@@ -21,6 +21,9 @@ out/
 .env.local
 *.tsbuildinfo
 
+# Tutorial personal progress (start from TODO.md.sample)
+doc/fr/TODO.md
+
 # OS
 .DS_Store
 Thumbs.db

@@ -61,18 +61,11 @@ Next.js (web) --REST--> order-service --outbox--> Kafka: orders.created
 
 ## Progression
 
-- [x] Étape 0 : environnement WSL
-- [ ] Étape 1 : infra Docker (Kafka, Kafka UI, Postgres) et premier message
-- [ ] Étape 2 : squelette Maven multi-module + module `events`
-- [ ] Étape 3 : `order-service` (REST, JPA, Flyway)
-- [ ] Étape 4 : publier `orders.created` et lab 1 (clés et partitions)
-- [ ] Étape 5 : `payment-service` et lab 2 (consumer groups)
-- [ ] Étape 6 : `inventory-service` et saga complète avec compensation
-- [ ] Étape 7 : fiabilité : lab 3 (offsets, idempotence) et lab 4 (retries, DLT)
-- [ ] Étape 8 : `notification-service` et SSE
-- [ ] Étape 9 : front Next.js
-- [ ] Étape 10 : tout dans Docker
-- [ ] Étape 11 : labs avancés (outbox, config producer, rejeu, sérialisation, multi-broker)
+Suivi personnel dans [TODO.md](./TODO.md) (ignoré par git). Point de départ versionné : [TODO.md.sample](./TODO.md.sample).
+
+```bash
+cp doc/fr/TODO.md.sample doc/fr/TODO.md
+```
 
 ---
 
