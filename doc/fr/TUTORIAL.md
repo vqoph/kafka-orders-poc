@@ -146,24 +146,37 @@ docker compose exec -it kafka /opt/kafka/bin/kafka-console-consumer.sh \
 
 - **Layout groupé** (proche Nest `apps/` + `libs/`) :
   ```text
+  pom.xml                   # parent multi-module (à créer EN PREMIER)
   libs/events/              # contrat partagé (records d'événements)
   services/order-service/
   services/payment-service/
   services/inventory-service/
   services/notification-service/
   apps/web/                 # Next.js, étape 9
-  pom.xml                   # parent multi-module
   ```
 - **Parent pom** : versions et dépendances communes (équivalent d'un `package.json` racine avec workspaces + `turbo`).
-- **Spring Boot BOM** (`spring-boot-starter-parent` ou `dependencyManagement`) : on ne précise pas les versions des libs Spring, elles sont cohérentes entre elles.
+- **Spring Boot BOM** (`spring-boot-starter-parent`) : on ne précise pas les versions des libs Spring, elles sont cohérentes entre elles.
 - **Module** `libs/events` : records Java partagés (`OrderCreated`, `PaymentProcessed`, ...). C'est le contrat entre services.
 - Un `record` Java = classe immuable avec getters/equals/hashCode générés (proche d'un type TS `readonly`).
 
-**Ce qu'on crée** : les 4 services via **Spring Boot CLI** (`spring init`, qui appelle start.spring.io), puis `libs/events` et le `pom.xml` parent à la main.
+**Ordre recommandé** : parent → `libs/events` → générer les services (CLI) → rattacher chaque service au parent.  
+`spring init` produit toujours un projet autonome (parent = `spring-boot-starter-parent`) : le reparenting est normal.
 
-**Prérequis CLI** : `sdk install springboot` (une fois). Vérifier : `spring version`.
+> start.spring.io n'accepte plus Spring Boot 3.5.x (compatibilité ≥ 4.0). On fige **4.1.2**.
 
-**Générer les services** (Boot **4.1.2**, Java 21, Maven — le défaut CLI est Gradle) :
+### 2.1 Parent `pom.xml` (racine)
+
+`packaging=pom` : agrégateur seulement (pas de jar). Il hérite de `spring-boot-starter-parent` **4.1.2**, fixe `java.version=21`, et déclare les `<modules>`.
+
+### 2.2 Module `libs/events`
+
+Jar simple (pas d'app Spring, pas de `spring-boot-maven-plugin`). Son `<parent>` pointe vers `../../pom.xml`. Package placeholder : `com.example.orders.events`.
+
+### 2.3 Générer les services (Spring Boot CLI)
+
+**Prérequis** : `sdk install springboot` (une fois). Vérifier : `spring version`.
+
+Maven obligatoire (`--build=maven` : le défaut CLI est Gradle).
 
 ```bash
 mkdir -p services libs
@@ -193,11 +206,22 @@ spring init --build=maven --boot-version=4.1.2 --java-version=21 \
   --extract services/notification-service
 ```
 
-> start.spring.io n'accepte plus Spring Boot 3.5.x (compatibilité ≥ 4.0). On fige **4.1.2**.
+### 2.4 Rattacher chaque service au parent
 
-Ensuite : module `libs/events` (jar simple, pas une app Spring) + `pom.xml` parent qui liste `libs/events` et `services/*`.
+Dans chaque `services/*/pom.xml`, remplacer le parent Initializr par :
 
-**Commandes de build**
+```xml
+<parent>
+  <groupId>com.example.orders</groupId>
+  <artifactId>kafka-orders-poc</artifactId>
+  <version>0.0.1-SNAPSHOT</version>
+  <relativePath>../../pom.xml</relativePath>
+</parent>
+```
+
+Puis retirer du module enfant : `groupId`, `version`, `java.version` (hérités). Garder `artifactId`, les `<dependencies>` et le `spring-boot-maven-plugin`.
+
+### 2.5 Build
 
 ```bash
 mvn -q -DskipTests install
@@ -205,7 +229,7 @@ mvn -q -DskipTests install
 mvn -pl services/order-service spring-boot:run
 ```
 
-**À observer** : le build passe, `order-service` démarre et `http://localhost:8081/actuator/health` répond `UP` (si Postgres est up).
+**À observer** : le build passe. Un `order-service` pleinement `UP` sur `/actuator/health` attendra la config Postgres (étape 3).
 
 ---
 
