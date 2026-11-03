@@ -63,6 +63,8 @@ Next.js (web) --REST--> order-service --outbox--> Kafka: orders.created
 
 Suivi personnel dans [TODO.md](./TODO.md) (ignoré par git). Point de départ versionné : [TODO.md.sample](./TODO.md.sample).
 
+Complément hors parcours : [Architecture Kafka — l'essentiel](./appendices/architecture-kafka-essentials.md) (vue d'ensemble producers / topics / brokers / consumer groups / KRaft). Voir aussi [Appendices](./appendices/README.md).
+
 ```bash
 cp doc/fr/TODO.md.sample doc/fr/TODO.md
 ```
@@ -105,6 +107,8 @@ docker compose version
 ## Étape 1 : infra Docker et premier message
 
 **Concepts avant de coder**
+
+Pour le vocabulaire et le schéma d'ensemble (avant de manipuler) : [Architecture Kafka — l'essentiel](./appendices/architecture-kafka-essentials.md).
 
 - Un **broker** Kafka stocke des messages dans des **topics**. Un topic est découpé en **partitions** (des logs append-only, ordonnés).
 - Un message = clé + valeur + headers + timestamp. Chaque message d'une partition a un **offset** (sa position).

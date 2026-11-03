@@ -25,6 +25,87 @@ Pense à un **journal append-only partagé** : on écrit à la fin, on lit à so
 
 Les **KRaft controllers** gèrent le cluster (métadonnées, élection de leaders, etc.). Côté appli, tu touches surtout à `bootstrap.servers` : le reste est de l’infra.
 
+### Schéma d’architecture (vue d’ensemble)
+
+Reprise approximative du diagramme ByteDiagram : controllers en haut, producers à gauche, brokers au centre, consumer group à droite.
+
+```mermaid
+flowchart TB
+  subgraph kraft["KRaft controller quorum"]
+    direction LR
+    AC["Active controller"]
+    ST1["Standby"]
+    ST2["Standby"]
+    META["Cluster metadata log<br/>__cluster_metadata-0"]
+    AC --- ST1 --- ST2
+    AC -.-> META
+  end
+
+  subgraph producers["Producers"]
+    direction TB
+    Prod1["Producer 1"]
+    Prod2["Producer 2"]
+  end
+
+  subgraph brokers["Brokers (storage)"]
+    direction LR
+    B1["Broker 1<br/>leader P0"]
+    B2["Broker 2<br/>leader P1"]
+    B3["Broker 3<br/>leader P2"]
+  end
+
+  subgraph consumers["Consumer group<br/>1 consumer ↔ 1 partition"]
+    direction TB
+    C1["Consumer 1 → P0"]
+    C2["Consumer 2 → P1"]
+    C3["Consumer 3 → P2"]
+  end
+
+  kraft -.->|métadonnées / heartbeats| brokers
+
+  Prod1 -->|"send → leader P0"| B1
+  Prod2 -->|"send → leader P2"| B3
+
+  B1 -->|fetch offset| C1
+  B2 -->|fetch offset| C2
+  B3 -->|fetch offset| C3
+```
+
+### Inset : réplicas (facteur 3)
+
+Même cluster vu sous l’angle leader / followers. Chaque partition a 1 leader + 2 followers ; seuls les membres de l’**ISR** peuvent devenir leader.
+
+```mermaid
+flowchart LR
+  subgraph b1["Broker 1"]
+    direction TB
+    P0L["P0 ★ leader"]
+    P1F1["P1 follower"]
+    P2F1["P2 follower"]
+  end
+
+  subgraph b2["Broker 2"]
+    direction TB
+    P1L["P1 ★ leader"]
+    P0F1["P0 follower"]
+    P2F2["P2 follower"]
+  end
+
+  subgraph b3["Broker 3"]
+    direction TB
+    P2L["P2 ★ leader"]
+    P0F2["P0 follower"]
+    P1F2["P1 follower"]
+  end
+
+  P0F1 -.->|replicate| P0L
+  P0F2 -.->|replicate| P0L
+  P1F1 -.->|replicate| P1L
+  P1F2 -.->|replicate| P1L
+  P2F1 -.->|replicate| P2L
+  P2F2 -.->|replicate| P2L
+```
+
 ---
 
 ## Topics et partitions
