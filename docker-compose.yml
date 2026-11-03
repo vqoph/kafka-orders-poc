@@ -1,0 +1,93 @@
+# Local infrastructure: Kafka (KRaft, no Zookeeper), Kafka UI and Postgres.
+# Start with: docker compose up -d
+
+services:
+  # ---------------------------------------------------------------------------
+  # Kafka broker
+  # ---------------------------------------------------------------------------
+  kafka:
+    image: apache/kafka:4.0.0
+    container_name: kafka
+    ports:
+      # Only the "from WSL" port is published. Containers use kafka:9092 on the Docker network.
+      - "29092:29092"
+    environment:
+      # --- KRaft basics ---
+      # In KRaft mode the broker also stores the cluster metadata itself.
+      # This single node is both a broker (stores messages) and a controller (manages metadata).
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      # Controller quorum: "<node id>@<host>:<controller port>". Only one node here.
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+
+      # --- Listeners (KEY POINT) ---
+      # Ports the broker listens on. Names (INTERNAL/EXTERNAL/CONTROLLER) are just labels.
+      # ":9092" with no host = bind on all interfaces.
+      KAFKA_LISTENERS: INTERNAL://:9092,EXTERNAL://:29092,CONTROLLER://:9093
+      # Address returned to clients in the Metadata response, for the listener they used.
+      # Container clients get kafka:9092; WSL clients get localhost:29092.
+      # CONTROLLER is omitted: clients never connect to it.
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka:9092,EXTERNAL://localhost:29092
+      # Protocol per listener label. PLAINTEXT = no TLS (fine for local Docker).
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT,CONTROLLER:PLAINTEXT
+      # Listener used for broker-to-broker traffic (required even with a single broker).
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+      # Listener used by the KRaft controller quorum (matches CONTROLLER://:9093 above
+      # and KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093).
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+
+      # --- Single-broker settings ---
+      # Internal Kafka topics (consumer offsets, transactions) default to 3 replicas.
+      # With one broker we must lower them to 1, otherwise consumers cannot start.
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      # Delay before the first rebalance of a new consumer group (default 3000 ms). 0 = faster dev loop.
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      # Auto-create topics on first use. Convenient in dev, but a typo in a topic name
+      # silently creates a new topic. We create topics explicitly later (NewTopic beans).
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "false"
+    volumes:
+      # Keep messages across restarts. `docker compose down -v` wipes them.
+      - kafka-data:/var/lib/kafka/data
+
+  # ---------------------------------------------------------------------------
+  # Kafka UI: web console to browse topics, partitions, messages and consumer groups
+  # ---------------------------------------------------------------------------
+  kafka-ui:
+    image: ghcr.io/kafbat/kafka-ui:latest
+    container_name: kafka-ui
+    depends_on:
+      - kafka
+    ports:
+      - "8080:8080"
+    environment:
+      KAFKA_CLUSTERS_0_NAME: local
+      # Kafka UI runs inside Docker, so it uses the internal address.
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
+
+  # ---------------------------------------------------------------------------
+  # Postgres: one server, one database per service (created by the init script)
+  # ---------------------------------------------------------------------------
+  postgres:
+    image: postgres:17-alpine
+    container_name: postgres
+    ports:
+      - "5432:5432"
+    environment:
+      # Dev-only credentials. Never reuse this in production.
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      # Scripts in this folder run once, when the volume is empty.
+      - ./docker/postgres/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  kafka-data:
+  postgres-data:
