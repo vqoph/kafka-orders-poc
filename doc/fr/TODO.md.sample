@@ -8,7 +8,7 @@ cp doc/fr/TODO.md.sample doc/fr/TODO.md
 
 - [ ] Étape 0 : environnement WSL
 - [ ] Étape 1 : infra Docker (Kafka, Kafka UI, Postgres) et premier message
-- [ ] Étape 2 : squelette Maven multi-module + module `events`
+- [ ] Étape 2 : squelette Maven (`libs/` + `services/`) + module `events`
 - [ ] Étape 3 : `order-service` (REST, JPA, Flyway)
 - [ ] Étape 4 : publier `orders.created` et lab 1 (clés et partitions)
 - [ ] Étape 5 : `payment-service` et lab 2 (consumer groups)
