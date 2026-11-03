@@ -61,7 +61,7 @@ Next.js (web) --REST--> order-service --outbox--> Kafka: orders.created
 
 ## Progression
 
-- [ ] Étape 0 : environnement WSL
+- [x] Étape 0 : environnement WSL
 - [ ] Étape 1 : infra Docker (Kafka, Kafka UI, Postgres) et premier message
 - [ ] Étape 2 : squelette Maven multi-module + module `events`
 - [ ] Étape 3 : `order-service` (REST, JPA, Flyway)
