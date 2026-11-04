@@ -233,6 +233,20 @@ mvn -q -DskipTests install
 mvn -pl services/order-service spring-boot:run
 ```
 
+**Piège `-am` + `spring-boot:run`** : `-am` (*also make*) rebuild bien les modules dont tu dépends (`libs/events`, …), mais Maven applique aussi la goal `run` au **parent** (`packaging=pom`, pas de `main`) → `Unable to find a suitable main class`.
+
+```bash
+# OK : installer les deps du reactor, puis run uniquement le service
+mvn -pl services/order-service -am -DskipTests install
+mvn -pl services/order-service spring-boot:run
+
+# OK aussi si events n’a pas changé (déjà dans ~/.m2)
+mvn -pl services/order-service spring-boot:run
+
+# KO : run propagé au parent
+mvn -pl services/order-service -am spring-boot:run
+```
+
 **À observer** : le build passe. Un `order-service` pleinement `UP` sur `/actuator/health` attendra la config Postgres (étape 3).
 
 ---
@@ -247,14 +261,41 @@ mvn -pl services/order-service spring-boot:run
 - `ddl-auto: validate` : Hibernate ne modifie jamais le schéma, Flyway en est le seul maître.
 - Entité `Order` avec un statut (`PENDING`, `CONFIRMED`, `CANCELLED`).
 
-**Commandes**
+### Qui fait quoi (classes)
+
+| Classe | Rôle (Nest approx.) |
+|---|---|
+| `domain/Order` | **Entité** JPA — modèle DB (`@Entity`), pas le JSON HTTP |
+| `domain/OrderRepository` | **Repository** — interface ; Spring génère `save` / `findAll` / `findById` |
+| `api/CreateOrderRequest` | **DTO entrée** — body JSON + validation (`@Valid`) |
+| `api/OrderResponse` | **DTO sortie** — JSON renvoyé au client (`from(Order)` à coder au Lab 0) |
+| `api/OrderService` | **Service** — cas d’usage (`@Service`, comme `@Injectable`) |
+| `api/OrderController` | **Controller** REST — routes HTTP minces (`@RestController`) |
+
+Les commentaires Javadoc en tête de ces classes répètent ce découpage dans le code.
+
+### Config + migration (déjà posés)
+
+- `application.yml` : port 8081, datasource `orders`, `ddl-auto: validate`
+- `V1__create_orders.sql` : tables `orders` / `order_items`
+
+### Exercice (à coder — simple)
+
+**Lab 0** : [Bases order-service (REST + mapping)](./appendices/exercises/lab-00-order-rest-jpa.md)
+
+Tu implémentes `OrderResponse.from` et `OrderService.findById` (`TODO Lab 0`). Le `GET /orders/{id}` est déjà branché dans le controller.
+
+**Commandes (après le lab)**
 
 ```bash
 curl -X POST localhost:8081/orders -H 'content-type: application/json' \
   -d '{"customerId":"c1","items":[{"sku":"A","quantity":2}],"amount":42.5}'
 curl localhost:8081/orders
+curl localhost:8081/orders/<id>
 # Swagger UI: http://localhost:8081/swagger-ui.html
 ```
+
+**Étape 3 ok** : Lab 0 fait ; POST + list + getById OK.
 
 ---
 
@@ -263,15 +304,55 @@ curl localhost:8081/orders
 **Concepts**
 
 - `KafkaTemplate.send(topic, key, value)` : la **clé** détermine la partition (`hash(key) % nbPartitions`). Même clé => même partition => **ordre garanti pour cette clé**.
-- Sérialisation : on commence en JSON (`JsonSerializer`). Piège : les type headers contiennent le nom de classe Java, ce qui casse entre services si les packages diffèrent. On y reviendra au lab 8.
-- Création des topics déclarative avec des beans `NewTopic` (3 partitions).
+- Sérialisation : JSON (`JsonSerializer`). Piège : les type headers portent le nom de classe Java (casse entre services si les packages diffèrent) — détail au lab 8.
+- Topics créés en code via beans `NewTopic` (ici 3 partitions). Auto-create est désactivé dans Docker Compose.
+- Dual-write simple : `save` en base puis `send` Kafka (pas atomique). L’outbox vient à l’étape 11.
 
-**Lab 1 : clés et partitions**
+### 4.1 Contrat `OrderCreated` (`libs/events`)
 
-1. Crée 10 commandes avec 2 clients différents, clé = `orderId`. Observe la répartition dans Kafka UI.
-2. Envoie plusieurs événements pour la **même** commande : ils sont tous dans la même partition, dans l'ordre.
-3. Retire la clé (envoi `null`) : les messages d'une même commande se dispersent, donc l'ordre n'est plus garanti.
-4. Question à te poser : que se passe-t-il si on augmente le nombre de partitions d'un topic existant ? (le mapping clé -> partition change)
+Record partagé = contrat entre services (comme un type dans `ts-shared`).
+
+### 4.2 Dépendance + config producer
+
+`order-service` dépend du module `events`. Dans `application.yml` : bootstrap `localhost:29092`, serializers JSON / String.
+
+### 4.3 `NewTopic` + `OrderEventPublisher`
+
+Bean `orders.created` (3 partitions, RF 1).  
+Publisher : `KafkaTemplate<String, OrderCreated>` (typage strict) + `toEvent(Order)` pour ne jamais publier l’entité JPA.  
+`Object` comme type de valeur compilerait un mauvais `send(..., order)` — à éviter.
+
+### 4.4 Publish après `save`
+
+Dans `OrderService.create` : après `orderRepository.save`, publier avec **clé = `orderId`**.
+
+### 4.5 Endpoint lab + exercice (à coder)
+
+Squelette avec `TODO Lab 1` :
+
+- `OrderEventPublisher.publishOrderCreatedWithKey` (même pattern que le prod : `toEvent` + `send` + log)
+- `KafkaLabController.resolveKey` + enum imbriqué `KeyMode` (`ORDER_ID` / `NONE`)
+
+Endpoint : `POST /labs/kafka/orders/{id}/republish?keyMode=ORDER_ID|NONE`  
+(Spring bind le query param sur le **nom** de la constante d’enum.)
+
+**Exercice** : [Lab 1 — Clés et partitions](./appendices/exercises/lab-01-keys-partitions.md)  
+→ Partie A = Java ; Partie B = Kafka UI.
+
+**Smoke prod (sans le lab)** — le create publie déjà avec clé = `orderId` :
+
+```bash
+# Voir étape 2.5 : ne pas combiner -am avec spring-boot:run
+mvn -pl services/order-service -am -DskipTests install
+mvn -pl services/order-service spring-boot:run
+
+curl -X POST localhost:8081/orders -H 'content-type: application/json' \
+  -d '{"customerId":"c1","items":[{"sku":"A","quantity":2}],"amount":42.5}'
+```
+
+**Étape 4 ok** : smoke OK + Lab 1 partie A (code) + partie B (observations + question).
+
+Annexe utile après la question B.5 : [Changer le nombre de partitions](./appendices/kafka-partition-count-changes.md).
 
 ---
 
@@ -420,6 +501,10 @@ docker compose --profile apps up --build
 ## Commandes utiles
 
 ```bash
+# Run a service (never: mvn -pl … -am spring-boot:run — fails on parent pom)
+mvn -pl services/order-service -am -DskipTests install
+mvn -pl services/order-service spring-boot:run
+
 # List topics
 docker compose exec kafka /opt/kafka/bin/kafka-topics.sh --bootstrap-server kafka:9092 --list
 
