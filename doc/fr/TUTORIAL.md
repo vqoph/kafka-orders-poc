@@ -400,24 +400,24 @@ Topic : `payments.processed`. Clé Kafka recommandée : **`orderId`** (ordre par
 À poser / expliquer avant le lab (tu ne codes pas ça dans le Lab 2) :
 
 - dépendance Maven `events` dans `services/payment-service/pom.xml`
-- `application.yml` : port **8082**, datasource `payments`, Kafka bootstrap **`localhost:29092`**, consumer + producer JSON, propriété `payment.failure-rate`
+- `application.yml` : port **8082**, datasource **`jdbc:…/payments`**, Kafka bootstrap **`localhost:29092`**, consumer + producer JSON, propriété `payment.failure-rate`
+- Flyway `V1__create_payments.sql` + entité `Payment` / `PaymentRepository` (même dual-write DB→Kafka que order-service)
 - `KafkaTopics` + `KafkaTopicsConfig` : bean `NewTopic` pour `payments.processed` (**3 partitions**, RF 1)
-- squelettes : listener `@KafkaListener`, publisher typé `KafkaTemplate<String, PaymentProcessed>`, éventuellement `decideSuccess` / mapping
+- `PaymentService` (décide → persist → publish), `PaymentEventPublisher`, listener `@KafkaListener` mince
 
-### 5.3 Listener + publication (points clefs — toi)
+### 5.3 Décision mock (point clef — toi)
 
 Corps métier laissé au reader (`TODO Lab 2`) :
 
-1. Lire `OrderCreated` dans le listener.
-2. Décider succès / échec via `payment.failure-rate`.
-3. Publier `PaymentProcessed` avec **clé = `orderId`**.
+1. Implémenter `PaymentDecision.decideSuccess()` à partir de `payment.failure-rate`.
+2. Relire le flux : `OrderCreated` → save `payments` → `PaymentProcessed` avec **clé = `orderId`**.
 
 Détail et indices : Lab 2 partie A.
 
 ### 5.4 Exercice (à coder + observer)
 
 **Exercice** : [Lab 2 — Consumer groups](./appendices/exercises/lab-02-consumer-groups.md)  
-→ Partie A = Java (listener + publish) ; Partie B = Kafka UI / `kafka-consumer-groups.sh`.
+→ Partie A = Java (`decideSuccess`) ; Partie B = Kafka UI / `kafka-consumer-groups.sh`.
 
 **Lancer (chemin Maven correct)** — jamais `mvn -pl payment-service` seul (module introuvable depuis la racine) :
 

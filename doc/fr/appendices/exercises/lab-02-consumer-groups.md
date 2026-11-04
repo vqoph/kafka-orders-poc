@@ -1,19 +1,17 @@
 # Lab 2 — Consumer groups
 
 Exercice de l’[étape 5 du tutoriel](../../TUTORIAL.md#étape-5--payment-service-et-lab-2).  
-But : **écrire le premier consumer** Spring Kafka (écouter `orders.created`, publier `payments.processed`), puis **observer** comment un **consumer group** répartit les partitions, rebalance, et se distingue d’un second groupe (file vs pub/sub).
+But : **comprendre le premier consumer** Spring Kafka (écouter `orders.created`, persister, publier `payments.processed`), puis **observer** comment un **consumer group** répartit les partitions, rebalance, et se distingue d’un second groupe (file vs pub/sub).
 
-Fichiers à compléter une fois le boilerplate posé (cherche `TODO Lab 2`) — chemins cibles :
+Fichier à compléter une fois le boilerplate posé (cherche `TODO Lab 2` / commentaire Lab 2) :
 
-- `services/payment-service/src/main/java/com/example/orders/payment/kafka/OrderCreatedListener.java` — corps du `@KafkaListener`
-- `services/payment-service/src/main/java/com/example/orders/payment/kafka/PaymentEventPublisher.java` — publication `PaymentProcessed` (clé = `orderId`)
-- éventuellement une méthode `decideSuccess` / mapping événement (même package ou service dédié)
+- `services/payment-service/src/main/java/com/example/orders/payment/PaymentDecision.java` — méthode `decideSuccess()`
 
-Contrat documenté (à créer dans `libs/events` si pas encore là) :
+Contrat déjà dans `libs/events` :
 
-- `libs/events/src/main/java/com/example/orders/events/PaymentProcessed.java` — record `(orderId, amount, success, processedAt)`
+- `PaymentProcessed` — record `(orderId, amount, success, processedAt)`
 
-Le boilerplate (pom `events`, `application.yml`, `KafkaTopics` / `KafkaTopicsConfig`, squelettes) est **posé par l’assistant** — tu te concentres sur le corps du listener et le publish.
+Le boilerplate (pom `events`, `application.yml` → base **`payments`**, Flyway + `Payment`, `PaymentService`, topics, publisher, listener) est **posé par l’assistant** — tu te concentres sur la décision mock, puis sur les observations Kafka.
 
 ## Prérequis
 
@@ -31,12 +29,12 @@ Tu es **à la fois consumer et producer** :
 | Consumer | `orders.created` | `OrderCreated` |
 | Producer | `payments.processed` | `PaymentProcessed` |
 
-Listener typique (squelette déjà fourni — **corps** à toi) :
+Flux déjà câblé (à lire, pas à réécrire) :
 
 ```java
 @KafkaListener(topics = KafkaTopics.ORDERS_CREATED, groupId = "payment-service")
 public void onOrderCreated(OrderCreated event) {
-    // TODO Lab 2 : décider succès/échec, publier PaymentProcessed
+    paymentService.processOrderCreated(event); // decide → DB payments → Kafka
 }
 ```
 
@@ -44,13 +42,12 @@ public void onOrderCreated(OrderCreated event) {
 |---|---|
 | `groupId = "payment-service"` | Identité du **groupe** : toutes les instances avec ce même id **partagent** les partitions |
 | `OrderCreated` | Contrat entrant (`libs/events`) — pas une entité JPA |
-| `PaymentProcessed` | Contrat sortant — ce qu’on publie |
-| `payment.failure-rate` | Probabilité d’échec simulé (ex. `0.2`) — injectée depuis la config |
+| Table / entité `Payment` | Persistance dans la base **`payments`** (Flyway) avant publish |
+| `PaymentProcessed` | Contrat sortant — ce qu’on publie (même `processedAt` que la ligne DB) |
+| `payment.failure-rate` | Probabilité d’échec simulé (ex. `0.2`) — injectée dans `PaymentDecision` |
 
-Inspire-toi du publisher de l’étape 4 : `KafkaTemplate<String, PaymentProcessed>`, `send(topic, key, event)`, log clair.  
-**Clé** = `event.orderId().toString()` (même logique que `orders.created`).
-
-Dans payment-service, `KafkaTopics` (boilerplate) expose en général **les deux** noms utiles ici : `ORDERS_CREATED` (écouter) et `PAYMENTS_PROCESSED` (publier) — le bean `NewTopic` ne crée que `payments.processed` (order-service crée déjà `orders.created`).
+**Clé** Kafka = `orderId.toString()` (même logique que `orders.created`).  
+`KafkaTopics` expose `ORDERS_CREATED` + `PAYMENTS_PROCESSED` ; le bean `NewTopic` ne crée que `payments.processed`.
 
 ---
 
@@ -58,44 +55,25 @@ Dans payment-service, `KafkaTopics` (boilerplate) expose en général **les deux
 
 ### A.1 Décider succès / échec
 
-À partir de `payment.failure-rate` (double entre `0.0` et `1.0`) :
+Dans `PaymentDecision.decideSuccess()`, à partir de `payment.failure-rate` (double entre `0.0` et `1.0`) :
 
 1. Tirer un aléa (`Math.random()` ou équivalent).
 2. Succès si `random >= failureRate` (donc `failure-rate=0` → toujours OK ; `1.0` → toujours KO).
-3. Idéalement une petite méthode `decideSuccess()` (ou équivalent) — plus facile à relire / tester.
+3. Ne hardcode pas le taux : la propriété est déjà injectée dans le constructeur.
 
 **Indices**
 
-- Injecte la propriété avec `@Value("${payment.failure-rate}")` ou `@ConfigurationProperties`.
-- Ne hardcode pas le taux dans le listener.
+- `PaymentService` appelle déjà `decideSuccess()` puis save + publish — tu n’as qu’à remplir le corps de la méthode.
 
-### A.2 Publier `PaymentProcessed` (clé = `orderId`)
+### A.2 Relire le dual-write (pas de code)
 
-Dans `PaymentEventPublisher` (ou méthode équivalente) :
+Vérifie mentalement / dans le code :
 
-1. Construire `new PaymentProcessed(orderId, amount, success, Instant.now())` (champs depuis `OrderCreated` + décision A.1).
-2. `kafkaTemplate.send(KafkaTopics.PAYMENTS_PROCESSED, key, event)` avec **`key = orderId.toString()`**.
-3. `log.info(...)` (topic, key, success).
-4. Supprimer le `UnsupportedOperationException` / stub si présent.
+1. `Payment` sauvé dans Postgres (`payments`).
+2. Puis `PaymentEventPublisher.publish(..., processedAt)` avec le **même** `Instant`.
+3. Clé = `orderId`.
 
-**Indices**
-
-- Template typé : `KafkaTemplate<String, PaymentProcessed>` (même filet de typage qu’à l’étape 4).
-- N’utilise **pas** l’entité JPA d’order-service : tu n’as que l’événement Kafka.
-
-### A.3 Corps du `@KafkaListener`
-
-1. Recevoir `OrderCreated event`.
-2. `boolean success = decideSuccess();` (ou inline équivalent).
-3. Appeler le publisher avec `event` + `success`.
-4. Logger au moins `orderId` + `success`.
-
-**Indices**
-
-- Signature simple : `void onOrderCreated(OrderCreated event)` suffit pour ce lab (pas besoin de `ConsumerRecord` tant que tu n’inspectes pas partition/offset ici — la partie B le fait via Kafka UI / CLI).
-- Si le désérialiseur ne matche pas le type : vérifie le package du record et les type headers (rappel étape 4 / lab 8 plus tard).
-
-### A.4 Compiler / relancer
+### A.3 Compiler / relancer
 
 ```bash
 mvn -pl services/payment-service -am -DskipTests install
@@ -109,23 +87,10 @@ mvn -pl services/payment-service spring-boot:run
 <details>
 <summary>Solution (seulement si bloqué)</summary>
 
-Exemple minimal (noms de classes / injection peuvent varier selon le boilerplate) :
+Dans `PaymentDecision.decideSuccess()` :
 
 ```java
-boolean success = Math.random() >= failureRate;
-paymentEventPublisher.publish(event, success);
-```
-
-```java
-PaymentProcessed processed = new PaymentProcessed(
-        order.orderId(),
-        order.amount(),
-        success,
-        Instant.now()
-);
-String key = order.orderId().toString();
-kafkaTemplate.send(KafkaTopics.PAYMENTS_PROCESSED, key, processed);
-log.info("Published {} key={} success={}", KafkaTopics.PAYMENTS_PROCESSED, key, success);
+return Math.random() >= failureRate;
 ```
 
 </details>
@@ -160,6 +125,7 @@ done
 **Observer**
 
 - Logs : messages consommés ; `payments.processed` apparaît dans Kafka UI.
+- Optionnel : une ligne dans Postgres `payments.payments` par commande traitée.
 - Consumer group `payment-service` : **un** membre possède les **3** partitions de `orders.created` (souvent `0`, `1`, `2`).
 
 **Conclure** : avec 1 consumer et 3 partitions, une seule instance lit tout.
