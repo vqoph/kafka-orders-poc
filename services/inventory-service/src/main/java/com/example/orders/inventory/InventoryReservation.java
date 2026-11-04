@@ -10,12 +10,11 @@ import com.example.orders.inventory.domain.StockRepository;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
+import java.util.function.Function;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -60,23 +59,26 @@ public class InventoryReservation {
             return failReservation(order);
         }
 
-        List<ReservationItem> items = new ArrayList<>();
-        // Map of SKU to Stock to avoid multiple calls to the database
-        Map<String, Stock> stocks = new HashMap<>();
+        // Defense in depth: merge qty by SKU
+        Map<String, Integer> qtyBySku = order.items().stream()
+                .collect(Collectors.toMap(
+                        OrderItemData::sku,
+                        OrderItemData::quantity,
+                        Integer::sum));
 
-        // Check if there is enough stock for each item
-        for (OrderItemData item : order.items()) {
-            Stock stock = stockRepository.findById(item.sku()).orElse(null);
-            if (stock != null && stock.getQuantity() >= item.quantity()) {
-                stocks.put(stock.getSku(), stock);
-                items.add(new ReservationItem(item.sku(), item.quantity()));
-            } else {
-                // If there is not enough stock for an item, return a failed reservation
+        Map<String, Stock> stocks = stockRepository.findAllById(qtyBySku.keySet()).stream()
+                .collect(Collectors.toMap(Stock::getSku, Function.identity()));
+
+        List<ReservationItem> items = new ArrayList<>();
+        for (Map.Entry<String, Integer> entry : qtyBySku.entrySet()) {
+            Stock stock = stocks.get(entry.getKey());
+            int quantity = entry.getValue();
+            if (stock == null || stock.getQuantity() < quantity) {
                 return failReservation(order);
             }
+            items.add(new ReservationItem(entry.getKey(), quantity));
         }
 
-        // Decrement the stock for each item
         for (ReservationItem item : items) {
             Stock stock = stocks.get(item.getSku());
             stock.decrement(item.getQuantity());
