@@ -358,26 +358,95 @@ Annexe utile après la question B.5 : [Changer le nombre de partitions](./append
 
 ## Étape 5 : payment-service et lab 2
 
+Premier **consumer** Spring Kafka du parcours : on réagit à `orders.created`, on décide succès/échec (taux configurable), et on publie `payments.processed`.  
+Le Lab 2 te fait **voir** les consumer groups (répartition, rebalance, idle, second groupe).
+
 **Concepts**
 
-- `@KafkaListener(topics = "orders.created", groupId = "payment-service")`.
-- **Consumer group** : les partitions d'un topic sont réparties entre les membres du groupe. Un message n'est traité que par UN membre du groupe, mais chaque groupe distinct reçoit TOUS les messages.
-- **Rebalance** : quand un consumer arrive/part, les partitions sont réassignées (pause brève de la consommation).
-- Le nombre max de consumers actifs dans un groupe = nombre de partitions.
-- Le service publie `payments.processed` avec un taux d'échec configurable (`payment.failure-rate`).
+- `@KafkaListener(topics = "orders.created", groupId = "payment-service")` ≈ `@EventPattern` Nest, mais le **`groupId`** est explicite et central.
+- **Consumer group** : les partitions d’un topic sont réparties entre les **membres** du groupe. Un message n’est traité que par **un** membre du groupe ; chaque **groupe distinct** reçoit **tous** les messages (file de travail vs pub/sub).
+- **Rebalance** : arrivée / départ d’un membre → réassignation des partitions (pause brève).
+- Max consumers **actifs** dans un groupe ≈ nombre de **partitions** (ici 3). Au-delà : membres **idle**.
+- Le service publie `payments.processed` avec `payment.failure-rate` (ex. `0.2` = ~20 % d’échecs simulés).
 
-**Lab 2 : consumer groups**
+### Qui fait quoi (Nest → Spring)
 
-```bash
-# Start a second instance of payment-service on another port, then watch Kafka UI:
-mvn -pl payment-service spring-boot:run -Dspring-boot.run.arguments=--server.port=8083
+| Nest (approx.) | Spring Kafka |
+|---|---|
+| `@EventPattern('orders.created')` | `@KafkaListener(topics = "orders.created", groupId = "…")` |
+| `ClientKafka` / emit | `KafkaTemplate.send(topic, key, value)` |
+| transport `groupId` dans la config microservice | `groupId` sur le listener (ou `spring.kafka.consumer.group-id`) |
+| type partagé `ts-shared` | record `PaymentProcessed` dans `libs/events` |
+
+### 5.1 Contrat `PaymentProcessed` (`libs/events`)
+
+Record partagé = contrat entre services (comme `OrderCreated`).
+
+Chemin cible : `libs/events/src/main/java/com/example/orders/events/PaymentProcessed.java`
+
+```java
+public record PaymentProcessed(
+        UUID orderId,
+        BigDecimal amount,
+        boolean success,
+        Instant processedAt
+) {}
 ```
 
-1. Avec 1 instance : elle possède les 3 partitions.
-2. Démarre une 2e instance : observe le rebalance et la nouvelle répartition (par exemple 2 + 1).
-3. Tue une instance : ses partitions repassent à l'autre.
-4. Lance un 4e consumer dans le même groupe : il reste inactif (3 partitions seulement).
-5. Ajoute un listener avec un autre `groupId` : il reçoit tous les messages. C'est la différence entre file de travail et pub/sub.
+Topic : `payments.processed`. Clé Kafka recommandée : **`orderId`** (ordre par commande, comme à l’étape 4).
+
+### 5.2 Dépendance + config (boilerplate — assistant)
+
+À poser / expliquer avant le lab (tu ne codes pas ça dans le Lab 2) :
+
+- dépendance Maven `events` dans `services/payment-service/pom.xml`
+- `application.yml` : port **8082**, datasource `payments`, Kafka bootstrap **`localhost:29092`**, consumer + producer JSON, propriété `payment.failure-rate`
+- `KafkaTopics` + `KafkaTopicsConfig` : bean `NewTopic` pour `payments.processed` (**3 partitions**, RF 1)
+- squelettes : listener `@KafkaListener`, publisher typé `KafkaTemplate<String, PaymentProcessed>`, éventuellement `decideSuccess` / mapping
+
+### 5.3 Listener + publication (points clefs — toi)
+
+Corps métier laissé au reader (`TODO Lab 2`) :
+
+1. Lire `OrderCreated` dans le listener.
+2. Décider succès / échec via `payment.failure-rate`.
+3. Publier `PaymentProcessed` avec **clé = `orderId`**.
+
+Détail et indices : Lab 2 partie A.
+
+### 5.4 Exercice (à coder + observer)
+
+**Exercice** : [Lab 2 — Consumer groups](./appendices/exercises/lab-02-consumer-groups.md)  
+→ Partie A = Java (listener + publish) ; Partie B = Kafka UI / `kafka-consumer-groups.sh`.
+
+**Lancer (chemin Maven correct)** — jamais `mvn -pl payment-service` seul (module introuvable depuis la racine) :
+
+```bash
+# Voir étape 2.5 : ne pas combiner -am avec spring-boot:run
+mvn -pl services/payment-service -am -DskipTests install
+mvn -pl services/payment-service spring-boot:run
+```
+
+2ᵉ instance pour le lab (port **8083**) :
+
+```bash
+mvn -pl services/payment-service spring-boot:run \
+  -Dspring-boot.run.arguments=--server.port=8083
+```
+
+**Smoke** (order-service déjà up, Lab 1 OK) : `POST /orders` → logs payment-service + message dans `payments.processed` (Kafka UI).
+
+**À observer (aperçu — détail dans le lab)**
+
+1. 1 instance → les **3** partitions du topic consommé.
+2. 2ᵉ instance (8083) → **rebalance** (ex. 2 + 1).
+3. Tuer une instance → reprise par l’autre.
+4. 4ᵉ consumer **même** `groupId` → **idle**.
+5. Autre `groupId` → reçoit **tous** les messages (pub/sub vs file).
+
+**Étape 5 ok** : smoke OK + Lab 2 partie A (code) + partie B (observations consumer groups).
+
+Complément : [Architecture Kafka — consumer group](./appendices/architecture-kafka-essentials.md#consumer-group).
 
 ---
 
