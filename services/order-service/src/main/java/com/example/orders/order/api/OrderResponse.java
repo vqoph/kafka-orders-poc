@@ -7,14 +7,18 @@ import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
+/**
+ * Response DTO (Data Transfer Object) — what we send as JSON to the client.
+ * Kept separate from the JPA {@link Order} entity so the HTTP API can evolve
+ * without coupling clients to the database model.
+ */
 public record OrderResponse(
         UUID id,
         String customerId,
         BigDecimal amount,
         OrderStatus status,
         Instant createdAt,
-        List<ItemResponse> items
-) {
+        List<ItemResponse> items) {
     public record ItemResponse(String sku, int quantity) {
     }
 
@@ -28,7 +32,6 @@ public record OrderResponse(
                 order.getAmount(),
                 order.getStatus(),
                 order.getCreatedAt(),
-                items
-        );
+                items);
     }
 }
