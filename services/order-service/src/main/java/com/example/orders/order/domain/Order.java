@@ -40,6 +40,14 @@ public class Order {
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;
 
+    /** {@code null} until {@code payments.processed} is applied. */
+    @Column(name = "payment_success")
+    private Boolean paymentSuccess;
+
+    /** {@code null} until {@code inventory.reserved} is applied. */
+    @Column(name = "inventory_success")
+    private Boolean inventorySuccess;
+
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "order_items", joinColumns = @JoinColumn(name = "order_id"))
     private List<OrderItem> items = new ArrayList<>();
@@ -55,6 +63,30 @@ public class Order {
         this.status = OrderStatus.PENDING;
         this.createdAt = Instant.now();
         this.items = new ArrayList<>(items);
+    }
+
+    public void recordPaymentResult(boolean success) {
+        this.paymentSuccess = success;
+    }
+
+    public void recordInventoryResult(boolean success) {
+        this.inventorySuccess = success;
+    }
+
+    public void confirm() {
+        this.status = OrderStatus.CONFIRMED;
+    }
+
+    public void cancel() {
+        this.status = OrderStatus.CANCELLED;
+    }
+
+    public boolean isTerminal() {
+        return status == OrderStatus.CONFIRMED || status == OrderStatus.CANCELLED;
+    }
+
+    public boolean hasBothSagaResults() {
+        return paymentSuccess != null && inventorySuccess != null;
     }
 
     public UUID getId() {
@@ -75,6 +107,14 @@ public class Order {
 
     public Instant getCreatedAt() {
         return createdAt;
+    }
+
+    public Boolean getPaymentSuccess() {
+        return paymentSuccess;
+    }
+
+    public Boolean getInventorySuccess() {
+        return inventorySuccess;
     }
 
     public List<OrderItem> getItems() {
