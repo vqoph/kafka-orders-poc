@@ -49,7 +49,7 @@ public class KafkaLabController {
     public Map<String, Object> republish(
             @PathVariable UUID id,
             @RequestParam(defaultValue = "ORDER_ID") KeyMode keyMode) {
-        Order order = orderService.findById(id);
+        Order order = orderService.getOrderOrThrow(id);
         String key = resolveKey(order, keyMode);
         orderEventPublisher.publishOrderCreatedWithKey(order, key);
         return Map.of(
