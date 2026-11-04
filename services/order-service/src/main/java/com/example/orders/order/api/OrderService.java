@@ -48,11 +48,16 @@ public class OrderService {
 
     @Transactional(readOnly = true)
     public OrderResponse findById(UUID id) {
-        Order order = orderRepository.findById(id)
+        Order order = getOrderOrThrow(id);
+        return OrderResponse.from(order);
+    }
+
+    @Transactional(readOnly = true)
+    public Order getOrderOrThrow(UUID id) {
+        return orderRepository.findById(id)
                 .orElseThrow(
                         () -> new ResponseStatusException(
                                 HttpStatus.NOT_FOUND,
                                 "Order not found"));
-        return OrderResponse.from(order);
     }
 }
