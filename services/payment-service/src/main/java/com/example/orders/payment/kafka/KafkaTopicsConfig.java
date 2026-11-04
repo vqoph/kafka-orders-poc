@@ -16,4 +16,12 @@ public class KafkaTopicsConfig {
                 .replicas(1)
                 .build();
     }
+
+    @Bean
+    NewTopic paymentsRefundRequestedTopic() {
+        return TopicBuilder.name(KafkaTopics.PAYMENTS_REFUND_REQUESTED)
+                .partitions(3)
+                .replicas(1)
+                .build();
+    }
 }
