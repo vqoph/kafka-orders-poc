@@ -27,7 +27,8 @@ spring:
     bootstrap-servers: localhost:29092
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
-      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      # Boot 4 / Jackson 3 — not the deprecated JsonSerializer (Jackson 2).
+      value-serializer: org.springframework.kafka.support.serializer.JacksonJsonSerializer
       properties:
         # Include Java type in headers (handy in one service; fragile across services — lab 8).
         spring.json.add.type.headers: true
