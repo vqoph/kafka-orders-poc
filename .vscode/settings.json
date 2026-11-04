@@ -1,0 +1,10 @@
+{
+    "java.compile.nullAnalysis.mode": "disabled",
+    "java.settings.url": "${workspaceFolder}/.vscode/org.eclipse.jdt.core.prefs",
+    "editor.formatOnSave": true,
+    "[java]": {
+        "editor.defaultFormatter": "redhat.java",
+        "editor.formatOnSave": true
+    },
+    "java.configuration.updateBuildConfiguration": "automatic"
+}
