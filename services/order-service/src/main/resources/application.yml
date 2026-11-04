@@ -23,9 +23,14 @@ spring:
   flyway:
     enabled: true
 
-  # Used from étape 4; harmless for now (no listeners yet).
   kafka:
     bootstrap-servers: localhost:29092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      properties:
+        # Include Java type in headers (handy in one service; fragile across services — lab 8).
+        spring.json.add.type.headers: true
 
 management:
   endpoints:
