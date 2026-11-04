@@ -1,0 +1,31 @@
+package com.example.orders.order.domain;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Embeddable;
+
+@Embeddable
+public class OrderItem {
+
+    @Column(nullable = false, length = 64)
+    private String sku;
+
+    @Column(nullable = false)
+    private int quantity;
+
+    protected OrderItem() {
+        // JPA
+    }
+
+    public OrderItem(String sku, int quantity) {
+        this.sku = sku;
+        this.quantity = quantity;
+    }
+
+    public String getSku() {
+        return sku;
+    }
+
+    public int getQuantity() {
+        return quantity;
+    }
+}
