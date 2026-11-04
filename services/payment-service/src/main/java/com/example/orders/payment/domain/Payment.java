@@ -31,6 +31,9 @@ public class Payment {
     @Column(name = "processed_at", nullable = false)
     private Instant processedAt;
 
+    @Column(name = "refunded_at")
+    private Instant refundedAt;
+
     protected Payment() {
         // JPA
     }
@@ -41,6 +44,10 @@ public class Payment {
         this.amount = amount;
         this.success = success;
         this.processedAt = Instant.now();
+    }
+
+    public void markRefunded() {
+        this.refundedAt = Instant.now();
     }
 
     public UUID getId() {
@@ -61,5 +68,9 @@ public class Payment {
 
     public Instant getProcessedAt() {
         return processedAt;
+    }
+
+    public Instant getRefundedAt() {
+        return refundedAt;
     }
 }
