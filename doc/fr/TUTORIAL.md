@@ -496,6 +496,13 @@ docker compose --profile apps up --build
 
 - Cluster à 3 brokers, `replication.factor=3`, `min.insync.replicas=2`, tuer un broker et observer l'élection de leader.
 
+**Bonus : parallélisme in-process (virtual threads)**
+
+- Exercice type “Promise.all” sans Promise : dans un service, lancer **plusieurs appels IO bloquants en parallèle** (ex. enrichir une commande : prix + promo + profil client), attendre les résultats, puis répondre.
+- API : `Executors.newVirtualThreadPerTaskExecutor()` + `Future.get()` / `executor.invokeAll(...)` (Java 21). Code impératif, proche de ce qu’on écrit en sync.
+- Optionnel Spring : `spring.threads.virtual.enabled=true` (Boot 3.2+) pour le serveur HTTP.
+- Rappel : le parallélisme métier de *cette* archi reste surtout Kafka (partitions / consumer groups) ; ici on ne couvre que le cas “plusieurs IO dans le même process”.
+
 ---
 
 ## Commandes utiles

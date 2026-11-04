@@ -17,4 +17,4 @@ cp doc/fr/TODO.md.sample doc/fr/TODO.md
 - [ ] Étape 8 : `notification-service` et SSE
 - [ ] Étape 9 : front Next.js
 - [ ] Étape 10 : tout dans Docker
-- [ ] Étape 11 : labs avancés (outbox, config producer, rejeu, sérialisation, multi-broker)
+- [ ] Étape 11 : labs avancés (outbox, config producer, rejeu, sérialisation, multi-broker, virtual threads)
