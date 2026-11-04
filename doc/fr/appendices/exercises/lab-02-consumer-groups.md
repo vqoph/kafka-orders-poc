@@ -69,8 +69,8 @@ Dans `PaymentDecision.decideSuccess()`, à partir de `payment.failure-rate` (dou
 
 Vérifie mentalement / dans le code :
 
-1. `Payment` sauvé dans Postgres (`payments`).
-2. Puis `PaymentEventPublisher.publish(..., processedAt)` avec le **même** `Instant`.
+1. `Payment` construit avec `processedAt = Instant.now()` (comme `Order.createdAt`).
+2. Sauvé puis `PaymentEventPublisher.publish(payment)` — l’événement reprend `payment.getProcessedAt()`.
 3. Clé = `orderId`.
 
 ### A.3 Compiler / relancer
@@ -206,9 +206,8 @@ Une partition n’est assignée qu’à **un** consumer d’un groupe donné à 
 
 ## Critères de réussite
 
-- [ ] Listener : lit `OrderCreated`, décide succès/échec via `payment.failure-rate`, appelle le publisher
-- [ ] Publish : `PaymentProcessed` avec **clé = orderId** sur `payments.processed`
-- [ ] Compile + run OK (`mvn -pl services/payment-service …`)
+- [ ] `decideSuccess()` OK ; flux `OrderCreated` → DB `payments` → `PaymentProcessed` (clé = orderId)
+- [ ] Compile + run OK (`mvn -pl services/payment-service …`) + smoke `POST /orders`
 - [ ] B.1–B.3 observés (1 instance, rebalance à 2, reprise après kill)
 - [ ] B.4 compris (idle si membres > partitions)
 - [ ] B.5 compris (autre `groupId` = flux complet)

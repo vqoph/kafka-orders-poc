@@ -304,7 +304,7 @@ curl localhost:8081/orders/<id>
 **Concepts**
 
 - `KafkaTemplate.send(topic, key, value)` : la **clé** détermine la partition (`hash(key) % nbPartitions`). Même clé => même partition => **ordre garanti pour cette clé**.
-- Sérialisation : JSON (`JsonSerializer`). Piège : les type headers portent le nom de classe Java (casse entre services si les packages diffèrent) — détail au lab 8.
+- Sérialisation : JSON (`JacksonJsonSerializer`, Boot 4 / Jackson 3). Piège : les type headers portent le nom de classe Java (casse entre services si les packages diffèrent) — détail au lab 8.
 - Topics créés en code via beans `NewTopic` (ici 3 partitions). Auto-create est désactivé dans Docker Compose.
 - Dual-write simple : `save` en base puis `send` Kafka (pas atomique). L’outbox vient à l’étape 11.
 
@@ -558,7 +558,7 @@ docker compose --profile apps up --build
 
 **Lab 8 : sérialisation**
 
-- Pièges des type headers JSON entre services, `JsonDeserializer.TRUSTED_PACKAGES`.
+- Pièges des type headers JSON entre services, `JacksonJsonDeserializer.TRUSTED_PACKAGES`.
 - Bonus : Avro + Schema Registry, évolution de schéma compatible.
 
 **Bonus : multi-broker**
