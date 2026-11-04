@@ -25,86 +25,14 @@ Pense à un **journal append-only partagé** : on écrit à la fin, on lit à so
 
 Les **KRaft controllers** gèrent le cluster (métadonnées, élection de leaders, etc.). Côté appli, tu touches surtout à `bootstrap.servers` : le reste est de l’infra.
 
-### Schéma d’architecture (vue d’ensemble)
-
-Reprise approximative du diagramme ByteDiagram : controllers en haut, producers à gauche, brokers au centre, consumer group à droite.
-
-```mermaid
-flowchart TB
-  subgraph kraft["KRaft controller quorum"]
-    direction LR
-    AC["Active controller"]
-    ST1["Standby"]
-    ST2["Standby"]
-    META["Cluster metadata log<br/>__cluster_metadata-0"]
-    AC --- ST1 --- ST2
-    AC -.-> META
-  end
-
-  subgraph producers["Producers"]
-    direction TB
-    Prod1["Producer 1"]
-    Prod2["Producer 2"]
-  end
-
-  subgraph brokers["Brokers (storage)"]
-    direction LR
-    B1["Broker 1<br/>leader P0"]
-    B2["Broker 2<br/>leader P1"]
-    B3["Broker 3<br/>leader P2"]
-  end
-
-  subgraph consumers["Consumer group<br/>1 consumer ↔ 1 partition"]
-    direction TB
-    C1["Consumer 1 → P0"]
-    C2["Consumer 2 → P1"]
-    C3["Consumer 3 → P2"]
-  end
-
-  kraft -.->|métadonnées / heartbeats| brokers
-
-  Prod1 -->|"send → leader P0"| B1
-  Prod2 -->|"send → leader P2"| B3
-
-  B1 -->|fetch offset| C1
-  B2 -->|fetch offset| C2
-  B3 -->|fetch offset| C3
-```
-
-### Inset : réplicas (facteur 3)
-
-Même cluster vu sous l’angle leader / followers. Chaque partition a 1 leader + 2 followers ; seuls les membres de l’**ISR** peuvent devenir leader.
-
 ```mermaid
 flowchart LR
-  subgraph b1["Broker 1"]
-    direction TB
-    P0L["P0 ★ leader"]
-    P1F1["P1 follower"]
-    P2F1["P2 follower"]
-  end
-
-  subgraph b2["Broker 2"]
-    direction TB
-    P1L["P1 ★ leader"]
-    P0F1["P0 follower"]
-    P2F2["P2 follower"]
-  end
-
-  subgraph b3["Broker 3"]
-    direction TB
-    P2L["P2 ★ leader"]
-    P0F2["P0 follower"]
-    P1F2["P1 follower"]
-  end
-
-  P0F1 -.->|replicate| P0L
-  P0F2 -.->|replicate| P0L
-  P1F1 -.->|replicate| P1L
-  P1F2 -.->|replicate| P1L
-  P2F1 -.->|replicate| P2L
-  P2F2 -.->|replicate| P2L
+  Producer -->|écrit| Topic
+  Topic[(Topic)] -->|stocké sur| Brokers
+  Brokers -->|lu par| Consumer
 ```
+
+Producer et consumer ne se connaissent pas : Kafka fait le tampon.
 
 ---
 
@@ -116,6 +44,17 @@ flowchart LR
 - La **même clé** (ex. `orderId`) envoie toujours le message vers la **même partition** → ordre métier cohérent pour une même entité.
 - **Plus de partitions ≈ plus de parallélisme** côté consumers (dans la limite du nombre d’instances du groupe).
 
+```mermaid
+flowchart LR
+  Key["clé = orderId"] --> Partitions
+  subgraph Partitions["Topic orders.created"]
+    direction TB
+    P0["P0"]
+    P1["P1"]
+    P2["P2"]
+  end
+```
+
 En pratique : choisis une clé métier stable quand l’ordre par entité compte ; dimensionne le nombre de partitions selon le débit et le parallélisme souhaités.
 
 ---
@@ -123,6 +62,12 @@ En pratique : choisis une clé métier stable quand l’ordre par entité compte
 ## Producer (configs utiles)
 
 Le producer n’envoie **pas** les messages aux consumers : il les écrit dans Kafka. Les consumers viennent les chercher.
+
+```mermaid
+flowchart LR
+  Producer -->|métadonnées : qui est leader ?| Kafka
+  Producer -->|"send direct → leader P0"| B1["Broker 1<br/>leader P0"]
+```
 
 Configs souvent utiles :
 
@@ -142,12 +87,37 @@ Le producer résout le **leader** de la partition cible, puis envoie **directeme
 - Modèle **pull** : le consumer **fetch** les messages ; Kafka ne les pousse pas.
 - Le **lag** = combien de messages restent derrière le consumer (indicateur de santé / charge).
 
+```mermaid
+flowchart LR
+  subgraph Topic["Topic (3 partitions)"]
+    direction TB
+    P0["P0"]
+    P1["P1"]
+    P2["P2"]
+  end
+  subgraph Group["group.id = notification"]
+    direction TB
+    C1["Consumer 1"]
+    C2["Consumer 2"]
+    C3["Consumer 3"]
+  end
+  P0 -->|fetch| C1
+  P1 -->|fetch| C2
+  P2 -->|fetch| C3
+```
+
 Si tu as 3 partitions et 1 instance : une instance lit les 3. Si tu as 3 instances : chacune prend en général 1 partition. Une 4ᵉ instance reste inactive tant qu’il n’y a pas plus de partitions.
 
 ### Cas d’usage
 
 - **Scaler un traitement métier** : plusieurs **instances** du même service partagent le même `group.id` → les partitions sont réparties entre elles, chaque message est traité **une fois** par ce service ; si une instance tombe, un **rebalance** redistribue ses partitions.
 - **Plusieurs métiers sur le même topic** : un `group.id` **différent** par service (ex. facturation vs analytics) → chaque groupe reçoit le **flux complet**, avec ses **propres offsets**.
+
+```mermaid
+flowchart LR
+  Topic[(orders.created)] --> G1["group: billing"]
+  Topic --> G2["group: analytics"]
+```
 
 ---
 
@@ -158,7 +128,14 @@ Si tu as 3 partitions et 1 instance : une instance lit les 3. Si tu as 3 instanc
 - Un message est **committed** quand il est accepté par suffisamment de replicas (selon la config).
 - Combo typique en prod : **`acks=all`** + **`min.insync.replicas`** ≥ 2 → tu n’ack qu’avec une vraie durabilité.
 
-Sans ça, tu peux perdre des messages en cas de panne du leader juste après un ack trop optimiste.
+```mermaid
+flowchart LR
+  Producer -->|write| Leader["P0 leader<br/>Broker 1"]
+  Leader -->|replicate| F1["P0 follower<br/>Broker 2"]
+  Leader -->|replicate| F2["P0 follower<br/>Broker 3"]
+```
+
+Sans ça, tu peux perdre des messages en cas de panne du leader juste après un ack trop optimiste. Seuls les membres de l’**ISR** peuvent devenir leader.
 
 ---
 
@@ -172,6 +149,21 @@ Sans ça, tu peux perdre des messages en cas de panne du leader juste après un 
 6. Le producer reçoit l’**ack**.
 7. Le consumer **fetch** les messages committed.
 8. Après traitement, le consumer **commit l’offset**.
+
+```mermaid
+sequenceDiagram
+  participant Prod as Producer
+  participant L as Leader
+  participant F as Followers
+  participant Cons as Consumer
+
+  Prod->>L: send
+  L->>F: replicate
+  F-->>L: ISR à jour
+  L-->>Prod: ack
+  Cons->>L: fetch (offset)
+  Cons->>Cons: traiter + commit offset
+```
 
 Kafka offre en pratique du **at-least-once** côté consommation si tu commits après traitement : en cas de crash entre traitement et commit, tu peux retraiter. D’où l’intérêt d’**handlers idempotents** (ou d’un outbox / table de déduplication).
 
