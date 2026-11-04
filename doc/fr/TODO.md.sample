@@ -12,8 +12,8 @@ cp doc/fr/TODO.md.sample doc/fr/TODO.md
 - [ ] Étape 3 : `order-service` (REST, JPA, Flyway) + Lab 0
 - [ ] Étape 4 : publier `orders.created` et lab 1 (clés et partitions)
 - [ ] Étape 5 : `payment-service` (premier consumer) et lab 2 (consumer groups)
-- [ ] Étape 6 : `inventory-service` et saga complète avec compensation
-- [ ] Étape 7 : fiabilité : lab 3 (offsets, idempotence) et lab 4 (retries, DLT)
+- [ ] Étape 6 : `inventory-service` et saga (chorégraphie) + lab 3
+- [ ] Étape 7 : fiabilité : lab 4 (offsets, idempotence) et lab 5 (retries, DLT)
 - [ ] Étape 8 : `notification-service` et SSE
 - [ ] Étape 9 : front Next.js
 - [ ] Étape 10 : tout dans Docker

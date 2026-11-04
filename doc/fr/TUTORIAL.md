@@ -450,20 +450,97 @@ Complément : [Architecture Kafka — consumer group](./appendices/architecture-
 
 ---
 
-## Étape 6 : inventory-service et saga complète
+## Étape 6 : inventory-service et saga (chorégraphie)
+
+Payment et inventory réagissent **en parallèle** à `orders.created`.  
+`order-service` **agrège** les deux résultats et tranche `CONFIRMED` / `CANCELLED`, avec **compensations** si une branche a réussi et l’autre non.  
+Le Lab 3 te fait **coder** la règle de réservation + l’agrégation, puis **observer** happy path et échec paiement.
 
 **Concepts**
 
-- Choréographie : `order-service` consomme `payments.processed` et `inventory.reserved`, agrège les deux résultats et décide `CONFIRMED` ou `CANCELLED`.
-- Compensation : si un seul des deux échoue, on émet un événement de compensation (`PaymentRefundRequested` ou `InventoryReleaseRequested`).
-- Corrélation : toutes les étapes partagent `orderId` (c'est aussi la clé Kafka).
-- État de saga stocké en base côté `order-service`.
+- **Choréographie** : pas d’orchestrateur central qui appelle les services ; chacun écoute des topics et publie. Ici `order-service` ne fait qu’**agréger** les faits (`payments.processed`, `inventory.reserved`).
+- **Compensation** : annuler un effet déjà réussi (`payments.refund.requested`, `inventory.release.requested`) quand la saga échoue.
+- **Corrélation** : partout la même clé Kafka = **`orderId`**.
+- **État de saga** en base côté `order-service` (colonnes `payment_success` / `inventory_success` nullable : `NULL` = pas encore reçu).
+- Sérialisation Boot 4 : `JacksonJsonSerializer` / `JacksonJsonDeserializer` (pas les `Json*` Jackson 2 dépréciés).
 
-**À observer** : une commande avec stock suffisant et paiement OK passe en `CONFIRMED`. Force un échec de paiement (`payment.failure-rate=1.0`) : la commande passe en `CANCELLED` et le stock réservé est relâché.
+### Qui fait quoi
+
+| Rôle | Service | Topics |
+|---|---|---|
+| Publie la commande | order-service | `orders.created` |
+| Paiement | payment-service | in `orders.created` → out `payments.processed` ; in `payments.refund.requested` |
+| Stock | inventory-service | in `orders.created` → out `inventory.reserved` ; in `inventory.release.requested` |
+| Cerveau saga | order-service | in `payments.processed` + `inventory.reserved` → out `orders.status` (+ compensations) |
+
+### 6.1 Contrats événements (`libs/events` — boilerplate)
+
+Records partagés (chemins sous `libs/events/.../events/`) :
+
+```java
+public record InventoryReserved(UUID orderId, boolean success, Instant reservedAt) {}
+
+public record PaymentRefundRequested(UUID orderId, BigDecimal amount, Instant requestedAt) {}
+
+public record InventoryReleaseRequested(UUID orderId, Instant requestedAt) {}
+
+public record OrderStatusChanged(UUID orderId, String status, Instant changedAt) {}
+```
+
+(`status` = nom de l’enum `PENDING` / `CONFIRMED` / `CANCELLED`, string pour garder le module `events` sans dépendance JPA.)
+
+### 6.2 inventory-service (boilerplate — assistant)
+
+À poser avant le lab (tu ne recodes pas le câblage Kafka) :
+
+- dépendance Maven `events` ; port **8085** ; datasource **`jdbc:…/inventory`** ; Kafka **`localhost:29092`** ; `JacksonJson*`
+- Flyway : `stock(sku, quantity)` + `reservations(...)` ; seed SKU **`A`** (quantité confortable pour les curls)
+- Topics `NewTopic` : `inventory.reserved`, `inventory.release.requested` (**3 partitions**)
+- Listener mince `orders.created` → service réserve → persist → publish `InventoryReserved` (clé = `orderId`)
+- Listener `inventory.release.requested` → remet le stock (compensation)
+- Optionnel : `inventory.failure-rate` (chaos, défaut `0.0`)
+
+### 6.3 payment-service — compensation (boilerplate)
+
+- Topic / listener `payments.refund.requested` : log + marque le paiement remboursé (pas de PSP réel).
+
+### 6.4 order-service — état saga (boilerplate + Lab 3)
+
+Boilerplate :
+
+- Flyway `V2__saga_state.sql` : `payment_success BOOLEAN NULL`, `inventory_success BOOLEAN NULL` sur `orders`
+- Listeners `payments.processed` + `inventory.reserved` (`groupId=order-service`)
+- Publisher `orders.status` + publishers de compensation
+- Garde-fou : si statut déjà `CONFIRMED` / `CANCELLED`, ignorer (évite double compensation ; raffiné aux labs fiabilité)
+
+**À coder (Lab 3)** :
+
+1. Règle de **réservation** inventory (stock suffisant → décrément + succès ; sinon échec).
+2. **Agrégation** : quand les deux colonnes sont non-null → `CONFIRMED` si les deux `true`, sinon `CANCELLED` + publier la/les compensation(s) pour la branche qui avait réussi.
+
+### 6.5 Exercice (à coder + observer)
+
+**Exercice** : [Lab 3 — Saga chorégraphiée](./appendices/exercises/lab-03-saga-choreography.md)  
+→ Partie A = Java (réservation + agrégation) ; Partie B = smoke happy path + `payment.failure-rate=1.0`.
+
+**Lancer** (trois services ; jamais `-am` avec `spring-boot:run`) :
+
+```bash
+mvn -pl services/order-service,services/payment-service,services/inventory-service -am -DskipTests install
+
+mvn -pl services/order-service spring-boot:run          # 8081
+mvn -pl services/payment-service spring-boot:run        # 8082
+mvn -pl services/inventory-service spring-boot:run      # 8085
+```
+
+**Smoke (aperçu)** : `POST /orders` avec SKU `A` → `GET` order `CONFIRMED` + messages `inventory.reserved` / `orders.status`.  
+Puis payment avec `--payment.failure-rate=1.0` → nouvelle order `CANCELLED` + release stock.
+
+**Étape 6 ok** : Lab 3 partie A + partie B (happy path + compensation après échec paiement).
 
 ---
 
-## Étape 7 : fiabilité (labs 3 et 4)
+## Étape 7 : fiabilité (labs 4 et 5)
 
 **Concepts**
 
@@ -473,12 +550,12 @@ Complément : [Architecture Kafka — consumer group](./appendices/architecture-
 - **Erreurs** : `DefaultErrorHandler` + `ExponentialBackOff`, puis `DeadLetterPublishingRecoverer` vers `<topic>.DLT`. `@RetryableTopic` crée des topics de retry intermédiaires.
 - **Poison pill** : un message qui fait planter le consumer à chaque tentative et bloque la partition s'il n'y a pas de DLT.
 
-**Lab 3 : at-least-once**
+**Lab 4 : at-least-once**
 
 1. Ajoute un `Thread.sleep` + un `System.exit` après le traitement et avant le commit.
 2. Relance : le message est retraité. Sans idempotence, double paiement. Avec la table `processed_events`, le doublon est ignoré.
 
-**Lab 4 : retries et DLT**
+**Lab 5 : retries et DLT**
 
 1. Envoie un message invalide (JSON cassé, ou `amount` négatif).
 2. Observe les retries avec backoff dans les logs, puis le message dans `orders.created.DLT` (Kafka UI).

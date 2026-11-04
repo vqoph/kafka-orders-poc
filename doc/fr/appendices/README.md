@@ -12,6 +12,7 @@ Compléments au [tutoriel](../TUTORIAL.md) : lectures de fond et exercices hors 
 - [Lab 0 — Bases order-service (REST + mapping)](./exercises/lab-00-order-rest-jpa.md) — cité depuis l’[étape 3](../TUTORIAL.md#étape-3--order-service-rest-jpa-flyway).
 - [Lab 1 — Clés et partitions](./exercises/lab-01-keys-partitions.md) — cité depuis l’[étape 4](../TUTORIAL.md#étape-4--publier-orderscreated-et-lab-1).
 - [Lab 2 — Consumer groups](./exercises/lab-02-consumer-groups.md) — cité depuis l’[étape 5](../TUTORIAL.md#étape-5--payment-service-et-lab-2).
+- [Lab 3 — Saga chorégraphiée](./exercises/lab-03-saga-choreography.md) — cité depuis l’[étape 6](../TUTORIAL.md#étape-6--inventory-service-et-saga-chorégraphie).
 
 ## Sources
 
