@@ -16,6 +16,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+/**
+ * JPA entity — the database model for a row in {@code orders} (plus embedded items).
+ * Not the same as the HTTP DTO ({@code OrderResponse}): entities stay close to the schema.
+ */
 @Entity
 @Table(name = "orders")
 public class Order {
