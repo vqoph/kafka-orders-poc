@@ -5,17 +5,17 @@ Learning POC: Java / Spring Boot microservices talking through Kafka (order saga
 ## Layout
 
 - `backend/` — Maven multi-module (`libs/events` + Spring Boot services)
-- `frontend/` — microfrontends (shell + remotes; see `scripts/frontend-*.sh`)
+- `frontend/` — microfrontends (shell + remotes)
 - `docker-compose.yml` — Kafka, Kafka UI, Postgres
-- `scripts/` — infra / backend / frontend helpers
+- `scripts/` — `backend-run.sh`, `frontend-dev.sh`
 
 ## Quick start
 
 ```bash
-./scripts/infra-up.sh
-./scripts/backend-install.sh
-# then run services, e.g.:
-#   mvn -f backend/pom.xml -pl services/order-service spring-boot:run
+docker compose up -d
+mvn -f backend/pom.xml -DskipTests install
+./scripts/backend-run.sh                 # all services (or: order-service, …)
+./scripts/frontend-dev.sh                # http://localhost:5000
 ```
 
 Start with [doc/fr/TUTORIAL.md](./doc/fr/TUTORIAL.md). It contains the step-by-step walkthrough, the concepts behind each step, and the commands to run.
