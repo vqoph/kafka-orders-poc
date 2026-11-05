@@ -1,0 +1,36 @@
+{
+  "name": "@poc/inventory",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "webpack serve --config webpack.config.js",
+    "build": "webpack --config webpack.config.js --mode production",
+    "lint": "eslint .",
+    "test": "vitest run --passWithNoTests"
+  },
+  "dependencies": {
+    "@poc/shared": "*",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^6.30.0"
+  },
+  "devDependencies": {
+    "@poc/config": "*",
+    "@tailwindcss/postcss": "^4.1.7",
+    "@types/react": "^18.3.20",
+    "@types/react-dom": "^18.3.6",
+    "css-loader": "^7.1.2",
+    "eslint": "^9.39.5",
+    "html-webpack-plugin": "^5.6.3",
+    "postcss": "^8.5.3",
+    "postcss-loader": "^8.1.1",
+    "style-loader": "^4.0.0",
+    "tailwindcss": "^4.1.7",
+    "ts-loader": "^9.5.2",
+    "typescript": "^5.8.3",
+    "vitest": "^3.1.4",
+    "webpack": "^5.99.9",
+    "webpack-cli": "^6.0.1",
+    "webpack-dev-server": "^5.2.1"
+  }
+}
