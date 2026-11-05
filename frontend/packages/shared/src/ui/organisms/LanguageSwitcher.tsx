@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { clsx } from 'clsx';
 import {
   getLocale,
   onLocaleChange,
   toggleLocale,
   type Locale,
 } from '../../i18n/localeApi';
-import { cn } from '../../utils/cn';
 
 const LABELS: Record<Locale, string> = {
   en: 'EN',
@@ -37,10 +37,13 @@ export function LanguageSwitcher() {
       aria-label={t('language.ariaLabel')}
       title={t('language.title', { label })}
       data-testid="language-switcher"
-      className={cn(
+      className={clsx(
+        // layout
         'flex size-8 cursor-pointer items-center justify-center rounded-lg',
-        'text-xs font-semibold tracking-wide text-muted transition-colors duration-200',
-        'hover:text-foreground',
+        // typography
+        'text-xs font-semibold tracking-wide text-muted',
+        // interaction
+        'transition-colors duration-200 hover:text-foreground',
         'focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/70',
       )}
     >

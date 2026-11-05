@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode, type TransitionEvent } from 'react';
 import { useTranslation } from 'react-i18next';
-import { cn } from '../../utils/cn';
+import { clsx } from 'clsx';
 import { Button } from '../atoms/Button';
 import { PageHeader } from '../molecules/PageHeader';
 
@@ -58,9 +58,11 @@ export function SidePanel({ title, onClose, children, className }: SidePanelProp
 
   return (
     <div
-      className={cn(
+      className={clsx(
+        // layout
         'fixed inset-0 z-40 flex justify-end',
-        !visible && 'pointer-events-none',
+        // state
+        { 'pointer-events-none': !visible },
       )}
       role="dialog"
       aria-modal="true"
@@ -68,17 +70,30 @@ export function SidePanel({ title, onClose, children, className }: SidePanelProp
       <button
         type="button"
         aria-label={t('closePanel')}
-        className={cn(
-          'absolute inset-0 bg-foreground/30 transition-opacity duration-200',
-          visible ? 'pointer-events-auto opacity-100' : 'opacity-0',
+        className={clsx(
+          // layout / surface
+          'absolute inset-0 bg-foreground/30',
+          // motion
+          'transition-opacity duration-200',
+          // state
+          {
+            'pointer-events-auto opacity-100': visible,
+            'opacity-0': !visible,
+          },
         )}
         onClick={requestClose}
       />
       <aside
-        className={cn(
+        className={clsx(
+          // layout / surface
           'relative z-10 flex h-full w-full max-w-xl flex-col border-l border-default bg-panel shadow-lg',
+          // motion
           'pointer-events-auto transition-transform duration-200 ease-out',
-          visible ? 'translate-x-0' : 'translate-x-full',
+          // state
+          {
+            'translate-x-0': visible,
+            'translate-x-full': !visible,
+          },
           className,
         )}
         onTransitionEnd={onPanelTransitionEnd}

@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { cn } from '../../utils/cn';
+import { clsx } from 'clsx';
 
 export type PageHeaderProps = {
   title: string;
@@ -11,7 +11,7 @@ export type PageHeaderProps = {
 export function PageHeader({ title, subtitle, actions, className }: PageHeaderProps) {
   return (
     <header
-      className={cn(
+      className={clsx(
         'flex flex-wrap items-end justify-between gap-3',
         className,
       )}

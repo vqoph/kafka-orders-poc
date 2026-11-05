@@ -1,5 +1,5 @@
 import type { HTMLAttributes } from 'react';
-import { cn } from '../../utils/cn';
+import { clsx } from 'clsx';
 
 export type BadgeTone = 'neutral' | 'success' | 'danger' | 'accent';
 
@@ -23,9 +23,15 @@ export function Badge({
 }: BadgeProps) {
   return (
     <span
-      className={cn(
+      className={clsx(
+        // layout / typography
         'inline-flex items-center px-2 py-0.5 text-xs font-medium uppercase tracking-wide',
-        pill ? 'rounded-full px-3 py-1 normal-case tracking-normal' : 'rounded',
+        // shape
+        {
+          'rounded-full px-3 py-1 normal-case tracking-normal': pill,
+          rounded: !pill,
+        },
+        // tone
         toneClass[tone],
         className,
       )}

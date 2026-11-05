@@ -1,5 +1,5 @@
 import type { HTMLAttributes, ReactNode } from 'react';
-import { cn } from '../../utils/cn';
+import { clsx } from 'clsx';
 
 export type ListCardProps = HTMLAttributes<HTMLDivElement> & {
   children: ReactNode;
@@ -14,9 +14,9 @@ export function ListCard({
 }: ListCardProps) {
   return (
     <div
-      className={cn(
+      className={clsx(
         'rounded-lg border border-default bg-panel px-4 py-3',
-        interactive && 'hover:border-accent',
+        { 'hover:border-accent': interactive },
         className,
       )}
       {...props}

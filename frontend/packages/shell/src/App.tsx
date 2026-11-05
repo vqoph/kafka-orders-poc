@@ -1,5 +1,6 @@
 import { lazy } from 'react';
 import { NavLink, Navigate, Route, Routes } from 'react-router-dom';
+import { clsx } from 'clsx';
 import { LanguageSwitcher, ThemeSwitcher, useTranslation } from '@poc/shared';
 import { RemoteOutlet } from './components/RemoteOutlet';
 
@@ -9,12 +10,14 @@ const InventoryApp = lazy(() => import('inventory/App'));
 const NotificationApp = lazy(() => import('notification/App'));
 
 const navClass = ({ isActive }: { isActive: boolean }) =>
-  [
+  clsx(
+    // layout / typography
     'rounded-md px-3 py-2 text-sm transition',
+    // state
     isActive
       ? 'bg-accent text-on-accent font-medium'
       : 'text-muted hover:bg-panel-muted hover:text-foreground',
-  ].join(' ');
+  );
 
 export default function App() {
   const { t } = useTranslation('shell');

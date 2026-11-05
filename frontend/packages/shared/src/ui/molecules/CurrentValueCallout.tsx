@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { cn } from '../../utils/cn';
+import { clsx } from 'clsx';
 
 export type CurrentValueCalloutProps = {
   label: string;
@@ -14,7 +14,7 @@ export function CurrentValueCallout({
 }: CurrentValueCalloutProps) {
   return (
     <div
-      className={cn(
+      className={clsx(
         'rounded-md bg-panel-muted px-3 py-2 text-sm text-foreground',
         className,
       )}

@@ -1,5 +1,5 @@
 import type { FormHTMLAttributes, ReactNode } from 'react';
-import { cn } from '../../utils/cn';
+import { clsx } from 'clsx';
 
 export type FormPanelProps = FormHTMLAttributes<HTMLFormElement> & {
   children: ReactNode;
@@ -12,7 +12,7 @@ export function FormPanel({
   asDiv = false,
   ...props
 }: FormPanelProps) {
-  const classes = cn(
+  const classes = clsx(
     'space-y-4 rounded-xl border border-default bg-panel p-4',
     className,
   );

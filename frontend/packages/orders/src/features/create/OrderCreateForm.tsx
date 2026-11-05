@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useFieldArray, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { clsx } from 'clsx';
 import {
   Button,
   ErrorText,
@@ -94,7 +95,7 @@ export function OrderCreateForm() {
                   {...register(`items.${index}.quantity`)}
                 />
               </Field>
-              <div className={index === 0 ? 'pt-6' : undefined}>
+              <div className={clsx(index === 0 && 'pt-6')}>
                 <Button
                   type="button"
                   variant="secondary"

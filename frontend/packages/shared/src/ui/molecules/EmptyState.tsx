@@ -1,10 +1,10 @@
 import type { HTMLAttributes } from 'react';
-import { cn } from '../../utils/cn';
+import { clsx } from 'clsx';
 
 export type EmptyStateProps = HTMLAttributes<HTMLParagraphElement> & {
   children: string;
 };
 
 export function EmptyState({ className, ...props }: EmptyStateProps) {
-  return <p className={cn('text-sm text-muted', className)} {...props} />;
+  return <p className={clsx('text-sm text-muted', className)} {...props} />;
 }

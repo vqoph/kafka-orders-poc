@@ -1,12 +1,12 @@
 import { useEffect, useState, type ComponentType, type SVGProps } from 'react';
 import { useTranslation } from 'react-i18next';
+import { clsx } from 'clsx';
 import {
   getThemePreference,
   onThemeChange,
   toggleTheme,
   type ThemePreference,
 } from '../../theme';
-import { cn } from '../../utils/cn';
 
 type IconProps = SVGProps<SVGSVGElement>;
 
@@ -103,17 +103,22 @@ export function ThemeSwitcher() {
       aria-label={t('theme.ariaLabel')}
       title={t('theme.title', { label })}
       data-testid="theme-switcher"
-      className={cn(
+      className={clsx(
+        // layout
         'flex size-8 cursor-pointer items-center justify-center rounded-lg',
+        // interaction
         'transition-colors duration-200',
         'focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/70',
-        isLight && 'text-warning',
-        isDark && 'text-accent',
-        !isLight && !isDark && 'text-muted hover:text-foreground',
+        // state
+        {
+          'text-warning': isLight,
+          'text-accent': isDark,
+          'text-muted hover:text-foreground': !isLight && !isDark,
+        },
       )}
     >
       <CurrentIcon
-        className={cn('size-4', isLight && 'fill-warning/40')}
+        className={clsx('size-4', { 'fill-warning/40': isLight })}
         aria-hidden
       />
     </button>

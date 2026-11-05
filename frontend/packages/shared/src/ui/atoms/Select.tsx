@@ -1,12 +1,12 @@
 import type { SelectHTMLAttributes } from 'react';
-import { cn } from '../../utils/cn';
+import { clsx } from 'clsx';
 
 export type SelectProps = SelectHTMLAttributes<HTMLSelectElement>;
 
 export function Select({ className, children, ...props }: SelectProps) {
   return (
     <select
-      className={cn(
+      className={clsx(
         'rounded-md border border-default bg-panel-muted px-2 py-1.5 text-foreground',
         className,
       )}

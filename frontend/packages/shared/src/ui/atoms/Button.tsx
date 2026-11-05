@@ -1,5 +1,5 @@
 import type { ButtonHTMLAttributes } from 'react';
-import { cn } from '../../utils/cn';
+import { clsx } from 'clsx';
 
 export type ButtonVariant = 'primary' | 'secondary' | 'warning' | 'ghost' | 'danger';
 
@@ -33,12 +33,18 @@ export function buttonClassName(
   size: ButtonSize = 'md',
   className?: string,
 ): string {
-  return cn(
-    variant === 'ghost'
-      ? 'inline-flex items-center'
-      : 'inline-flex items-center justify-center rounded-md transition',
+  const isGhost = variant === 'ghost';
+
+  return clsx(
+    // layout / motion
+    {
+      'inline-flex items-center': isGhost,
+      'inline-flex items-center justify-center rounded-md transition': !isGhost,
+    },
+    // variant
     variantClass[variant],
-    variant === 'ghost' ? undefined : sizeClass[size],
+    // size
+    !isGhost && sizeClass[size],
     className,
   );
 }

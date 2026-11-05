@@ -1,5 +1,5 @@
 import type { HTMLAttributes, ReactNode } from 'react';
-import { cn } from '../../utils/cn';
+import { clsx } from 'clsx';
 
 export type PageShellProps = HTMLAttributes<HTMLDivElement> & {
   children: ReactNode;
@@ -21,7 +21,7 @@ export function PageShell({
   ...props
 }: PageShellProps) {
   return (
-    <div className={cn('p-4 md:p-6', className)} {...props}>
+    <div className={clsx('p-4 md:p-6', className)} {...props}>
       <div className={maxWidthClass[maxWidth]}>{children}</div>
     </div>
   );
