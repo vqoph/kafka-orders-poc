@@ -1,10 +1,44 @@
 {
-    "java.compile.nullAnalysis.mode": "disabled",
-    "java.settings.url": "${workspaceFolder}/.vscode/org.eclipse.jdt.core.prefs",
-    "editor.formatOnSave": true,
-    "[java]": {
-        "editor.defaultFormatter": "redhat.java",
-        "editor.formatOnSave": true
-    },
-    "java.configuration.updateBuildConfiguration": "automatic"
+  "java.compile.nullAnalysis.mode": "disabled",
+  "java.settings.url": "${workspaceFolder}/.vscode/org.eclipse.jdt.core.prefs",
+  "editor.formatOnSave": true,
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "explicit"
+  },
+  "eslint.workingDirectories": [
+    {
+      "pattern": "frontend/packages/*"
+    }
+  ],
+  "eslint.validate": [
+    "javascript",
+    "javascriptreact",
+    "typescript",
+    "typescriptreact"
+  ],
+  "eslint.useFlatConfig": true,
+  "[java]": {
+    "editor.defaultFormatter": "redhat.java",
+    "editor.formatOnSave": true
+  },
+  "[javascript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[javascriptreact]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[typescript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[typescriptreact]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[json]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "java.configuration.updateBuildConfiguration": "automatic",
+  "json.schemaDownload.enable": true,
+  "json.schemaDownload.trustedDomains": {
+    "https://json.schemastore.org/": true
+  }
 }
