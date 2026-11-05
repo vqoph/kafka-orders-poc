@@ -14,4 +14,5 @@ export * from './molecules/PageHeader';
 export * from './organisms/ChaosRateForm';
 export * from './organisms/ErrorBoundary';
 export * from './organisms/PageShell';
+export * from './organisms/SidePanel';
 export * from './organisms/ThemeSwitcher';

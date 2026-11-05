@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { Provider } from 'react-redux';
 import { Link, Route, Routes, useNavigate, useParams } from 'react-router-dom';
 import { useFieldArray, useForm } from 'react-hook-form';
@@ -18,6 +18,7 @@ import {
   PageHeader,
   PageShell,
   Select,
+  SidePanel,
   emitPocEvent,
   errorMessage,
 } from '@poc/shared';
@@ -179,79 +180,69 @@ function OrderCreate() {
   });
 
   return (
-    <section className="mx-auto max-w-lg space-y-4">
-      <PageHeader
-        title="Create order"
-        actions={
-          <Link to=".." className={buttonClassName('ghost')}>
-            Back to list
-          </Link>
-        }
-      />
-      <FormPanel onSubmit={onSubmit} className="space-y-3">
-        <Field label="Customer id" error={errors.customerId?.message}>
-          <Input {...register('customerId')} />
-        </Field>
-        <Field label="Amount" error={errors.amount?.message}>
-          <Input type="number" step="0.01" min={0.01} {...register('amount')} />
-        </Field>
-        <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <h3 className="text-sm font-medium text-foreground">Items</h3>
-            <Button
-              type="button"
-              variant="secondary"
-              size="sm"
-              onClick={() => append({ sku: '', quantity: 1 })}
-            >
-              Add item
-            </Button>
-          </div>
-          {errors.items?.root && <ErrorText>{errors.items.root.message}</ErrorText>}
-          {typeof errors.items?.message === 'string' && (
-            <ErrorText>{errors.items.message}</ErrorText>
-          )}
-          <ul className="space-y-2">
-            {fields.map((field, index) => (
-              <li key={field.id} className="grid grid-cols-[1fr_5rem_auto] gap-2">
-                <Field
-                  label={index === 0 ? 'SKU' : ''}
-                  error={errors.items?.[index]?.sku?.message}
-                >
-                  <Input placeholder="SKU" {...register(`items.${index}.sku`)} />
-                </Field>
-                <Field
-                  label={index === 0 ? 'Qty' : ''}
-                  error={errors.items?.[index]?.quantity?.message}
-                >
-                  <Input
-                    type="number"
-                    min={1}
-                    {...register(`items.${index}.quantity`)}
-                  />
-                </Field>
-                <div className={index === 0 ? 'pt-6' : undefined}>
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    size="sm"
-                    onClick={() => remove(index)}
-                    disabled={fields.length === 1}
-                    className="px-2 py-2 text-muted hover:border-danger hover:text-danger"
-                  >
-                    Remove
-                  </Button>
-                </div>
-              </li>
-            ))}
-          </ul>
+    <FormPanel onSubmit={onSubmit} className="space-y-3">
+      <Field label="Customer id" error={errors.customerId?.message}>
+        <Input {...register('customerId')} />
+      </Field>
+      <Field label="Amount" error={errors.amount?.message}>
+        <Input type="number" step="0.01" min={0.01} {...register('amount')} />
+      </Field>
+      <div className="space-y-2">
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-medium text-foreground">Items</h3>
+          <Button
+            type="button"
+            variant="secondary"
+            size="sm"
+            onClick={() => append({ sku: '', quantity: 1 })}
+          >
+            Add item
+          </Button>
         </div>
-        {error && <ErrorText>{errorMessage(error, 'Failed to create order')}</ErrorText>}
-        <Button type="submit" variant="primary" size="lg" disabled={isLoading}>
-          {isLoading ? 'Creating…' : 'Create order'}
-        </Button>
-      </FormPanel>
-    </section>
+        {errors.items?.root && <ErrorText>{errors.items.root.message}</ErrorText>}
+        {typeof errors.items?.message === 'string' && (
+          <ErrorText>{errors.items.message}</ErrorText>
+        )}
+        <ul className="space-y-2">
+          {fields.map((field, index) => (
+            <li key={field.id} className="grid grid-cols-[1fr_5rem_auto] gap-2">
+              <Field
+                label={index === 0 ? 'SKU' : ''}
+                error={errors.items?.[index]?.sku?.message}
+              >
+                <Input placeholder="SKU" {...register(`items.${index}.sku`)} />
+              </Field>
+              <Field
+                label={index === 0 ? 'Qty' : ''}
+                error={errors.items?.[index]?.quantity?.message}
+              >
+                <Input
+                  type="number"
+                  min={1}
+                  {...register(`items.${index}.quantity`)}
+                />
+              </Field>
+              <div className={index === 0 ? 'pt-6' : undefined}>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => remove(index)}
+                  disabled={fields.length === 1}
+                  className="px-2 py-2 text-muted hover:border-danger hover:text-danger"
+                >
+                  Remove
+                </Button>
+              </div>
+            </li>
+          ))}
+        </ul>
+      </div>
+      {error && <ErrorText>{errorMessage(error, 'Failed to create order')}</ErrorText>}
+      <Button type="submit" variant="primary" size="lg" disabled={isLoading}>
+        {isLoading ? 'Creating…' : 'Create order'}
+      </Button>
+    </FormPanel>
   );
 }
 
@@ -265,81 +256,90 @@ function OrderDetail() {
   if (isLoading || !order) return <LoadingText>Loading order…</LoadingText>;
 
   return (
-    <section className="space-y-4">
-      <PageHeader
-        title="Order detail"
-        actions={
-          <Link to=".." className={buttonClassName('ghost')}>
-            Back to list
-          </Link>
-        }
-      />
-      <FormPanel asDiv className="space-y-3">
-        <dl className="grid gap-2 text-sm sm:grid-cols-2">
-          <div className="sm:col-span-2">
-            <dt className="text-muted">id</dt>
-            <dd className="font-mono text-accent">{order.id}</dd>
-          </div>
-          <div>
-            <dt className="text-muted">customerId</dt>
-            <dd>{order.customerId}</dd>
-          </div>
-          <div>
-            <dt className="text-muted">status</dt>
-            <dd className="font-mono">{order.status}</dd>
-          </div>
-          <div>
-            <dt className="text-muted">amount</dt>
-            <dd>{order.amount}</dd>
-          </div>
-          <div>
-            <dt className="text-muted">createdAt</dt>
-            <dd className="font-mono">{order.createdAt ?? 'null'}</dd>
-          </div>
-          <div>
-            <dt className="text-muted">paymentSuccess</dt>
-            <dd className="font-mono">{nullableBool(order.paymentSuccess)}</dd>
-          </div>
-          <div>
-            <dt className="text-muted">inventorySuccess</dt>
-            <dd className="font-mono">{nullableBool(order.inventorySuccess)}</dd>
-          </div>
-        </dl>
-        <div>
-          <h3 className="mb-2 text-sm font-medium text-foreground">items</h3>
-          {!order.items?.length ? (
-            <p className="font-mono text-sm text-muted">[]</p>
-          ) : (
-            <table className="w-full text-left text-sm">
-              <thead>
-                <tr className="text-muted">
-                  <th className="pb-1 font-medium">sku</th>
-                  <th className="pb-1 font-medium">quantity</th>
-                </tr>
-              </thead>
-              <tbody>
-                {order.items.map((item, index) => (
-                  <tr key={`${item.sku}-${index}`} className="font-mono text-foreground">
-                    <td className="py-0.5 pr-4">{item.sku}</td>
-                    <td className="py-0.5">{item.quantity}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
+    <FormPanel asDiv className="space-y-3">
+      <dl className="grid gap-2 text-sm sm:grid-cols-2">
+        <div className="sm:col-span-2">
+          <dt className="text-muted">id</dt>
+          <dd className="font-mono text-accent">{order.id}</dd>
         </div>
-      </FormPanel>
-    </section>
+        <div>
+          <dt className="text-muted">customerId</dt>
+          <dd>{order.customerId}</dd>
+        </div>
+        <div>
+          <dt className="text-muted">status</dt>
+          <dd className="font-mono">{order.status}</dd>
+        </div>
+        <div>
+          <dt className="text-muted">amount</dt>
+          <dd>{order.amount}</dd>
+        </div>
+        <div>
+          <dt className="text-muted">createdAt</dt>
+          <dd className="font-mono">{order.createdAt ?? 'null'}</dd>
+        </div>
+        <div>
+          <dt className="text-muted">paymentSuccess</dt>
+          <dd className="font-mono">{nullableBool(order.paymentSuccess)}</dd>
+        </div>
+        <div>
+          <dt className="text-muted">inventorySuccess</dt>
+          <dd className="font-mono">{nullableBool(order.inventorySuccess)}</dd>
+        </div>
+      </dl>
+      <div>
+        <h3 className="mb-2 text-sm font-medium text-foreground">items</h3>
+        {!order.items?.length ? (
+          <p className="font-mono text-sm text-muted">[]</p>
+        ) : (
+          <table className="w-full text-left text-sm">
+            <thead>
+              <tr className="text-muted">
+                <th className="pb-1 font-medium">sku</th>
+                <th className="pb-1 font-medium">quantity</th>
+              </tr>
+            </thead>
+            <tbody>
+              {order.items.map((item, index) => (
+                <tr key={`${item.sku}-${index}`} className="font-mono text-foreground">
+                  <td className="py-0.5 pr-4">{item.sku}</td>
+                  <td className="py-0.5">{item.quantity}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
+    </FormPanel>
   );
 }
 
 function OrdersRoutes() {
+  const navigate = useNavigate();
+  const close = useCallback(() => {
+    navigate('/orders');
+  }, [navigate]);
+
   return (
     <PageShell>
+      <OrdersList />
       <Routes>
-        <Route index element={<OrdersList />} />
-        <Route path="new" element={<OrderCreate />} />
-        <Route path=":id" element={<OrderDetail />} />
+        <Route
+          path="new"
+          element={
+            <SidePanel title="Create order" onClose={close}>
+              <OrderCreate />
+            </SidePanel>
+          }
+        />
+        <Route
+          path=":id"
+          element={
+            <SidePanel title="Order detail" onClose={close}>
+              <OrderDetail />
+            </SidePanel>
+          }
+        />
       </Routes>
     </PageShell>
   );
