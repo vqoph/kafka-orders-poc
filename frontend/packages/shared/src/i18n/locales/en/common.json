@@ -28,5 +28,13 @@
     "loadFailed": "Failed to load failure rate",
     "updateFailed": "Failed to update failure rate"
   },
-  "requestFailed": "Request failed ({{status}})"
+  "requestFailed": "Request failed ({{status}})",
+  "pagination": {
+    "prev": "Previous",
+    "next": "Next",
+    "page": "Page {{page}}",
+    "pageOf": "Page {{page}} of {{totalPages}}",
+    "pageSize": "Per page",
+    "navLabel": "Pagination"
+  }
 }

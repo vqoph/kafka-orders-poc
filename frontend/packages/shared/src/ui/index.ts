@@ -11,6 +11,7 @@ export * from './molecules/Field';
 export * from './molecules/FormPanel';
 export * from './molecules/ListCard';
 export * from './molecules/PageHeader';
+export * from './molecules/PaginationControls';
 export * from './organisms/ChaosRateForm';
 export * from './organisms/ErrorBoundary';
 export * from './organisms/PageShell';

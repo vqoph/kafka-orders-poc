@@ -28,5 +28,13 @@
     "loadFailed": "Échec du chargement du taux d'échec",
     "updateFailed": "Échec de la mise à jour du taux d'échec"
   },
-  "requestFailed": "Requête échouée ({{status}})"
+  "requestFailed": "Requête échouée ({{status}})",
+  "pagination": {
+    "prev": "Précédent",
+    "next": "Suivant",
+    "page": "Page {{page}}",
+    "pageOf": "Page {{page}} sur {{totalPages}}",
+    "pageSize": "Par page",
+    "navLabel": "Pagination"
+  }
 }
