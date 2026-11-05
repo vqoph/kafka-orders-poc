@@ -1,5 +1,5 @@
 import { Suspense, type ComponentType, type LazyExoticComponent } from 'react';
-import { ErrorBoundary } from '@poc/shared';
+import { ErrorBoundary, useTranslation } from '@poc/shared';
 
 type Props = {
   name: string;
@@ -7,12 +7,14 @@ type Props = {
 };
 
 export function RemoteOutlet({ name, remote: Remote }: Props) {
+  const { t } = useTranslation('shell');
+
   return (
     <ErrorBoundary name={name}>
       <Suspense
         fallback={
           <div className="rounded-xl border border-default bg-panel p-6 text-muted">
-            Loading {name}…
+            {t('loadingRemote', { name })}
           </div>
         }
       >

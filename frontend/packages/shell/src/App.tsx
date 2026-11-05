@@ -1,6 +1,6 @@
 import { lazy } from 'react';
 import { NavLink, Navigate, Route, Routes } from 'react-router-dom';
-import { ThemeSwitcher } from '@poc/shared';
+import { LanguageSwitcher, ThemeSwitcher, useTranslation } from '@poc/shared';
 import { RemoteOutlet } from './components/RemoteOutlet';
 
 const OrdersApp = lazy(() => import('orders/App'));
@@ -17,29 +17,32 @@ const navClass = ({ isActive }: { isActive: boolean }) =>
   ].join(' ');
 
 export default function App() {
+  const { t } = useTranslation('shell');
+
   return (
     <div className="min-h-screen bg-surface text-foreground">
       <header className="border-b border-default bg-panel">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-4 py-4">
           <div>
-            <p className="text-xs uppercase tracking-[0.2em] text-accent">Kafka Orders POC</p>
-            <h1 className="text-lg font-semibold text-foreground">Microfrontend shell</h1>
+            <p className="text-xs uppercase tracking-[0.2em] text-accent">{t('brand')}</p>
+            <h1 className="text-lg font-semibold text-foreground">{t('title')}</h1>
           </div>
           <div className="flex flex-wrap items-center gap-3">
             <nav className="flex flex-wrap gap-1">
               <NavLink to="/orders" className={navClass}>
-                Orders
+                {t('nav.orders')}
               </NavLink>
               <NavLink to="/payment" className={navClass}>
-                Payment
+                {t('nav.payment')}
               </NavLink>
               <NavLink to="/inventory" className={navClass}>
-                Inventory
+                {t('nav.inventory')}
               </NavLink>
               <NavLink to="/notifications" className={navClass}>
-                Notifications
+                {t('nav.notifications')}
               </NavLink>
             </nav>
+            <LanguageSwitcher />
             <ThemeSwitcher />
           </div>
         </div>
@@ -66,11 +69,7 @@ export default function App() {
           />
           <Route
             path="*"
-            element={
-              <div className="p-6 text-muted">
-                Unknown route. Use the navigation above.
-              </div>
-            }
+            element={<div className="p-6 text-muted">{t('unknownRoute')}</div>}
           />
         </Routes>
       </main>
