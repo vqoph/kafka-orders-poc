@@ -5,12 +5,12 @@ import org.springframework.stereotype.Component;
 
 /**
  * Decides simulated payment success from {@code payment.failure-rate}.
- * Lab 2 — {@link #decideSuccess()}.
+ * Lab 2 — {@link #decideSuccess()}. Rate is mutable at runtime via chaos API.
  */
 @Component
 public class PaymentDecision {
 
-    private final double failureRate;
+    private volatile double failureRate;
 
     public PaymentDecision(@Value("${payment.failure-rate}") double failureRate) {
         this.failureRate = failureRate;
@@ -22,5 +22,16 @@ public class PaymentDecision {
      */
     public boolean decideSuccess() {
         return Math.random() >= failureRate;
+    }
+
+    public double getFailureRate() {
+        return failureRate;
+    }
+
+    public void setFailureRate(double failureRate) {
+        if (failureRate < 0.0 || failureRate > 1.0) {
+            throw new IllegalArgumentException("failure rate must be between 0.0 and 1.0");
+        }
+        this.failureRate = failureRate;
     }
 }
