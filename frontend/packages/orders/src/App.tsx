@@ -4,7 +4,23 @@ import { Link, Route, Routes, useNavigate, useParams } from 'react-router-dom';
 import { useFieldArray, useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { emitPocEvent } from '@poc/shared';
+import {
+  Badge,
+  Button,
+  buttonClassName,
+  EmptyState,
+  ErrorText,
+  Field,
+  FormPanel,
+  Input,
+  ListCard,
+  LoadingText,
+  PageHeader,
+  PageShell,
+  Select,
+  emitPocEvent,
+  errorMessage,
+} from '@poc/shared';
 import {
   useCreateOrderMutation,
   useGetOrderQuery,
@@ -46,15 +62,6 @@ const createOrderSchema = z.object({
 
 type CreateOrderForm = z.infer<typeof createOrderSchema>;
 
-function errorMessage(error: unknown, fallback: string): string {
-  if (error && typeof error === 'object' && 'status' in error) {
-    const err = error as { status?: number | string; data?: unknown };
-    if (typeof err.data === 'string' && err.data) return err.data;
-    if (err.status != null) return `Request failed (${err.status})`;
-  }
-  return fallback;
-}
-
 function nullableBool(value?: boolean | null): string {
   if (value === true) return 'true';
   if (value === false) return 'false';
@@ -78,42 +85,36 @@ function OrdersList() {
 
   return (
     <section className="space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 className="text-xl font-semibold text-foreground">Orders</h2>
-        <div className="flex flex-wrap gap-2">
-          <label className="flex items-center gap-2 text-sm text-muted">
-            <span>sort</span>
-            <select
-              value={sortMode}
-              onChange={(e) => setSortMode(e.target.value as SortMode)}
-              className="rounded-md border border-default bg-panel-muted px-2 py-1.5 text-foreground"
-            >
-              {SORT_OPTIONS.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-          </label>
-          <button
-            type="button"
-            onClick={() => void refetch()}
-            className="rounded-md border border-default px-3 py-1.5 text-sm text-foreground hover:border-accent"
-          >
-            Refresh
-          </button>
-          <Link
-            to="new"
-            className="rounded-md bg-accent px-3 py-1.5 text-sm font-medium text-on-accent hover:bg-accent-strong"
-          >
-            New order
-          </Link>
-        </div>
-      </div>
-      {(isLoading || isFetching) && <p className="text-muted">Loading…</p>}
-      {error && <p className="text-danger">{errorMessage(error, 'Failed to load orders')}</p>}
+      <PageHeader
+        title="Orders"
+        actions={
+          <>
+            <label className="flex items-center gap-2 text-sm text-muted">
+              <span>sort</span>
+              <Select
+                value={sortMode}
+                onChange={(e) => setSortMode(e.target.value as SortMode)}
+              >
+                {SORT_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </Select>
+            </label>
+            <Button variant="secondary" onClick={() => void refetch()}>
+              Refresh
+            </Button>
+            <Link to="new" className={buttonClassName('primary')}>
+              New order
+            </Link>
+          </>
+        }
+      />
+      {(isLoading || isFetching) && <LoadingText />}
+      {error && <ErrorText>{errorMessage(error, 'Failed to load orders')}</ErrorText>}
       {!isLoading && !error && orders.length === 0 && (
-        <p className="text-muted">No orders yet.</p>
+        <EmptyState>No orders yet.</EmptyState>
       )}
       <ul className="space-y-2">
         {sortedOrders.map((order) => (
@@ -121,20 +122,20 @@ function OrdersList() {
             <Link
               to={order.id}
               onClick={() => emitPocEvent('poc:order-selected', { orderId: order.id })}
-              className="block rounded-lg border border-default bg-panel px-4 py-3 hover:border-accent"
+              className="block"
             >
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <span className="font-mono text-sm text-accent">{order.id}</span>
-                <span className="rounded bg-panel-muted px-2 py-0.5 text-xs uppercase tracking-wide text-muted">
-                  {order.status}
-                </span>
-              </div>
-              <p className="mt-1 text-sm text-muted">
-                customerId {order.customerId} · amount {order.amount}
-              </p>
-              <p className="mt-0.5 font-mono text-xs text-muted">
-                {formatItemsSummary(order.items)}
-              </p>
+              <ListCard interactive>
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <span className="font-mono text-sm text-accent">{order.id}</span>
+                  <Badge>{order.status}</Badge>
+                </div>
+                <p className="mt-1 text-sm text-muted">
+                  customerId {order.customerId} · amount {order.amount}
+                </p>
+                <p className="mt-0.5 font-mono text-xs text-muted">
+                  {formatItemsSummary(order.items)}
+                </p>
+              </ListCard>
             </Link>
           </li>
         ))}
@@ -179,125 +180,101 @@ function OrderCreate() {
 
   return (
     <section className="mx-auto max-w-lg space-y-4">
-      <div className="flex items-center justify-between">
-        <h2 className="text-xl font-semibold text-foreground">Create order</h2>
-        <Link to=".." className="text-sm text-accent hover:text-accent-strong">
-          Back to list
-        </Link>
-      </div>
-      <form onSubmit={onSubmit} className="space-y-3 rounded-xl border border-default bg-panel p-4">
-        <label className="block space-y-1 text-sm">
-          <span className="text-muted">Customer id</span>
-          <input
-            className="w-full rounded-md border border-default bg-panel-muted px-3 py-2 text-foreground"
-            {...register('customerId')}
-          />
-          {errors.customerId && <span className="text-danger">{errors.customerId.message}</span>}
-        </label>
-        <label className="block space-y-1 text-sm">
-          <span className="text-muted">Amount</span>
-          <input
-            type="number"
-            step="0.01"
-            min={0.01}
-            className="w-full rounded-md border border-default bg-panel-muted px-3 py-2 text-foreground"
-            {...register('amount')}
-          />
-          {errors.amount && <span className="text-danger">{errors.amount.message}</span>}
-        </label>
+      <PageHeader
+        title="Create order"
+        actions={
+          <Link to=".." className={buttonClassName('ghost')}>
+            Back to list
+          </Link>
+        }
+      />
+      <FormPanel onSubmit={onSubmit} className="space-y-3">
+        <Field label="Customer id" error={errors.customerId?.message}>
+          <Input {...register('customerId')} />
+        </Field>
+        <Field label="Amount" error={errors.amount?.message}>
+          <Input type="number" step="0.01" min={0.01} {...register('amount')} />
+        </Field>
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <h3 className="text-sm font-medium text-foreground">Items</h3>
-            <button
+            <Button
               type="button"
+              variant="secondary"
+              size="sm"
               onClick={() => append({ sku: '', quantity: 1 })}
-              className="rounded-md border border-default px-2 py-1 text-xs text-foreground hover:border-accent"
             >
               Add item
-            </button>
+            </Button>
           </div>
-          {errors.items?.root && (
-            <p className="text-sm text-danger">{errors.items.root.message}</p>
-          )}
+          {errors.items?.root && <ErrorText>{errors.items.root.message}</ErrorText>}
           {typeof errors.items?.message === 'string' && (
-            <p className="text-sm text-danger">{errors.items.message}</p>
+            <ErrorText>{errors.items.message}</ErrorText>
           )}
           <ul className="space-y-2">
             {fields.map((field, index) => (
               <li key={field.id} className="grid grid-cols-[1fr_5rem_auto] gap-2">
-                <label className="block space-y-1 text-sm">
-                  {index === 0 && <span className="text-muted">SKU</span>}
-                  <input
-                    className="w-full rounded-md border border-default bg-panel-muted px-3 py-2 text-foreground"
-                    placeholder="SKU"
-                    {...register(`items.${index}.sku`)}
-                  />
-                  {errors.items?.[index]?.sku && (
-                    <span className="text-danger">{errors.items[index].sku.message}</span>
-                  )}
-                </label>
-                <label className="block space-y-1 text-sm">
-                  {index === 0 && <span className="text-muted">Qty</span>}
-                  <input
+                <Field
+                  label={index === 0 ? 'SKU' : ''}
+                  error={errors.items?.[index]?.sku?.message}
+                >
+                  <Input placeholder="SKU" {...register(`items.${index}.sku`)} />
+                </Field>
+                <Field
+                  label={index === 0 ? 'Qty' : ''}
+                  error={errors.items?.[index]?.quantity?.message}
+                >
+                  <Input
                     type="number"
                     min={1}
-                    className="w-full rounded-md border border-default bg-panel-muted px-3 py-2 text-foreground"
                     {...register(`items.${index}.quantity`)}
                   />
-                  {errors.items?.[index]?.quantity && (
-                    <span className="text-danger">{errors.items[index].quantity.message}</span>
-                  )}
-                </label>
+                </Field>
                 <div className={index === 0 ? 'pt-6' : undefined}>
-                  <button
+                  <Button
                     type="button"
+                    variant="secondary"
+                    size="sm"
                     onClick={() => remove(index)}
                     disabled={fields.length === 1}
-                    className="rounded-md border border-default px-2 py-2 text-xs text-muted hover:border-danger hover:text-danger disabled:opacity-40"
+                    className="px-2 py-2 text-muted hover:border-danger hover:text-danger"
                   >
                     Remove
-                  </button>
+                  </Button>
                 </div>
               </li>
             ))}
           </ul>
         </div>
-        {error && (
-          <p className="text-sm text-danger">{errorMessage(error, 'Failed to create order')}</p>
-        )}
-        <button
-          type="submit"
-          disabled={isLoading}
-          className="rounded-md bg-accent px-4 py-2 text-sm font-medium text-on-accent hover:bg-accent-strong disabled:opacity-60"
-        >
+        {error && <ErrorText>{errorMessage(error, 'Failed to create order')}</ErrorText>}
+        <Button type="submit" variant="primary" size="lg" disabled={isLoading}>
           {isLoading ? 'Creating…' : 'Create order'}
-        </button>
-      </form>
+        </Button>
+      </FormPanel>
     </section>
   );
 }
 
 function OrderDetail() {
   const { id = '' } = useParams();
-  const { data: order, error, isLoading } = useGetOrderQuery(
-    { id },
-    { skip: !id },
-  );
+  const { data: order, error, isLoading } = useGetOrderQuery({ id }, { skip: !id });
 
   if (error) {
-    return <p className="text-danger">{errorMessage(error, 'Failed to load order')}</p>;
+    return <ErrorText>{errorMessage(error, 'Failed to load order')}</ErrorText>;
   }
-  if (isLoading || !order) return <p className="text-muted">Loading order…</p>;
+  if (isLoading || !order) return <LoadingText>Loading order…</LoadingText>;
 
   return (
     <section className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h2 className="text-xl font-semibold text-foreground">Order detail</h2>
-        <Link to=".." className="text-sm text-accent hover:text-accent-strong">
-          Back to list
-        </Link>
-      </div>
-      <div className="space-y-3 rounded-xl border border-default bg-panel p-4">
+      <PageHeader
+        title="Order detail"
+        actions={
+          <Link to=".." className={buttonClassName('ghost')}>
+            Back to list
+          </Link>
+        }
+      />
+      <FormPanel asDiv className="space-y-3">
         <dl className="grid gap-2 text-sm sm:grid-cols-2">
           <div className="sm:col-span-2">
             <dt className="text-muted">id</dt>
@@ -351,20 +328,20 @@ function OrderDetail() {
             </table>
           )}
         </div>
-      </div>
+      </FormPanel>
     </section>
   );
 }
 
 function OrdersRoutes() {
   return (
-    <div className="p-4 md:p-6">
+    <PageShell>
       <Routes>
         <Route index element={<OrdersList />} />
         <Route path="new" element={<OrderCreate />} />
         <Route path=":id" element={<OrderDetail />} />
       </Routes>
-    </div>
+    </PageShell>
   );
 }
 

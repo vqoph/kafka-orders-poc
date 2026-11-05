@@ -1,5 +1,5 @@
 import { Suspense, type ComponentType, type LazyExoticComponent } from 'react';
-import { ErrorBoundary } from './ErrorBoundary';
+import { ErrorBoundary } from '@poc/shared';
 
 type Props = {
   name: string;

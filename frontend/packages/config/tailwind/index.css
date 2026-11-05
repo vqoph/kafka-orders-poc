@@ -1,5 +1,8 @@
 @import "tailwindcss";
 
+/* Scan shared UI so utility classes used only in @poc/shared are generated */
+@source "../../shared/src/**/*.{js,ts,jsx,tsx}";
+
 @theme {
   --font-sans: "Segoe UI", ui-sans-serif, system-ui, sans-serif;
   --color-surface: var(--poc-surface);

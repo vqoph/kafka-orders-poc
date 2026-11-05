@@ -1,7 +1,7 @@
 import { lazy } from 'react';
 import { NavLink, Navigate, Route, Routes } from 'react-router-dom';
+import { ThemeSwitcher } from '@poc/shared';
 import { RemoteOutlet } from './components/RemoteOutlet';
-import { ThemeSwitcher } from './components/ThemeSwitcher';
 
 const OrdersApp = lazy(() => import('orders/App'));
 const PaymentApp = lazy(() => import('payment/App'));

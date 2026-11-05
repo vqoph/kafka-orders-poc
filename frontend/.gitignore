@@ -1,6 +1,7 @@
 node_modules
 dist
 .turbo
+storybook-static
 *.log
 coverage
 .DS_Store
