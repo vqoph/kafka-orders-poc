@@ -2,6 +2,7 @@ package com.example.orders.payment.api;
 
 import com.example.orders.payment.PaymentDecision;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;
@@ -42,6 +43,7 @@ public class ChaosController {
             Double rate) {
     }
 
+    @Schema(requiredProperties = {"rate"})
     public record FailureRateResponse(double rate) {
     }
 }

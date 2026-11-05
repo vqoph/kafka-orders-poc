@@ -2,6 +2,7 @@ package com.example.orders.order.api;
 
 import com.example.orders.order.domain.Order;
 import com.example.orders.order.domain.OrderStatus;
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
@@ -12,6 +13,7 @@ import java.util.UUID;
  * Kept separate from the JPA {@link Order} entity so the HTTP API can evolve
  * without coupling clients to the database model.
  */
+@Schema(requiredProperties = {"id", "customerId", "amount", "status", "createdAt", "items"})
 public record OrderResponse(
         UUID id,
         String customerId,
@@ -19,8 +21,9 @@ public record OrderResponse(
         OrderStatus status,
         Instant createdAt,
         List<ItemResponse> items,
-        Boolean paymentSuccess,
-        Boolean inventorySuccess) {
+        @Schema(nullable = true) Boolean paymentSuccess,
+        @Schema(nullable = true) Boolean inventorySuccess) {
+    @Schema(requiredProperties = {"sku", "quantity"})
     public record ItemResponse(String sku, int quantity) {
     }
 

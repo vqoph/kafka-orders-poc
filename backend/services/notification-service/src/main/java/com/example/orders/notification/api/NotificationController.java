@@ -1,6 +1,7 @@
 package com.example.orders.notification.api;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.io.IOException;
 import java.time.Instant;
 import java.util.List;
@@ -53,8 +54,9 @@ public class NotificationController {
         return List.of();
     }
 
+    @Schema(requiredProperties = {"type", "message", "at"})
     public record NotificationEvent(
-            UUID orderId,
+            @Schema(nullable = true) UUID orderId,
             String type,
             String message,
             Instant at) {

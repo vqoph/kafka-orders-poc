@@ -3,6 +3,7 @@ package com.example.orders.inventory.api;
 import com.example.orders.inventory.domain.Stock;
 import com.example.orders.inventory.domain.StockRepository;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -37,6 +38,7 @@ public class StockController {
         return StockResponse.from(stock);
     }
 
+    @Schema(requiredProperties = {"sku", "quantity"})
     public record StockResponse(String sku, int quantity) {
         public static StockResponse from(Stock stock) {
             return new StockResponse(stock.getSku(), stock.getQuantity());
