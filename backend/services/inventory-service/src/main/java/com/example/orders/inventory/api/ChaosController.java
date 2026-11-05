@@ -1,6 +1,7 @@
 package com.example.orders.inventory.api;
 
 import com.example.orders.inventory.InventoryReservation;
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;
@@ -22,11 +23,13 @@ public class ChaosController {
     }
 
     @GetMapping("/failure-rate")
+    @Operation(operationId = "getInventoryFailureRate")
     public FailureRateResponse getFailureRate() {
         return new FailureRateResponse(inventoryReservation.getFailureRate());
     }
 
     @PutMapping("/failure-rate")
+    @Operation(operationId = "setInventoryFailureRate")
     public FailureRateResponse putFailureRate(@Valid @RequestBody FailureRateRequest request) {
         inventoryReservation.setFailureRate(request.rate());
         return new FailureRateResponse(inventoryReservation.getFailureRate());

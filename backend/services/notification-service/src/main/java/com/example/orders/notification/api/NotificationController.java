@@ -1,5 +1,6 @@
 package com.example.orders.notification.api;
 
+import io.swagger.v3.oas.annotations.Operation;
 import java.io.IOException;
 import java.time.Instant;
 import java.util.List;
@@ -23,6 +24,7 @@ public class NotificationController {
     private final List<SseEmitter> emitters = new CopyOnWriteArrayList<>();
 
     @GetMapping(path = "/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    @Operation(operationId = "streamNotifications", hidden = true)
     public SseEmitter stream() {
         SseEmitter emitter = new SseEmitter(0L);
         emitters.add(emitter);
@@ -45,6 +47,7 @@ public class NotificationController {
     }
 
     @GetMapping
+    @Operation(operationId = "listNotifications")
     public List<NotificationEvent> list(@RequestParam(required = false) UUID orderId) {
         // Stub: no persisted notifications yet.
         return List.of();

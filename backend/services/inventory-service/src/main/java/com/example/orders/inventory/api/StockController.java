@@ -2,6 +2,7 @@ package com.example.orders.inventory.api;
 
 import com.example.orders.inventory.domain.Stock;
 import com.example.orders.inventory.domain.StockRepository;
+import io.swagger.v3.oas.annotations.Operation;
 import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -21,6 +22,7 @@ public class StockController {
     }
 
     @GetMapping
+    @Operation(operationId = "listStock")
     public List<StockResponse> list() {
         return stockRepository.findAll().stream()
                 .map(StockResponse::from)
@@ -28,6 +30,7 @@ public class StockController {
     }
 
     @GetMapping("/{sku}")
+    @Operation(operationId = "getStock")
     public StockResponse getBySku(@PathVariable String sku) {
         Stock stock = stockRepository.findById(sku)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "SKU not found: " + sku));

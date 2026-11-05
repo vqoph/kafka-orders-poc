@@ -1,6 +1,7 @@
 package com.example.orders.payment.api;
 
 import com.example.orders.payment.PaymentDecision;
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;
@@ -22,11 +23,13 @@ public class ChaosController {
     }
 
     @GetMapping("/failure-rate")
+    @Operation(operationId = "getPaymentFailureRate")
     public FailureRateResponse getFailureRate() {
         return new FailureRateResponse(paymentDecision.getFailureRate());
     }
 
     @PutMapping("/failure-rate")
+    @Operation(operationId = "setPaymentFailureRate")
     public FailureRateResponse putFailureRate(@Valid @RequestBody FailureRateRequest request) {
         paymentDecision.setFailureRate(request.rate());
         return new FailureRateResponse(paymentDecision.getFailureRate());
