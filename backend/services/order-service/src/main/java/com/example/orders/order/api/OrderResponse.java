@@ -18,7 +18,9 @@ public record OrderResponse(
         BigDecimal amount,
         OrderStatus status,
         Instant createdAt,
-        List<ItemResponse> items) {
+        List<ItemResponse> items,
+        Boolean paymentSuccess,
+        Boolean inventorySuccess) {
     public record ItemResponse(String sku, int quantity) {
     }
 
@@ -32,6 +34,8 @@ public record OrderResponse(
                 order.getAmount(),
                 order.getStatus(),
                 order.getCreatedAt(),
-                items);
+                items,
+                order.getPaymentSuccess(),
+                order.getInventorySuccess());
     }
 }
