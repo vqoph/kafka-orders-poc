@@ -18,6 +18,22 @@ mvn -f backend/pom.xml -DskipTests install
 ./scripts/frontend-dev.sh                # http://localhost:5000
 ```
 
+### Frontend API-first (OpenAPI → RTK Query)
+
+Each microfrontend owns **one** business API. Clients are generated from OpenAPI (not hand-written):
+
+1. Backend exposes Swagger via springdoc (`/v3/api-docs`, `/swagger-ui.html`)
+2. Contracts live in `frontend/packages/<mfe>/openapi.json`
+3. `@rtk-query/codegen-openapi` produces `src/api/generatedApi.ts`
+4. UI consumes generated hooks only (`emptyApi` + thin tag enhancements)
+
+```bash
+# optional: refresh specs from running services, then regenerate clients
+cd frontend
+npm run fetch:openapi
+npm run generate:api
+```
+
 Start with [doc/fr/TUTORIAL.md](./doc/fr/TUTORIAL.md). It contains the step-by-step walkthrough, the concepts behind each step, and the commands to run.
 
 French Kafka concepts overview (appendix): [doc/fr/appendices/architecture-kafka-essentials.md](./doc/fr/appendices/architecture-kafka-essentials.md). Index: [doc/fr/README.md](./doc/fr/README.md).

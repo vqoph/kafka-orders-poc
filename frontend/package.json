@@ -9,9 +9,12 @@
     "build": "turbo run build",
     "lint": "turbo run lint",
     "test": "turbo run test",
-    "format": "prettier --write \"**/*.{ts,tsx,js,json,css,md}\""
+    "format": "prettier --write \"**/*.{ts,tsx,js,json,css,md}\"",
+    "generate:api": "npm run generate:api --workspaces --if-present",
+    "fetch:openapi": "./scripts/fetch-openapi.sh"
   },
   "devDependencies": {
+    "@rtk-query/codegen-openapi": "^2.2.0",
     "prettier": "^3.5.3",
     "turbo": "^2.5.4",
     "typescript": "^5.8.3"

@@ -80,6 +80,18 @@ function createWebpackConfig(options) {
             requiredVersion: deps["react-router-dom"],
             eager: isHost,
           },
+          ...(deps["@reduxjs/toolkit"]
+            ? {
+                "@reduxjs/toolkit": {
+                  singleton: true,
+                  requiredVersion: deps["@reduxjs/toolkit"],
+                },
+                "react-redux": {
+                  singleton: true,
+                  requiredVersion: deps["react-redux"],
+                },
+              }
+            : {}),
         },
       }),
       new HtmlWebpackPlugin({

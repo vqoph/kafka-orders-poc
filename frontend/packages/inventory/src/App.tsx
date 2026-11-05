@@ -1,65 +1,68 @@
-import { useCallback, useEffect, useState, type FormEvent } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
+import { Provider } from 'react-redux';
+import { emitPocEvent } from '@poc/shared';
 import {
-  ApiError,
-  emitPocEvent,
-  getInventoryFailureRate,
-  listStock,
-  setInventoryFailureRate,
-  type StockItem,
-} from '@poc/shared';
+  useGetInventoryFailureRateQuery,
+  useListStockQuery,
+  useSetInventoryFailureRateMutation,
+} from './api/inventoryApi';
+import { store } from './store';
 import './styles.css';
 
-export default function App() {
-  const [stock, setStock] = useState<StockItem[]>([]);
-  const [rate, setRate] = useState(0);
-  const [draft, setDraft] = useState('0');
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [message, setMessage] = useState<string | null>(null);
+function errorMessage(error: unknown, fallback: string): string {
+  if (error && typeof error === 'object' && 'status' in error) {
+    const err = error as { status?: number | string; data?: unknown };
+    if (typeof err.data === 'string' && err.data) return err.data;
+    if (err.status != null) return `Request failed (${err.status})`;
+  }
+  return fallback;
+}
 
-  const refresh = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const [stockData, chaos] = await Promise.all([listStock(), getInventoryFailureRate()]);
-      setStock(stockData);
-      setRate(chaos.rate);
-      setDraft(String(chaos.rate));
-    } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'Failed to load inventory');
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+function InventoryApp() {
+  const {
+    data: stock = [],
+    error: stockError,
+    isLoading: stockLoading,
+    isFetching: stockFetching,
+    refetch: refetchStock,
+  } = useListStockQuery();
+  const { data: chaos, error: chaosError, isLoading: chaosLoading } =
+    useGetInventoryFailureRateQuery();
+  const [setInventoryFailureRate, { error: saveError, isLoading: saving, isSuccess }] =
+    useSetInventoryFailureRateMutation();
+
+  const [draft, setDraft] = useState('0');
+  const [validationError, setValidationError] = useState<string | null>(null);
 
   useEffect(() => {
-    void refresh();
-  }, [refresh]);
+    if (chaos) setDraft(String(chaos.rate));
+  }, [chaos]);
 
   async function onSubmit(event: FormEvent) {
     event.preventDefault();
-    setSaving(true);
-    setError(null);
-    setMessage(null);
+    setValidationError(null);
     const next = Number(draft);
     if (Number.isNaN(next) || next < 0 || next > 1) {
-      setError('Rate must be a number between 0 and 1');
-      setSaving(false);
+      setValidationError('Rate must be a number between 0 and 1');
       return;
     }
     try {
-      const data = await setInventoryFailureRate(next);
-      setRate(data.rate);
-      setDraft(String(data.rate));
-      setMessage('Inventory chaos rate updated');
-      emitPocEvent('poc:chaos-updated', { service: 'inventory', rate: data.rate });
-    } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'Failed to update failure rate');
-    } finally {
-      setSaving(false);
+      const result = await setInventoryFailureRate({
+        failureRateRequest: { rate: next },
+      }).unwrap();
+      setDraft(String(result.rate));
+      emitPocEvent('poc:chaos-updated', { service: 'inventory', rate: result.rate });
+    } catch {
+      // Error is surfaced via mutation `saveError`
     }
   }
+
+  const loadError =
+    (stockError ? errorMessage(stockError, 'Failed to load inventory') : null) ??
+    (chaosError ? errorMessage(chaosError, 'Failed to load failure rate') : null);
+  const formError =
+    validationError ??
+    (saveError ? errorMessage(saveError, 'Failed to update failure rate') : null);
 
   return (
     <div className="p-4 md:p-6">
@@ -69,15 +72,15 @@ export default function App() {
             <h2 className="text-xl font-semibold text-foreground">Stock</h2>
             <button
               type="button"
-              onClick={() => void refresh()}
+              onClick={() => void refetchStock()}
               className="rounded-md border border-default px-3 py-1.5 text-sm text-foreground hover:border-accent"
             >
               Refresh
             </button>
           </div>
-          {loading && <p className="text-muted">Loading…</p>}
-          {error && <p className="text-danger">{error}</p>}
-          {!loading && stock.length === 0 && !error && (
+          {(stockLoading || stockFetching) && <p className="text-muted">Loading…</p>}
+          {loadError && <p className="text-danger">{loadError}</p>}
+          {!stockLoading && stock.length === 0 && !stockError && (
             <p className="text-muted">No stock rows returned.</p>
           )}
           <ul className="space-y-2">
@@ -90,9 +93,6 @@ export default function App() {
                   <span className="font-mono text-accent">{item.sku}</span>
                   <span className="text-sm text-foreground">qty {item.quantity}</span>
                 </div>
-                {item.reserved != null && (
-                  <p className="mt-1 text-xs text-muted">reserved {item.reserved}</p>
-                )}
               </li>
             ))}
           </ul>
@@ -105,36 +105,52 @@ export default function App() {
               Artificial failure rate for inventory-service (0–1).
             </p>
           </header>
-          <form
-            onSubmit={onSubmit}
-            className="space-y-4 rounded-xl border border-default bg-panel p-4"
-          >
-            <div className="rounded-md bg-panel-muted px-3 py-2 text-sm text-foreground">
-              Current rate: <span className="font-mono text-warning">{rate}</span>
-            </div>
-            <label className="block space-y-1 text-sm">
-              <span className="text-muted">Failure rate</span>
-              <input
-                type="number"
-                min={0}
-                max={1}
-                step={0.05}
-                value={draft}
-                onChange={(e) => setDraft(e.target.value)}
-                className="w-full rounded-md border border-default bg-panel-muted px-3 py-2 text-foreground"
-              />
-            </label>
-            {message && <p className="text-sm text-success">{message}</p>}
-            <button
-              type="submit"
-              disabled={saving}
-              className="rounded-md bg-warning px-4 py-2 text-sm font-medium text-on-accent hover:opacity-90 disabled:opacity-60"
+          {chaosLoading ? (
+            <p className="text-muted">Loading…</p>
+          ) : (
+            <form
+              onSubmit={(e) => void onSubmit(e)}
+              className="space-y-4 rounded-xl border border-default bg-panel p-4"
             >
-              {saving ? 'Saving…' : 'Update rate'}
-            </button>
-          </form>
+              <div className="rounded-md bg-panel-muted px-3 py-2 text-sm text-foreground">
+                Current rate:{' '}
+                <span className="font-mono text-warning">{chaos?.rate ?? '—'}</span>
+              </div>
+              <label className="block space-y-1 text-sm">
+                <span className="text-muted">Failure rate</span>
+                <input
+                  type="number"
+                  min={0}
+                  max={1}
+                  step={0.05}
+                  value={draft}
+                  onChange={(e) => setDraft(e.target.value)}
+                  className="w-full rounded-md border border-default bg-panel-muted px-3 py-2 text-foreground"
+                />
+              </label>
+              {formError && <p className="text-sm text-danger">{formError}</p>}
+              {isSuccess && !saveError && !validationError && (
+                <p className="text-sm text-success">Inventory chaos rate updated</p>
+              )}
+              <button
+                type="submit"
+                disabled={saving}
+                className="rounded-md bg-warning px-4 py-2 text-sm font-medium text-on-accent hover:opacity-90 disabled:opacity-60"
+              >
+                {saving ? 'Saving…' : 'Update rate'}
+              </button>
+            </form>
+          )}
         </section>
       </div>
     </div>
+  );
+}
+
+export default function App() {
+  return (
+    <Provider store={store}>
+      <InventoryApp />
+    </Provider>
   );
 }

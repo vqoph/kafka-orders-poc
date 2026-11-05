@@ -1,80 +1,34 @@
-import { useEffect, useMemo, useState } from 'react';
-import {
-  ApiError,
-  listNotifications,
-  notificationsStreamUrl,
-  onPocEvent,
-  type NotificationMessage,
-} from '@poc/shared';
+import { useEffect, useState } from 'react';
+import { Provider } from 'react-redux';
+import { onPocEvent } from '@poc/shared';
+import { useListNotificationsQuery } from './api/notificationApi';
+import { useNotificationStream } from './hooks/useNotificationStream';
+import { store } from './store';
 import './styles.css';
 
-function parseEventData(raw: string): NotificationMessage | null {
-  try {
-    const parsed = JSON.parse(raw) as NotificationMessage;
-    if (!parsed || typeof parsed !== 'object') return null;
-    return {
-      ...parsed,
-      orderId: parsed.orderId ?? 'unknown',
-      message: parsed.message ?? raw,
-    };
-  } catch {
-    return {
-      orderId: 'unknown',
-      message: raw,
-      timestamp: new Date().toISOString(),
-    };
+function errorMessage(error: unknown, fallback: string): string {
+  if (error && typeof error === 'object' && 'status' in error) {
+    const err = error as { status?: number | string; data?: unknown };
+    if (typeof err.data === 'string' && err.data) return err.data;
+    if (err.status != null) return `Request failed (${err.status})`;
   }
+  return fallback;
 }
 
-export default function App() {
-  const [events, setEvents] = useState<NotificationMessage[]>([]);
+function NotificationsApp() {
   const [filterOrderId, setFilterOrderId] = useState('');
-  const [connected, setConnected] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const connected = useNotificationStream(filterOrderId);
+  const {
+    data: events = [],
+    error,
+    isLoading,
+  } = useListNotificationsQuery({ orderId: filterOrderId || undefined });
 
   useEffect(() => {
     return onPocEvent('poc:order-selected', ({ orderId }) => {
       setFilterOrderId(orderId);
     });
   }, []);
-
-  useEffect(() => {
-    let cancelled = false;
-    void (async () => {
-      try {
-        const history = await listNotifications(filterOrderId || undefined);
-        if (!cancelled) {
-          setEvents(history);
-          setError(null);
-        }
-      } catch (err) {
-        if (!cancelled) {
-          setError(err instanceof ApiError ? err.message : 'Failed to load notifications');
-        }
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [filterOrderId]);
-
-  useEffect(() => {
-    const source = new EventSource(notificationsStreamUrl());
-    source.onopen = () => setConnected(true);
-    source.onerror = () => setConnected(false);
-    source.onmessage = (event) => {
-      const parsed = parseEventData(event.data);
-      if (!parsed) return;
-      if (filterOrderId && parsed.orderId !== filterOrderId) return;
-      setEvents((prev) => [parsed, ...prev].slice(0, 100));
-    };
-    return () => source.close();
-  }, [filterOrderId]);
-
-  const statusLabel = useMemo(
-    () => (connected ? 'SSE connected' : 'SSE disconnected'),
-    [connected],
-  );
 
   return (
     <div className="p-4 md:p-6">
@@ -89,7 +43,7 @@ export default function App() {
               connected ? 'bg-success/15 text-success' : 'bg-danger/15 text-danger'
             }`}
           >
-            {statusLabel}
+            {connected ? 'SSE connected' : 'SSE disconnected'}
           </span>
         </header>
 
@@ -103,30 +57,43 @@ export default function App() {
           />
         </label>
 
-        {error && <p className="text-sm text-danger">{error}</p>}
+        {isLoading && <p className="text-sm text-muted">Loading…</p>}
+        {error && (
+          <p className="text-sm text-danger">
+            {errorMessage(error, 'Failed to load notifications')}
+          </p>
+        )}
 
         <ol className="space-y-2 border-l border-default pl-4">
-          {events.length === 0 && <li className="text-sm text-muted">No notifications yet.</li>}
+          {events.length === 0 && !isLoading && (
+            <li className="text-sm text-muted">No notifications yet.</li>
+          )}
           {events.map((event, index) => (
             <li
-              key={`${event.id ?? event.timestamp ?? index}-${index}`}
+              key={`${event.orderId ?? 'none'}-${event.at}-${index}`}
               className="relative rounded-lg border border-default bg-panel px-4 py-3"
             >
               <span className="absolute left-[-1.35rem] top-5 h-2.5 w-2.5 rounded-full bg-accent" />
               <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-muted">
-                <span className="font-mono text-accent">{event.orderId}</span>
-                <span>{event.timestamp ?? '—'}</span>
+                <span className="font-mono text-accent">{event.orderId ?? '—'}</span>
+                <span>{event.at}</span>
               </div>
               <p className="mt-1 text-sm text-foreground">{event.message}</p>
-              {(event.type || event.status) && (
-                <p className="mt-1 text-xs uppercase tracking-wide text-muted">
-                  {[event.type, event.status].filter(Boolean).join(' · ')}
-                </p>
+              {event.type && (
+                <p className="mt-1 text-xs uppercase tracking-wide text-muted">{event.type}</p>
               )}
             </li>
           ))}
         </ol>
       </section>
     </div>
+  );
+}
+
+export default function App() {
+  return (
+    <Provider store={store}>
+      <NotificationsApp />
+    </Provider>
   );
 }

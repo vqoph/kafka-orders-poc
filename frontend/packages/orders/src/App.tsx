@@ -1,17 +1,16 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useState } from 'react';
+import { Provider } from 'react-redux';
 import { Link, Route, Routes, useNavigate, useParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { emitPocEvent } from '@poc/shared';
 import {
-  ApiError,
-  createOrder,
-  emitPocEvent,
-  getOrder,
-  listOrders,
-  onPocEvent,
-  type OrderResponse,
-} from '@poc/shared';
+  useCreateOrderMutation,
+  useGetOrderQuery,
+  useListOrdersQuery,
+} from './api/ordersApi';
+import { store } from './store';
 import './styles.css';
 
 const createOrderSchema = z.object({
@@ -23,6 +22,15 @@ const createOrderSchema = z.object({
 
 type CreateOrderForm = z.infer<typeof createOrderSchema>;
 
+function errorMessage(error: unknown, fallback: string): string {
+  if (error && typeof error === 'object' && 'status' in error) {
+    const err = error as { status?: number | string; data?: unknown };
+    if (typeof err.data === 'string' && err.data) return err.data;
+    if (err.status != null) return `Request failed (${err.status})`;
+  }
+  return fallback;
+}
+
 function flagLabel(value?: boolean | null): string {
   if (value === true) return 'ok';
   if (value === false) return 'failed';
@@ -30,28 +38,8 @@ function flagLabel(value?: boolean | null): string {
 }
 
 function OrdersList() {
-  const [orders, setOrders] = useState<OrderResponse[]>([]);
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  const refresh = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      setOrders(await listOrders());
-    } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'Failed to load orders');
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    void refresh();
-    return onPocEvent('poc:order-created', () => {
-      void refresh();
-    });
-  }, [refresh]);
+  const { data: orders = [], error, isLoading, isFetching, refetch } =
+    useListOrdersQuery();
 
   return (
     <section className="space-y-4">
@@ -60,7 +48,7 @@ function OrdersList() {
         <div className="flex gap-2">
           <button
             type="button"
-            onClick={() => void refresh()}
+            onClick={() => void refetch()}
             className="rounded-md border border-default px-3 py-1.5 text-sm text-foreground hover:border-accent"
           >
             Refresh
@@ -73,9 +61,9 @@ function OrdersList() {
           </Link>
         </div>
       </div>
-      {loading && <p className="text-muted">Loading…</p>}
-      {error && <p className="text-danger">{error}</p>}
-      {!loading && !error && orders.length === 0 && (
+      {(isLoading || isFetching) && <p className="text-muted">Loading…</p>}
+      {error && <p className="text-danger">{errorMessage(error, 'Failed to load orders')}</p>}
+      {!isLoading && !error && orders.length === 0 && (
         <p className="text-muted">No orders yet.</p>
       )}
       <ul className="space-y-2">
@@ -103,11 +91,11 @@ function OrdersList() {
 
 function OrderCreate() {
   const navigate = useNavigate();
-  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [createOrder, { error, isLoading }] = useCreateOrderMutation();
   const {
     register,
     handleSubmit,
-    formState: { errors, isSubmitting },
+    formState: { errors },
   } = useForm<CreateOrderForm>({
     resolver: zodResolver(createOrderSchema),
     defaultValues: {
@@ -119,22 +107,19 @@ function OrderCreate() {
   });
 
   const onSubmit = handleSubmit(async (values) => {
-    setSubmitError(null);
     try {
+      const unitPrice = values.unitPrice ?? 0;
       const order = await createOrder({
-        customerId: values.customerId,
-        items: [
-          {
-            sku: values.sku,
-            quantity: values.quantity,
-            unitPrice: values.unitPrice,
-          },
-        ],
-      });
+        createOrderRequest: {
+          customerId: values.customerId,
+          amount: unitPrice * values.quantity,
+          items: [{ sku: values.sku, quantity: values.quantity }],
+        },
+      }).unwrap();
       emitPocEvent('poc:order-created', { orderId: order.id });
       navigate(`/orders/${order.id}`);
-    } catch (err) {
-      setSubmitError(err instanceof ApiError ? err.message : 'Failed to create order');
+    } catch {
+      // Error is surfaced via mutation `error`
     }
   });
 
@@ -184,13 +169,15 @@ function OrderCreate() {
             {errors.unitPrice && <span className="text-danger">{errors.unitPrice.message}</span>}
           </label>
         </div>
-        {submitError && <p className="text-sm text-danger">{submitError}</p>}
+        {error && (
+          <p className="text-sm text-danger">{errorMessage(error, 'Failed to create order')}</p>
+        )}
         <button
           type="submit"
-          disabled={isSubmitting}
+          disabled={isLoading}
           className="rounded-md bg-accent px-4 py-2 text-sm font-medium text-on-accent hover:bg-accent-strong disabled:opacity-60"
         >
-          {isSubmitting ? 'Creating…' : 'Create order'}
+          {isLoading ? 'Creating…' : 'Create order'}
         </button>
       </form>
     </section>
@@ -199,28 +186,15 @@ function OrderCreate() {
 
 function OrderDetail() {
   const { id = '' } = useParams();
-  const [order, setOrder] = useState<OrderResponse | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const { data: order, error, isLoading } = useGetOrderQuery(
+    { id },
+    { skip: !id },
+  );
 
-  useEffect(() => {
-    let cancelled = false;
-    void (async () => {
-      try {
-        const data = await getOrder(id);
-        if (!cancelled) setOrder(data);
-      } catch (err) {
-        if (!cancelled) {
-          setError(err instanceof ApiError ? err.message : 'Failed to load order');
-        }
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [id]);
-
-  if (error) return <p className="text-danger">{error}</p>;
-  if (!order) return <p className="text-muted">Loading order…</p>;
+  if (error) {
+    return <p className="text-danger">{errorMessage(error, 'Failed to load order')}</p>;
+  }
+  if (isLoading || !order) return <p className="text-muted">Loading order…</p>;
 
   return (
     <section className="space-y-4">
@@ -242,6 +216,10 @@ function OrderDetail() {
             <dd className="uppercase">{order.status}</dd>
           </div>
           <div>
+            <dt className="text-muted">Amount</dt>
+            <dd>{order.amount}</dd>
+          </div>
+          <div>
             <dt className="text-muted">Payment</dt>
             <dd>{flagLabel(order.paymentSuccess)}</dd>
           </div>
@@ -256,7 +234,6 @@ function OrderDetail() {
             {order.items?.map((item, index) => (
               <li key={`${item.sku}-${index}`} className="font-mono">
                 {item.sku} × {item.quantity}
-                {item.unitPrice != null ? ` @ ${item.unitPrice}` : ''}
               </li>
             ))}
           </ul>
@@ -266,8 +243,7 @@ function OrderDetail() {
   );
 }
 
-export default function App() {
-  // Relative to shell `/orders/*` (absolute `/orders/...` paths miss the splat remainder).
+function OrdersRoutes() {
   return (
     <div className="p-4 md:p-6">
       <Routes>
@@ -276,5 +252,13 @@ export default function App() {
         <Route path=":id" element={<OrderDetail />} />
       </Routes>
     </div>
+  );
+}
+
+export default function App() {
+  return (
+    <Provider store={store}>
+      <OrdersRoutes />
+    </Provider>
   );
 }
