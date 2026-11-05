@@ -2,8 +2,12 @@ package com.example.orders.order.api;
 
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
-import java.util.List;
 import java.util.UUID;
+import org.springdoc.core.annotations.ParameterObject;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -36,8 +40,11 @@ public class OrderController {
 
     @GetMapping
     @Operation(operationId = "listOrders")
-    public List<OrderResponse> list() {
-        return orderService.findAll();
+    public Page<OrderResponse> list(
+            @ParameterObject
+            @PageableDefault(sort = "createdAt", direction = Sort.Direction.DESC)
+            Pageable pageable) {
+        return orderService.findAll(pageable);
     }
 
     @GetMapping("/{id}")

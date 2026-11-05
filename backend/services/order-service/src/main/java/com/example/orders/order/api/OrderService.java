@@ -6,6 +6,8 @@ import com.example.orders.order.domain.OrderRepository;
 import com.example.orders.order.kafka.OrderEventPublisher;
 import java.util.List;
 import java.util.UUID;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -40,10 +42,8 @@ public class OrderService {
     }
 
     @Transactional(readOnly = true)
-    public List<OrderResponse> findAll() {
-        return orderRepository.findAll().stream()
-                .map(OrderResponse::from)
-                .toList();
+    public Page<OrderResponse> findAll(Pageable pageable) {
+        return orderRepository.findAll(pageable).map(OrderResponse::from);
     }
 
     @Transactional(readOnly = true)
