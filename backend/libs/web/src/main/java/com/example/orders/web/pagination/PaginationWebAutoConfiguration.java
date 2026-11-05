@@ -11,7 +11,7 @@ import org.springframework.data.web.config.PageableHandlerMethodArgumentResolver
 @AutoConfiguration
 public class PaginationWebAutoConfiguration {
 
-    public static final int DEFAULT_PAGE_SIZE = 20;
+    public static final int DEFAULT_PAGE_SIZE = 8;
     public static final int MAX_PAGE_SIZE = 100;
 
     @Bean

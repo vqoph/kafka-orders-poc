@@ -1,14 +1,16 @@
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Badge,
   Button,
   buttonClassName,
+  DEFAULT_PAGE_SIZE,
   EmptyState,
   ErrorText,
   ListCard,
   LoadingText,
   PageHeader,
+  PaginationControls,
   Select,
   emitPocEvent,
   errorMessage,
@@ -16,7 +18,7 @@ import {
 } from '@poc/shared';
 import { useListOrdersQuery } from '../../api/ordersApi';
 import { formatItemsSummary } from '../detail/formatOrder';
-import { SORT_MODES, compareOrders, type SortMode } from './sortOrders';
+import { SORT_MODES, toPageableSort, type SortMode } from './sortOrders';
 
 const SORT_LABEL_KEYS: Record<SortMode, string> = {
   'date-desc': 'sortOptions.dateDesc',
@@ -26,14 +28,20 @@ const SORT_LABEL_KEYS: Record<SortMode, string> = {
 
 export function OrdersList() {
   const { t } = useTranslation('orders');
-  const { data: orders = [], error, isLoading, isFetching, refetch } =
-    useListOrdersQuery();
+  const [page, setPage] = useState(0);
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
   const [sortMode, setSortMode] = useState<SortMode>('date-desc');
 
-  const sortedOrders = useMemo(
-    () => [...orders].sort((a, b) => compareOrders(a, b, sortMode)),
-    [orders, sortMode],
-  );
+  const { data, error, isLoading, isFetching, refetch } = useListOrdersQuery({
+    page,
+    size: pageSize,
+    sort: [toPageableSort(sortMode)],
+  });
+
+  const orders = data?.content ?? [];
+  const totalPages = data?.totalPages ?? 0;
+  const first = data?.first ?? true;
+  const last = data?.last ?? true;
 
   return (
     <section className="space-y-4">
@@ -45,7 +53,10 @@ export function OrdersList() {
               <span>{t('sort')}</span>
               <Select
                 value={sortMode}
-                onChange={(e) => setSortMode(e.target.value as SortMode)}
+                onChange={(e) => {
+                  setSortMode(e.target.value as SortMode);
+                  setPage(0);
+                }}
               >
                 {SORT_MODES.map((mode) => (
                   <option key={mode} value={mode}>
@@ -63,13 +74,28 @@ export function OrdersList() {
           </>
         }
       />
+      <div className="flex justify-end">
+        <PaginationControls
+          page={page}
+          totalPages={totalPages}
+          first={first}
+          last={last}
+          pageSize={pageSize}
+          disabled={isFetching}
+          onPageChange={setPage}
+          onPageSizeChange={(size) => {
+            setPageSize(size);
+            setPage(0);
+          }}
+        />
+      </div>
       {(isLoading || isFetching) && <LoadingText />}
       {error && <ErrorText>{errorMessage(error, t('loadFailed'))}</ErrorText>}
       {!isLoading && !error && orders.length === 0 && (
         <EmptyState>{t('empty')}</EmptyState>
       )}
       <ul className="space-y-2">
-        {sortedOrders.map((order) => (
+        {orders.map((order) => (
           <li key={order.id}>
             <Link
               to={order.id}
