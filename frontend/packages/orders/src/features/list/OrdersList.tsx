@@ -12,12 +12,20 @@ import {
   Select,
   emitPocEvent,
   errorMessage,
+  useTranslation,
 } from '@poc/shared';
 import { useListOrdersQuery } from '../../api/ordersApi';
 import { formatItemsSummary } from '../detail/formatOrder';
-import { SORT_OPTIONS, compareOrders, type SortMode } from './sortOrders';
+import { SORT_MODES, compareOrders, type SortMode } from './sortOrders';
+
+const SORT_LABEL_KEYS: Record<SortMode, string> = {
+  'date-desc': 'sortOptions.dateDesc',
+  'date-asc': 'sortOptions.dateAsc',
+  status: 'sortOptions.status',
+};
 
 export function OrdersList() {
+  const { t } = useTranslation('orders');
   const { data: orders = [], error, isLoading, isFetching, refetch } =
     useListOrdersQuery();
   const [sortMode, setSortMode] = useState<SortMode>('date-desc');
@@ -30,35 +38,35 @@ export function OrdersList() {
   return (
     <section className="space-y-4">
       <PageHeader
-        title="Orders"
+        title={t('title')}
         actions={
           <>
             <label className="flex items-center gap-2 text-sm text-muted">
-              <span>sort</span>
+              <span>{t('sort')}</span>
               <Select
                 value={sortMode}
                 onChange={(e) => setSortMode(e.target.value as SortMode)}
               >
-                {SORT_OPTIONS.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
+                {SORT_MODES.map((mode) => (
+                  <option key={mode} value={mode}>
+                    {t(SORT_LABEL_KEYS[mode])}
                   </option>
                 ))}
               </Select>
             </label>
             <Button variant="secondary" onClick={() => void refetch()}>
-              Refresh
+              {t('refresh')}
             </Button>
             <Link to="new" className={buttonClassName('primary')}>
-              New order
+              {t('newOrder')}
             </Link>
           </>
         }
       />
       {(isLoading || isFetching) && <LoadingText />}
-      {error && <ErrorText>{errorMessage(error, 'Failed to load orders')}</ErrorText>}
+      {error && <ErrorText>{errorMessage(error, t('loadFailed'))}</ErrorText>}
       {!isLoading && !error && orders.length === 0 && (
-        <EmptyState>No orders yet.</EmptyState>
+        <EmptyState>{t('empty')}</EmptyState>
       )}
       <ul className="space-y-2">
         {sortedOrders.map((order) => (
@@ -74,10 +82,13 @@ export function OrdersList() {
                   <Badge>{order.status}</Badge>
                 </div>
                 <p className="mt-1 text-sm text-muted">
-                  customerId {order.customerId} · amount {order.amount}
+                  {t('listMeta', {
+                    customerId: order.customerId,
+                    amount: order.amount,
+                  })}
                 </p>
                 <p className="mt-0.5 font-mono text-xs text-muted">
-                  {formatItemsSummary(order.items)}
+                  {formatItemsSummary(order.items, t)}
                 </p>
               </ListCard>
             </Link>

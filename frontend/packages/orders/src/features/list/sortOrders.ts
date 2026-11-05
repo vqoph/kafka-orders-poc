@@ -2,11 +2,7 @@ import type { OrderResponse } from '../../api/generatedApi';
 
 export type SortMode = 'date-asc' | 'date-desc' | 'status';
 
-export const SORT_OPTIONS: { value: SortMode; label: string }[] = [
-  { value: 'date-desc', label: 'date desc' },
-  { value: 'date-asc', label: 'date asc' },
-  { value: 'status', label: 'status' },
-];
+export const SORT_MODES: SortMode[] = ['date-desc', 'date-asc', 'status'];
 
 export function compareOrders(a: OrderResponse, b: OrderResponse, mode: SortMode): number {
   if (mode === 'status') {

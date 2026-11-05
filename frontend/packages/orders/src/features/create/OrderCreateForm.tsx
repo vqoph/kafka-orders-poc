@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useFieldArray, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -9,20 +10,23 @@ import {
   Input,
   emitPocEvent,
   errorMessage,
+  useTranslation,
 } from '@poc/shared';
 import { useCreateOrderMutation } from '../../api/ordersApi';
 import { createOrderSchema, type CreateOrderForm } from './createOrderSchema';
 
 export function OrderCreateForm() {
+  const { t } = useTranslation('orders');
   const navigate = useNavigate();
   const [createOrder, { error, isLoading }] = useCreateOrderMutation();
+  const schema = useMemo(() => createOrderSchema(t), [t]);
   const {
     control,
     register,
     handleSubmit,
     formState: { errors },
   } = useForm<CreateOrderForm>({
-    resolver: zodResolver(createOrderSchema),
+    resolver: zodResolver(schema),
     defaultValues: {
       customerId: 'cust-1',
       amount: 19.99,
@@ -49,22 +53,22 @@ export function OrderCreateForm() {
 
   return (
     <FormPanel onSubmit={onSubmit} className="space-y-3">
-      <Field label="Customer id" error={errors.customerId?.message}>
+      <Field label={t('create.customerId')} error={errors.customerId?.message}>
         <Input {...register('customerId')} />
       </Field>
-      <Field label="Amount" error={errors.amount?.message}>
+      <Field label={t('create.amount')} error={errors.amount?.message}>
         <Input type="number" step="0.01" min={0.01} {...register('amount')} />
       </Field>
       <div className="space-y-2">
         <div className="flex items-center justify-between">
-          <h3 className="text-sm font-medium text-foreground">Items</h3>
+          <h3 className="text-sm font-medium text-foreground">{t('create.items')}</h3>
           <Button
             type="button"
             variant="secondary"
             size="sm"
             onClick={() => append({ sku: '', quantity: 1 })}
           >
-            Add item
+            {t('create.addItem')}
           </Button>
         </div>
         {errors.items?.root && <ErrorText>{errors.items.root.message}</ErrorText>}
@@ -75,13 +79,13 @@ export function OrderCreateForm() {
           {fields.map((field, index) => (
             <li key={field.id} className="grid grid-cols-[1fr_5rem_auto] gap-2">
               <Field
-                label={index === 0 ? 'SKU' : ''}
+                label={index === 0 ? t('create.sku') : ''}
                 error={errors.items?.[index]?.sku?.message}
               >
-                <Input placeholder="SKU" {...register(`items.${index}.sku`)} />
+                <Input placeholder={t('create.sku')} {...register(`items.${index}.sku`)} />
               </Field>
               <Field
-                label={index === 0 ? 'Qty' : ''}
+                label={index === 0 ? t('create.qty') : ''}
                 error={errors.items?.[index]?.quantity?.message}
               >
                 <Input
@@ -99,16 +103,16 @@ export function OrderCreateForm() {
                   disabled={fields.length === 1}
                   className="px-2 py-2 text-muted hover:border-danger hover:text-danger"
                 >
-                  Remove
+                  {t('create.remove')}
                 </Button>
               </div>
             </li>
           ))}
         </ul>
       </div>
-      {error && <ErrorText>{errorMessage(error, 'Failed to create order')}</ErrorText>}
+      {error && <ErrorText>{errorMessage(error, t('create.failed'))}</ErrorText>}
       <Button type="submit" variant="primary" size="lg" disabled={isLoading}>
-        {isLoading ? 'Creating…' : 'Create order'}
+        {isLoading ? t('create.creating') : t('create.submit')}
       </Button>
     </FormPanel>
   );

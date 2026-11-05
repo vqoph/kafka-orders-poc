@@ -1,59 +1,60 @@
+import { ErrorText, FormPanel, LoadingText, errorMessage, useTranslation } from '@poc/shared';
 import { useParams } from 'react-router-dom';
-import { ErrorText, FormPanel, LoadingText, errorMessage } from '@poc/shared';
 import { useGetOrderQuery } from '../../api/ordersApi';
 import { nullableBool } from './formatOrder';
 
 export function OrderDetail() {
+  const { t } = useTranslation('orders');
   const { id = '' } = useParams();
   const { data: order, error, isLoading } = useGetOrderQuery({ id }, { skip: !id });
 
   if (error) {
-    return <ErrorText>{errorMessage(error, 'Failed to load order')}</ErrorText>;
+    return <ErrorText>{errorMessage(error, t('detail.loadFailed'))}</ErrorText>;
   }
-  if (isLoading || !order) return <LoadingText>Loading order…</LoadingText>;
+  if (isLoading || !order) return <LoadingText>{t('detail.loading')}</LoadingText>;
 
   return (
     <FormPanel asDiv className="space-y-3">
       <dl className="grid gap-2 text-sm sm:grid-cols-2">
         <div className="sm:col-span-2">
-          <dt className="text-muted">id</dt>
+          <dt className="text-muted">{t('detail.id')}</dt>
           <dd className="font-mono text-accent">{order.id}</dd>
         </div>
         <div>
-          <dt className="text-muted">customerId</dt>
+          <dt className="text-muted">{t('detail.customerId')}</dt>
           <dd>{order.customerId}</dd>
         </div>
         <div>
-          <dt className="text-muted">status</dt>
+          <dt className="text-muted">{t('detail.status')}</dt>
           <dd className="font-mono">{order.status}</dd>
         </div>
         <div>
-          <dt className="text-muted">amount</dt>
+          <dt className="text-muted">{t('detail.amount')}</dt>
           <dd>{order.amount}</dd>
         </div>
         <div>
-          <dt className="text-muted">createdAt</dt>
-          <dd className="font-mono">{order.createdAt ?? 'null'}</dd>
+          <dt className="text-muted">{t('detail.createdAt')}</dt>
+          <dd className="font-mono">{order.createdAt ?? t('detail.null')}</dd>
         </div>
         <div>
-          <dt className="text-muted">paymentSuccess</dt>
-          <dd className="font-mono">{nullableBool(order.paymentSuccess)}</dd>
+          <dt className="text-muted">{t('detail.paymentSuccess')}</dt>
+          <dd className="font-mono">{nullableBool(order.paymentSuccess, t)}</dd>
         </div>
         <div>
-          <dt className="text-muted">inventorySuccess</dt>
-          <dd className="font-mono">{nullableBool(order.inventorySuccess)}</dd>
+          <dt className="text-muted">{t('detail.inventorySuccess')}</dt>
+          <dd className="font-mono">{nullableBool(order.inventorySuccess, t)}</dd>
         </div>
       </dl>
       <div>
-        <h3 className="mb-2 text-sm font-medium text-foreground">items</h3>
+        <h3 className="mb-2 text-sm font-medium text-foreground">{t('detail.items')}</h3>
         {!order.items?.length ? (
           <p className="font-mono text-sm text-muted">[]</p>
         ) : (
           <table className="w-full text-left text-sm">
             <thead>
               <tr className="text-muted">
-                <th className="pb-1 font-medium">sku</th>
-                <th className="pb-1 font-medium">quantity</th>
+                <th className="pb-1 font-medium">{t('detail.sku')}</th>
+                <th className="pb-1 font-medium">{t('detail.quantity')}</th>
               </tr>
             </thead>
             <tbody>

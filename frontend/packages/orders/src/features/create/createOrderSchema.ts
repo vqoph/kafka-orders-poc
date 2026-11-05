@@ -1,16 +1,20 @@
 import { z } from 'zod';
 
-export const createOrderSchema = z.object({
-  customerId: z.string().min(1, 'Customer id is required'),
-  amount: z.coerce.number().min(0.01, 'Amount must be >= 0.01'),
-  items: z
-    .array(
-      z.object({
-        sku: z.string().min(1, 'SKU is required'),
-        quantity: z.coerce.number().int().positive('Quantity must be > 0'),
-      }),
-    )
-    .min(1, 'At least one item is required'),
-});
+type Translate = (key: string) => string;
 
-export type CreateOrderForm = z.infer<typeof createOrderSchema>;
+export function createOrderSchema(t: Translate) {
+  return z.object({
+    customerId: z.string().min(1, t('create.customerIdRequired')),
+    amount: z.coerce.number().min(0.01, t('create.amountMin')),
+    items: z
+      .array(
+        z.object({
+          sku: z.string().min(1, t('create.skuRequired')),
+          quantity: z.coerce.number().int().positive(t('create.quantityPositive')),
+        }),
+      )
+      .min(1, t('create.itemsRequired')),
+  });
+}
+
+export type CreateOrderForm = z.infer<ReturnType<typeof createOrderSchema>>;
