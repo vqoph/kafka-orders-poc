@@ -21,13 +21,12 @@ export type PaginationControlsProps = {
   className?: string;
 };
 
-const pageButtonClass = (active: boolean, disabled: boolean) =>
+const pageButtonClass = (active: boolean) =>
   clsx(
-    'inline-flex size-7 shrink-0 items-center justify-center rounded-md text-xs transition',
+    'inline-flex size-7 shrink-0 cursor-pointer items-center justify-center rounded-md text-xs transition',
     active
       ? 'bg-accent font-medium text-on-accent'
-      : 'text-foreground hover:bg-panel-muted',
-    disabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer',
+      : 'text-foreground hover:bg-panel-muted disabled:pointer-events-none',
   );
 
 function ChevronLeftIcon() {
@@ -72,6 +71,8 @@ export function PaginationControls({
 }: PaginationControlsProps) {
   const { t } = useTranslation('common');
   const pageItems = buildPageItems(page, totalPages);
+  const prevDisabled = disabled || first || totalPages <= 0;
+  const nextDisabled = disabled || last || totalPages <= 0;
 
   return (
     <div className={clsx('flex flex-wrap items-center gap-2 pt-2', className)}>
@@ -82,9 +83,9 @@ export function PaginationControls({
         <button
           type="button"
           aria-label={t('pagination.prev')}
-          className={pageButtonClass(false, disabled || first || totalPages <= 0)}
+          className={clsx(pageButtonClass(false), prevDisabled && 'invisible')}
           onClick={() => onPageChange(Math.max(0, page - 1))}
-          disabled={disabled || first || totalPages <= 0}
+          disabled={prevDisabled}
         >
           <ChevronLeftIcon />
         </button>
@@ -106,7 +107,7 @@ export function PaginationControls({
               aria-label={t('pagination.page', { page: item + 1 })}
               aria-current={item === page ? 'page' : undefined}
               onClick={() => onPageChange(item)}
-              className={pageButtonClass(item === page, disabled)}
+              className={pageButtonClass(item === page)}
             >
               {item + 1}
             </button>
@@ -116,9 +117,9 @@ export function PaginationControls({
         <button
           type="button"
           aria-label={t('pagination.next')}
-          className={pageButtonClass(false, disabled || last || totalPages <= 0)}
+          className={clsx(pageButtonClass(false), nextDisabled && 'invisible')}
           onClick={() => onPageChange(page + 1)}
-          disabled={disabled || last || totalPages <= 0}
+          disabled={nextDisabled}
         >
           <ChevronRightIcon />
         </button>
@@ -130,10 +131,7 @@ export function PaginationControls({
           <Select
             value={pageSize}
             disabled={disabled}
-            className={clsx(
-              'h-7 py-0 text-xs',
-              disabled ? 'cursor-not-allowed' : 'cursor-pointer',
-            )}
+            className="h-7 cursor-pointer py-0 text-xs"
             onChange={(event) => {
               onPageSizeChange(Number(event.target.value) as PageSizeOption);
             }}
