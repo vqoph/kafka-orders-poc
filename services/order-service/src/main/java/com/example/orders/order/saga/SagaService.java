@@ -4,6 +4,10 @@ import com.example.orders.events.InventoryReserved;
 import com.example.orders.events.PaymentProcessed;
 import com.example.orders.order.domain.Order;
 import com.example.orders.order.domain.OrderRepository;
+import com.example.orders.order.domain.OrderStatus;
+
+import java.util.UUID;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -27,12 +31,8 @@ public class SagaService {
 
     @Transactional
     public void onPaymentProcessed(PaymentProcessed event) {
-        Order order = orderRepository.findById(event.orderId()).orElse(null);
+        Order order = getOrderAndValidate(event.orderId());
         if (order == null) {
-            log.warn("Payment for unknown orderId={}", event.orderId());
-            return;
-        }
-        if (order.isTerminal()) {
             return;
         }
         order.recordPaymentResult(event.success());
@@ -41,12 +41,8 @@ public class SagaService {
 
     @Transactional
     public void onInventoryReserved(InventoryReserved event) {
-        Order order = orderRepository.findById(event.orderId()).orElse(null);
+        Order order = getOrderAndValidate(event.orderId());
         if (order == null) {
-            log.warn("Inventory for unknown orderId={}", event.orderId());
-            return;
-        }
-        if (order.isTerminal()) {
             return;
         }
         order.recordInventoryResult(event.success());
@@ -60,15 +56,48 @@ public class SagaService {
      * If status is not PENDING → return.
      * Both true → order.confirm(), save, publishStatusChanged.
      * Else → order.cancel(), save, publishStatusChanged;
-     *   if payment was true → publishRefundRequested;
-     *   if inventory was true → publishReleaseRequested.
+     * if payment was true → publishRefundRequested;
+     * if inventory was true → publishReleaseRequested.
      *
-     * Helpers on Order: hasBothSagaResults(), getPaymentSuccess(), getInventorySuccess(),
+     * Helpers on Order: hasBothSagaResults(), getPaymentSuccess(),
+     * getInventorySuccess(),
      * confirm(), cancel(). Publisher: sagaEventPublisher.
      *
      * See doc/fr/appendices/exercises/lab-03-saga-choreography.md (A.2).
      */
-    void tryComplete(Order order) {
-        throw new UnsupportedOperationException("TODO Lab 3: implement saga aggregation");
+    private void tryComplete(Order order) {
+        if (order.getStatus() != OrderStatus.PENDING || !order.hasBothSagaResults()) {
+            return;
+        }
+
+        if (order.hasBothSagaSuccess()) {
+            order.confirm();
+            orderRepository.save(order);
+            sagaEventPublisher.publishStatusChanged(order);
+            return;
+        }
+
+        order.cancel();
+        orderRepository.save(order);
+        sagaEventPublisher.publishStatusChanged(order);
+        if (order.getPaymentSuccess()) {
+            sagaEventPublisher.publishRefundRequested(order);
+        }
+        if (order.getInventorySuccess()) {
+            sagaEventPublisher.publishReleaseRequested(order);
+        }
+
+    }
+
+    private Order getOrderAndValidate(UUID orderId) {
+        Order order = orderRepository.findById(orderId).orElse(null);
+        if (order == null) {
+            log.warn("Unknown orderId={}", orderId);
+            return null;
+        }
+        if (order.isTerminal()) {
+            return null;
+        }
+        return order;
     }
 }

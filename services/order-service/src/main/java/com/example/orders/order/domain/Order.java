@@ -17,8 +17,10 @@ import java.util.List;
 import java.util.UUID;
 
 /**
- * JPA entity — the database model for a row in {@code orders} (plus embedded items).
- * Not the same as the HTTP DTO ({@code OrderResponse}): entities stay close to the schema.
+ * JPA entity — the database model for a row in {@code orders} (plus embedded
+ * items).
+ * Not the same as the HTTP DTO ({@code OrderResponse}): entities stay close to
+ * the schema.
  */
 @Entity
 @Table(name = "orders")
@@ -87,6 +89,10 @@ public class Order {
 
     public boolean hasBothSagaResults() {
         return paymentSuccess != null && inventorySuccess != null;
+    }
+
+    public boolean hasBothSagaSuccess() {
+        return hasBothSagaResults() && paymentSuccess && inventorySuccess;
     }
 
     public UUID getId() {
