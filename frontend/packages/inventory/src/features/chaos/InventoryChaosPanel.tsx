@@ -1,10 +1,11 @@
-import { ChaosRateForm, useChaosRateForm } from '@poc/shared';
+import { ChaosRateForm, useChaosRateForm, useTranslation } from '@poc/shared';
 import {
   useGetInventoryFailureRateQuery,
   useSetInventoryFailureRateMutation,
 } from '../../api/inventoryApi';
 
 export function InventoryChaosPanel() {
+  const { t } = useTranslation('inventory');
   const { data: chaos, error: chaosError, isLoading: chaosLoading } =
     useGetInventoryFailureRateQuery();
   const [setInventoryFailureRate, { error: saveError, isLoading: saving, isSuccess }] =
@@ -17,15 +18,15 @@ export function InventoryChaosPanel() {
     saveError,
     saving,
     isSuccess,
-    successMessage: 'Inventory chaos rate updated',
+    successMessage: t('chaos.updated'),
     onSave: async (rate) =>
       setInventoryFailureRate({ failureRateRequest: { rate } }).unwrap(),
   });
 
   return (
     <ChaosRateForm
-      title="Inventory chaos"
-      description="Artificial failure rate for inventory-service (0–1)."
+      title={t('chaos.title')}
+      description={t('chaos.description')}
       currentRate={chaos?.rate}
       value={form.draft}
       onChange={form.setDraft}

@@ -6,10 +6,12 @@ import {
   LoadingText,
   PageHeader,
   errorMessage,
+  useTranslation,
 } from '@poc/shared';
 import { useListStockQuery } from '../../api/inventoryApi';
 
 export function StockList() {
+  const { t } = useTranslation('inventory');
   const {
     data: stock = [],
     error: stockError,
@@ -21,19 +23,19 @@ export function StockList() {
   return (
     <section className="space-y-4">
       <PageHeader
-        title="Stock"
+        title={t('stock')}
         actions={
           <Button variant="secondary" onClick={() => void refetchStock()}>
-            Refresh
+            {t('refresh')}
           </Button>
         }
       />
       {(stockLoading || stockFetching) && <LoadingText />}
       {stockError && (
-        <ErrorText>{errorMessage(stockError, 'Failed to load inventory')}</ErrorText>
+        <ErrorText>{errorMessage(stockError, t('loadFailed'))}</ErrorText>
       )}
       {!stockLoading && stock.length === 0 && !stockError && (
-        <EmptyState>No stock rows returned.</EmptyState>
+        <EmptyState>{t('empty')}</EmptyState>
       )}
       <ul className="space-y-2">
         {stock.map((item) => (
@@ -41,7 +43,9 @@ export function StockList() {
             <ListCard>
               <div className="flex items-center justify-between gap-2">
                 <span className="font-mono text-accent">{item.sku}</span>
-                <span className="text-sm text-foreground">qty {item.quantity}</span>
+                <span className="text-sm text-foreground">
+                  {t('qty', { quantity: item.quantity })}
+                </span>
               </div>
             </ListCard>
           </li>
