@@ -80,6 +80,24 @@ function createWebpackConfig(options) {
             requiredVersion: deps["react-router-dom"],
             eager: isHost,
           },
+          ...(deps.i18next
+            ? {
+                i18next: {
+                  singleton: true,
+                  requiredVersion: deps.i18next,
+                  eager: isHost,
+                },
+              }
+            : {}),
+          ...(deps["react-i18next"]
+            ? {
+                "react-i18next": {
+                  singleton: true,
+                  requiredVersion: deps["react-i18next"],
+                  eager: isHost,
+                },
+              }
+            : {}),
           ...(deps["@reduxjs/toolkit"]
             ? {
                 "@reduxjs/toolkit": {
