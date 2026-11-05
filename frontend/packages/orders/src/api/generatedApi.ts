@@ -2,7 +2,14 @@ import { emptySplitApi as api } from './emptyApi';
 const injectedRtkApi = api.injectEndpoints({
   endpoints: (build) => ({
     listOrders: build.query<ListOrdersApiResponse, ListOrdersApiArg>({
-      query: () => ({ url: `/orders` }),
+      query: (queryArg) => ({
+        url: `/orders`,
+        params: {
+          page: queryArg.page,
+          size: queryArg.size,
+          sort: queryArg.sort,
+        },
+      }),
     }),
     createOrder: build.mutation<CreateOrderApiResponse, CreateOrderApiArg>({
       query: (queryArg) => ({ url: `/orders`, method: 'POST', body: queryArg.createOrderRequest }),
@@ -23,8 +30,15 @@ const injectedRtkApi = api.injectEndpoints({
   overrideExisting: false,
 });
 export { injectedRtkApi as generatedApi };
-export type ListOrdersApiResponse = /** status 200 OK */ OrderResponse[];
-export type ListOrdersApiArg = void;
+export type ListOrdersApiResponse = /** status 200 OK */ PageOrderResponse;
+export type ListOrdersApiArg = {
+  /** Zero-based page index (0..N) */
+  page?: number;
+  /** The size of the page to be returned */
+  size?: number;
+  /** Sorting criteria in the format: property,(asc|desc). Default sort order is ascending. Multiple sort criteria are supported. */
+  sort?: string[];
+};
 export type CreateOrderApiResponse = /** status 201 Created */ OrderResponse;
 export type CreateOrderApiArg = {
   createOrderRequest: CreateOrderRequest;
@@ -51,6 +65,32 @@ export type OrderResponse = {
   items: ItemResponse[];
   paymentSuccess?: boolean | null;
   inventorySuccess?: boolean | null;
+};
+export type SortObject = {
+  empty?: boolean;
+  sorted?: boolean;
+  unsorted?: boolean;
+};
+export type PageableObject = {
+  offset?: number;
+  paged?: boolean;
+  pageNumber?: number;
+  pageSize?: number;
+  sort?: SortObject;
+  unpaged?: boolean;
+};
+export type PageOrderResponse = {
+  totalPages?: number;
+  totalElements?: number;
+  size?: number;
+  content?: OrderResponse[];
+  number?: number;
+  sort?: SortObject;
+  pageable?: PageableObject;
+  numberOfElements?: number;
+  first?: boolean;
+  last?: boolean;
+  empty?: boolean;
 };
 export type OrderItemRequest = {
   sku: string;
