@@ -1,10 +1,11 @@
-import { ChaosRateForm, PageShell, useChaosRateForm } from '@poc/shared';
+import { ChaosRateForm, PageShell, useChaosRateForm, useTranslation } from '@poc/shared';
 import {
   useGetPaymentFailureRateQuery,
   useSetPaymentFailureRateMutation,
 } from '../../api/paymentApi';
 
 export function PaymentChaosPage() {
+  const { t } = useTranslation('payment');
   const { data, error, isLoading } = useGetPaymentFailureRateQuery();
   const [setPaymentFailureRate, { error: saveError, isLoading: saving, isSuccess }] =
     useSetPaymentFailureRateMutation();
@@ -16,7 +17,7 @@ export function PaymentChaosPage() {
     saveError,
     saving,
     isSuccess,
-    successMessage: 'Payment chaos rate updated',
+    successMessage: t('chaos.updated'),
     onSave: async (rate) =>
       setPaymentFailureRate({ failureRateRequest: { rate } }).unwrap(),
   });
@@ -24,8 +25,8 @@ export function PaymentChaosPage() {
   return (
     <PageShell maxWidth="sm">
       <ChaosRateForm
-        title="Payment chaos"
-        description="Control the payment-service artificial failure rate (0 = none, 1 = always fail)."
+        title={t('chaos.title')}
+        description={t('chaos.description')}
         currentRate={data?.rate}
         value={chaos.draft}
         onChange={chaos.setDraft}
