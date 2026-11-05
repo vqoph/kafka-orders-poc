@@ -29,9 +29,7 @@ export type CreateOrderApiResponse = /** status 201 Created */ OrderResponse;
 export type CreateOrderApiArg = {
   createOrderRequest: CreateOrderRequest;
 };
-export type RepublishApiResponse = /** status 200 OK */ {
-  [key: string]: any;
-};
+export type RepublishApiResponse = /** status 200 OK */ RepublishResponse;
 export type RepublishApiArg = {
   id: string;
   keyMode?: 'ORDER_ID' | 'NONE';
@@ -62,6 +60,12 @@ export type CreateOrderRequest = {
   customerId: string;
   items: OrderItemRequest[];
   amount: number;
+};
+export type RepublishResponse = {
+  topic: string;
+  keyMode: string;
+  key: string;
+  order: OrderResponse;
 };
 export const {
   useListOrdersQuery,

@@ -98,8 +98,7 @@
             "content": {
               "*/*": {
                 "schema": {
-                  "type": "object",
-                  "additionalProperties": {}
+                  "$ref": "#/components/schemas/RepublishResponse"
                 }
               }
             }
@@ -251,6 +250,29 @@
           "id",
           "items",
           "status"
+        ]
+      },
+      "RepublishResponse": {
+        "type": "object",
+        "properties": {
+          "topic": {
+            "type": "string"
+          },
+          "keyMode": {
+            "type": "string"
+          },
+          "key": {
+            "type": "string"
+          },
+          "order": {
+            "$ref": "#/components/schemas/OrderResponse"
+          }
+        },
+        "required": [
+          "key",
+          "keyMode",
+          "order",
+          "topic"
         ]
       }
     }

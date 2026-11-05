@@ -3,7 +3,8 @@ package com.example.orders.order.kafka;
 import com.example.orders.order.api.OrderResponse;
 import com.example.orders.order.api.OrderService;
 import com.example.orders.order.domain.Order;
-import java.util.Map;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.UUID;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -46,17 +47,26 @@ public class KafkaLabController {
      *                string)
      */
     @PostMapping("/orders/{id}/republish")
-    public Map<String, Object> republish(
+    @Operation(operationId = "republish")
+    public RepublishResponse republish(
             @PathVariable UUID id,
             @RequestParam(defaultValue = "ORDER_ID") KeyMode keyMode) {
         Order order = orderService.getOrderOrThrow(id);
         String key = resolveKey(order, keyMode);
         orderEventPublisher.publishOrderCreatedWithKey(order, key);
-        return Map.of(
-                "topic", KafkaTopics.ORDERS_CREATED,
-                "keyMode", keyMode.name(),
-                "key", key == null ? "" : key,
-                "order", OrderResponse.from(order));
+        return new RepublishResponse(
+                KafkaTopics.ORDERS_CREATED,
+                keyMode.name(),
+                key == null ? "" : key,
+                OrderResponse.from(order));
+    }
+
+    @Schema(requiredProperties = {"topic", "keyMode", "key", "order"})
+    public record RepublishResponse(
+            String topic,
+            String keyMode,
+            String key,
+            OrderResponse order) {
     }
 
     /*

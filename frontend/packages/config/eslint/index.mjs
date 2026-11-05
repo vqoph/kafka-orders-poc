@@ -21,6 +21,8 @@ export default defineConfig(
       "node_modules/**",
       ".turbo/**",
       "coverage/**",
+      // RTK Query OpenAPI codegen output — do not hand-lint
+      "**/src/api/generatedApi.ts",
       // CommonJS tooling kept as .js in this monorepo (webpack/vitest/prettier shareables)
       "**/*.config.js",
       "**/*.config.cjs",
