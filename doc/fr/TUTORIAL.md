@@ -44,7 +44,7 @@ Browser / microfronts --REST/SSE--> order / payment / inventory / notification
 - Java 21 LTS, Spring Boot 3.5.x, Maven multi-module (le module `events` joue le rôle de `ts-shared`).
 - Spring Kafka, Spring Web, Spring Data JPA, Flyway, springdoc-openapi, Actuator.
 - Kafka en KRaft (image `apache/kafka`, pas de Zookeeper) + Kafka UI + Postgres (une base par service).
-- Front (hors parcours tuto) : microfrontends sous `frontend/` (shell + remotes), lancés via `scripts/frontend-*.sh`.
+- Front (hors parcours tuto) : microfrontends sous `frontend/` (shell + remotes), lancés via `./scripts/frontend-dev.sh`.
 - Tests : JUnit 5 + Testcontainers (peu, ciblés).
 
 ## Correspondances NestJS vers Spring
@@ -586,7 +586,7 @@ Crée une commande dans un autre terminal : l'événement apparaît dans le flux
 
 ## Étape 9 : UI (hors parcours)
 
-Le front n’est **plus** dans le tutoriel. L’UI microfrontend vit sous `frontend/` (shell + remotes) et se lance via `scripts/frontend-install.sh` / `scripts/frontend-dev.sh`. Les services Java exposent déjà le contrat REST/SSE + CORS pour `localhost:5000-5004`.
+Le front n’est **plus** dans le tutoriel. L’UI microfrontend vit sous `frontend/` (shell + remotes) et se lance via `./scripts/frontend-dev.sh`. Les services Java exposent déjà le contrat REST/SSE + CORS pour `localhost:5000-5004`.
 
 ---
 
@@ -644,7 +644,7 @@ docker compose --profile apps up --build
 
 ```bash
 # Run a service (never: mvn -f backend/pom.xml -pl … -am spring-boot:run — fails on parent pom)
-# From repo root; or: ./scripts/backend-install.sh then ./scripts/backend-run.sh order-service
+# From repo root; or: ./scripts/backend-run.sh order-service
 mvn -f backend/pom.xml -pl services/order-service -am -DskipTests install
 mvn -f backend/pom.xml -pl services/order-service spring-boot:run
 
