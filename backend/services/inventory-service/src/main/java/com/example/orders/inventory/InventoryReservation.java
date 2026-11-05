@@ -21,13 +21,14 @@ import org.springframework.stereotype.Component;
 
 /**
  * Lab 3 — stock reservation rule ({@link #reserve(OrderCreated)}).
+ * Failure rate is mutable at runtime via chaos API.
  */
 @Component
 public class InventoryReservation {
 
     private final StockRepository stockRepository;
     private final ReservationRepository reservationRepository;
-    private final double failureRate;
+    private volatile double failureRate;
     private final Logger log = Logger.getLogger(InventoryReservation.class.getName());
 
     public InventoryReservation(
@@ -90,6 +91,17 @@ public class InventoryReservation {
         reservationRepository.save(reservation);
 
         return reservation;
+    }
+
+    public double getFailureRate() {
+        return failureRate;
+    }
+
+    public void setFailureRate(double failureRate) {
+        if (failureRate < 0.0 || failureRate > 1.0) {
+            throw new IllegalArgumentException("failure rate must be between 0.0 and 1.0");
+        }
+        this.failureRate = failureRate;
     }
 
     private Reservation failReservation(OrderCreated order) {
