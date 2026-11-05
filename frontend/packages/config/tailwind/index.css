@@ -2,13 +2,47 @@
 
 @theme {
   --font-sans: "Segoe UI", ui-sans-serif, system-ui, sans-serif;
-  --color-surface: #0f172a;
-  --color-panel: #1e293b;
-  --color-border: #334155;
-  --color-accent: #38bdf8;
-  --color-accent-strong: #0ea5e9;
-  --color-success: #34d399;
-  --color-danger: #f87171;
-  --color-warning: #fbbf24;
-  --color-muted: #94a3b8;
+  --color-surface: var(--poc-surface);
+  --color-panel: var(--poc-panel);
+  --color-panel-muted: var(--poc-panel-muted);
+  --color-default: var(--poc-default);
+  --color-foreground: var(--poc-foreground);
+  --color-muted: var(--poc-muted);
+  --color-accent: var(--poc-accent);
+  --color-accent-strong: var(--poc-accent-strong);
+  --color-on-accent: var(--poc-on-accent);
+  --color-success: var(--poc-success);
+  --color-danger: var(--poc-danger);
+  --color-warning: var(--poc-warning);
+}
+
+:root,
+[data-theme="light"] {
+  --poc-surface: #c9d1db;
+  --poc-panel: #dde3eb;
+  --poc-panel-muted: #b8c2cf;
+  --poc-default: #9aa6b5;
+  --poc-foreground: #1a2332;
+  --poc-muted: #4f5d6e;
+  --poc-accent: #0369a1;
+  --poc-accent-strong: #075985;
+  --poc-on-accent: #eef3f8;
+  --poc-success: #047857;
+  --poc-danger: #b91c1c;
+  --poc-warning: #b45309;
+}
+
+[data-theme="dark"] {
+  --poc-surface: #0b1220;
+  --poc-panel: #151d2e;
+  --poc-panel-muted: #1c2640;
+  --poc-default: #2a3650;
+  --poc-foreground: #e2e8f0;
+  --poc-muted: #94a3b8;
+  --poc-accent: #38bdf8;
+  --poc-accent-strong: #0ea5e9;
+  --poc-on-accent: #0b1220;
+  --poc-success: #34d399;
+  --poc-danger: #f87171;
+  --poc-warning: #fbbf24;
 }
