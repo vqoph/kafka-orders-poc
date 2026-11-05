@@ -42,7 +42,7 @@ Next.js (web) --REST--> order-service --outbox--> Kafka: orders.created
 - Java 21 LTS, Spring Boot 3.5.x, Maven multi-module (le module `events` joue le rôle de `ts-shared`).
 - Spring Kafka, Spring Web, Spring Data JPA, Flyway, springdoc-openapi, Actuator.
 - Kafka en KRaft (image `apache/kafka`, pas de Zookeeper) + Kafka UI + Postgres (une base par service).
-- Front : mêmes versions que monkeytype (Next 16, React 19, Tailwind 4, TypeScript 5.9, RTK Query + codegen OpenAPI, react-hook-form, zod). Les versions exactes seront recopiées depuis `apps/web/package.json` de monkeytype au moment de l'étape front.
+- Front : Next 16, React 19, Tailwind 4, TypeScript 5.9, RTK Query + codegen OpenAPI, react-hook-form, zod.
 - Tests : JUnit 5 + Testcontainers (peu, ciblés).
 
 ## Correspondances NestJS vers Spring
@@ -73,7 +73,7 @@ cp doc/fr/TODO.md.sample doc/fr/TODO.md
 
 ## Étape 0 : environnement WSL
 
-**Pourquoi** : Docker est déjà dans ton WSL, mais il manque Java et Maven. Node 26 / npm 11 sont requis pour avoir la même toolchain que monkeytype.
+**Pourquoi** : Docker est déjà dans ton WSL, mais il manque Java et Maven. Node 26 / npm 11 sont requis pour le front Next.js.
 
 ```bash
 # Install SDKMAN (manages JDK and Maven versions, like nvm for Node)
@@ -585,7 +585,7 @@ Crée une commande dans un autre terminal : l'événement apparaît dans le flux
 
 **Concepts**
 
-- Même socle que monkeytype : Next 16 (App Router), React 19, Tailwind 4, TypeScript 5.9, RTK Query avec codegen depuis l'OpenAPI de springdoc, react-hook-form + zod.
+- Socle front : Next 16 (App Router), React 19, Tailwind 4, TypeScript 5.9, RTK Query avec codegen depuis l'OpenAPI de springdoc, react-hook-form + zod.
 - `rewrites` dans `next.config` vers les services Java : pas de CORS.
 - `EventSource` côté client pour le live.
 - Pages : création de commande, liste avec statut live, détail avec timeline d'événements, panneau "chaos" (taux d'échec du paiement, etc.).
