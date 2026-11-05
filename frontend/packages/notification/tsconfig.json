@@ -1,7 +1,6 @@
 {
   "extends": "@poc/config/typescript/react.json",
   "compilerOptions": {
-    "baseUrl": ".",
     "paths": {
       "@poc/shared": ["../shared/src"],
       "@poc/shared/*": ["../shared/src/*"]
