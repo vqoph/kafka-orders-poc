@@ -1,0 +1,51 @@
+{
+  "title": "Commandes",
+  "sort": "tri",
+  "sortOptions": {
+    "dateDesc": "date desc",
+    "dateAsc": "date asc",
+    "status": "statut"
+  },
+  "refresh": "Actualiser",
+  "newOrder": "Nouvelle commande",
+  "loadFailed": "Échec du chargement des commandes",
+  "empty": "Aucune commande pour le moment.",
+  "listMeta": "customerId {{customerId}} · montant {{amount}}",
+  "itemsEmpty": "items: []",
+  "createTitle": "Créer une commande",
+  "detailTitle": "Détail de la commande",
+  "create": {
+    "customerId": "Identifiant client",
+    "amount": "Montant",
+    "items": "Articles",
+    "sku": "SKU",
+    "qty": "Qté",
+    "addItem": "Ajouter un article",
+    "remove": "Retirer",
+    "creating": "Création…",
+    "submit": "Créer la commande",
+    "failed": "Échec de la création de la commande",
+    "customerIdRequired": "L'identifiant client est requis",
+    "amountMin": "Le montant doit être >= 0,01",
+    "skuRequired": "Le SKU est requis",
+    "quantityPositive": "La quantité doit être > 0",
+    "itemsRequired": "Au moins un article est requis"
+  },
+  "detail": {
+    "loadFailed": "Échec du chargement de la commande",
+    "loading": "Chargement de la commande…",
+    "id": "id",
+    "customerId": "customerId",
+    "status": "status",
+    "amount": "amount",
+    "createdAt": "createdAt",
+    "paymentSuccess": "paymentSuccess",
+    "inventorySuccess": "inventorySuccess",
+    "items": "items",
+    "sku": "sku",
+    "quantity": "quantity",
+    "null": "null",
+    "true": "true",
+    "false": "false"
+  }
+}

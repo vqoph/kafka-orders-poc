@@ -1,0 +1,7 @@
+{
+  "chaos": {
+    "title": "Chaos paiement",
+    "description": "Contrôlez le taux d'échec artificiel du payment-service (0 = aucun, 1 = toujours en échec).",
+    "updated": "Taux de chaos paiement mis à jour"
+  }
+}

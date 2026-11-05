@@ -1,0 +1,7 @@
+{
+  "chaos": {
+    "title": "Payment chaos",
+    "description": "Control the payment-service artificial failure rate (0 = none, 1 = always fail).",
+    "updated": "Payment chaos rate updated"
+  }
+}

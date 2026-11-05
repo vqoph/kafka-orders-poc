@@ -1,4 +1,5 @@
 import { useEffect, useState, type ComponentType, type SVGProps } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   getThemePreference,
   onThemeChange,
@@ -67,14 +68,15 @@ function Moon(props: IconProps) {
   );
 }
 
-const THEMES: { value: ThemePreference; icon: ComponentType<IconProps>; label: string }[] =
+const THEMES: { value: ThemePreference; icon: ComponentType<IconProps>; labelKey: string }[] =
   [
-    { value: 'system', icon: Monitor, label: 'System' },
-    { value: 'light', icon: Sun, label: 'Light' },
-    { value: 'dark', icon: Moon, label: 'Dark' },
+    { value: 'system', icon: Monitor, labelKey: 'theme.system' },
+    { value: 'light', icon: Sun, labelKey: 'theme.light' },
+    { value: 'dark', icon: Moon, labelKey: 'theme.dark' },
   ];
 
 export function ThemeSwitcher() {
+  const { t } = useTranslation('common');
   const [preference, setPreference] = useState<ThemePreference>('system');
   const [mounted, setMounted] = useState(false);
 
@@ -88,8 +90,9 @@ export function ThemeSwitcher() {
     return <div className="size-8 rounded-lg border border-default bg-panel" aria-hidden />;
   }
 
-  const CurrentIcon = THEMES.find((item) => item.value === preference)?.icon ?? Monitor;
-  const label = THEMES.find((item) => item.value === preference)?.label ?? 'System';
+  const current = THEMES.find((item) => item.value === preference) ?? THEMES[0]!;
+  const CurrentIcon = current.icon;
+  const label = t(current.labelKey);
   const isLight = preference === 'light';
   const isDark = preference === 'dark';
 
@@ -97,8 +100,8 @@ export function ThemeSwitcher() {
     <button
       type="button"
       onClick={() => toggleTheme()}
-      aria-label="Theme"
-      title={`Theme: ${label}`}
+      aria-label={t('theme.ariaLabel')}
+      title={t('theme.title', { label })}
       data-testid="theme-switcher"
       className={cn(
         'flex size-8 cursor-pointer items-center justify-center rounded-lg',

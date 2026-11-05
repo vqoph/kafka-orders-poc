@@ -1,0 +1,12 @@
+{
+  "stock": "Stock",
+  "refresh": "Refresh",
+  "loadFailed": "Failed to load inventory",
+  "empty": "No stock rows returned.",
+  "qty": "qty {{quantity}}",
+  "chaos": {
+    "title": "Inventory chaos",
+    "description": "Artificial failure rate for inventory-service (0–1).",
+    "updated": "Inventory chaos rate updated"
+  }
+}

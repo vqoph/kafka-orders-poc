@@ -1,0 +1,12 @@
+{
+  "stock": "Stock",
+  "refresh": "Actualiser",
+  "loadFailed": "Échec du chargement de l'inventaire",
+  "empty": "Aucune ligne de stock retournée.",
+  "qty": "qté {{quantity}}",
+  "chaos": {
+    "title": "Chaos inventaire",
+    "description": "Taux d'échec artificiel pour inventory-service (0–1).",
+    "updated": "Taux de chaos inventaire mis à jour"
+  }
+}

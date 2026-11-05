@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode, type TransitionEvent } from 'react';
+import { useTranslation } from 'react-i18next';
 import { cn } from '../../utils/cn';
 import { Button } from '../atoms/Button';
 import { PageHeader } from '../molecules/PageHeader';
@@ -13,6 +14,7 @@ export type SidePanelProps = {
 };
 
 export function SidePanel({ title, onClose, children, className }: SidePanelProps) {
+  const { t } = useTranslation('common');
   const [entered, setEntered] = useState(false);
   const [exiting, setExiting] = useState(false);
   const closedRef = useRef(false);
@@ -65,7 +67,7 @@ export function SidePanel({ title, onClose, children, className }: SidePanelProp
     >
       <button
         type="button"
-        aria-label="Close panel"
+        aria-label={t('closePanel')}
         className={cn(
           'absolute inset-0 bg-foreground/30 transition-opacity duration-200',
           visible ? 'pointer-events-auto opacity-100' : 'opacity-0',
@@ -85,8 +87,8 @@ export function SidePanel({ title, onClose, children, className }: SidePanelProp
           <PageHeader
             title={title}
             actions={
-              <Button variant="ghost" onClick={requestClose} aria-label="Close">
-                Close
+              <Button variant="ghost" onClick={requestClose} aria-label={t('close')}>
+                {t('close')}
               </Button>
             }
           />

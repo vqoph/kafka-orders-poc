@@ -1,4 +1,5 @@
 import type { FormEvent } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '../atoms/Button';
 import { ErrorText } from '../atoms/ErrorText';
 import { Input } from '../atoms/Input';
@@ -35,9 +36,11 @@ export function ChaosRateForm({
   saving = false,
   error,
   successMessage,
-  submitLabel = 'Update rate',
-  savingLabel = 'Saving…',
+  submitLabel,
+  savingLabel,
 }: ChaosRateFormProps) {
+  const { t } = useTranslation('common');
+
   function handleSubmit(event: FormEvent) {
     event.preventDefault();
     void onSubmit();
@@ -50,8 +53,11 @@ export function ChaosRateForm({
         <LoadingText />
       ) : (
         <FormPanel onSubmit={handleSubmit}>
-          <CurrentValueCallout label="Current rate" value={currentRate ?? '—'} />
-          <Field label="Failure rate">
+          <CurrentValueCallout
+            label={t('chaos.currentRate')}
+            value={currentRate ?? t('emDash')}
+          />
+          <Field label={t('chaos.failureRate')}>
             <Input
               type="number"
               min={0}
@@ -64,7 +70,9 @@ export function ChaosRateForm({
           {error ? <ErrorText>{error}</ErrorText> : null}
           {successMessage ? <SuccessText>{successMessage}</SuccessText> : null}
           <Button type="submit" variant="warning" size="lg" disabled={saving}>
-            {saving ? savingLabel : submitLabel}
+            {saving
+              ? (savingLabel ?? t('chaos.saving'))
+              : (submitLabel ?? t('chaos.updateRate'))}
           </Button>
         </FormPanel>
       )}

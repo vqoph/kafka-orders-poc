@@ -1,0 +1,32 @@
+{
+  "close": "Close",
+  "closePanel": "Close panel",
+  "loading": "Loading…",
+  "retry": "Retry",
+  "emDash": "—",
+  "theme": {
+    "ariaLabel": "Theme",
+    "title": "Theme: {{label}}",
+    "system": "System",
+    "light": "Light",
+    "dark": "Dark"
+  },
+  "language": {
+    "ariaLabel": "Language",
+    "title": "Language: {{label}}"
+  },
+  "errorBoundary": {
+    "title": "Remote unavailable: {{name}}",
+    "hint": "Start the remote webpack server and refresh. Details: {{details}}"
+  },
+  "chaos": {
+    "updateRate": "Update rate",
+    "saving": "Saving…",
+    "currentRate": "Current rate",
+    "failureRate": "Failure rate",
+    "rateInvalid": "Rate must be a number between 0 and 1",
+    "loadFailed": "Failed to load failure rate",
+    "updateFailed": "Failed to update failure rate"
+  },
+  "requestFailed": "Request failed ({{status}})"
+}

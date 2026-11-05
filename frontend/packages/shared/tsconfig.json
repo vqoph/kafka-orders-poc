@@ -1,4 +1,4 @@
 {
   "extends": "@poc/config/typescript/react.json",
-  "include": ["src", ".storybook"]
+  "include": ["src", ".storybook", "../config/typescript/css.d.ts"]
 }

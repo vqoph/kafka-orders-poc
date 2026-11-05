@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { emitPocEvent, type PocEventMap } from '../../events/bus';
 import { errorMessage } from '../../utils/errorMessage';
 
@@ -25,6 +26,7 @@ export function useChaosRateForm({
   successMessage,
   onSave,
 }: UseChaosRateFormArgs) {
+  const { t } = useTranslation('common');
   const [draft, setDraft] = useState('0');
   const [validationError, setValidationError] = useState<string | null>(null);
 
@@ -36,7 +38,7 @@ export function useChaosRateForm({
     setValidationError(null);
     const next = Number(draft);
     if (Number.isNaN(next) || next < 0 || next > 1) {
-      setValidationError('Rate must be a number between 0 and 1');
+      setValidationError(t('chaos.rateInvalid'));
       return;
     }
     try {
@@ -50,8 +52,8 @@ export function useChaosRateForm({
 
   const displayError =
     validationError ??
-    (loadError ? errorMessage(loadError, 'Failed to load failure rate') : null) ??
-    (saveError ? errorMessage(saveError, 'Failed to update failure rate') : null);
+    (loadError ? errorMessage(loadError, t('chaos.loadFailed')) : null) ??
+    (saveError ? errorMessage(saveError, t('chaos.updateFailed')) : null);
 
   return {
     draft,

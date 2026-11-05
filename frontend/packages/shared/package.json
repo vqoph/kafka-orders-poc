@@ -18,7 +18,10 @@
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
   },
-  "dependencies": {},
+  "dependencies": {
+    "i18next": "^25.10.10",
+    "react-i18next": "^15.7.4"
+  },
   "devDependencies": {
     "@poc/config": "*",
     "@storybook/addon-essentials": "^8.6.14",

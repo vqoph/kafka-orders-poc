@@ -1,0 +1,32 @@
+{
+  "close": "Fermer",
+  "closePanel": "Fermer le panneau",
+  "loading": "Chargement…",
+  "retry": "Réessayer",
+  "emDash": "—",
+  "theme": {
+    "ariaLabel": "Thème",
+    "title": "Thème : {{label}}",
+    "system": "Système",
+    "light": "Clair",
+    "dark": "Sombre"
+  },
+  "language": {
+    "ariaLabel": "Langue",
+    "title": "Langue : {{label}}"
+  },
+  "errorBoundary": {
+    "title": "Remote indisponible : {{name}}",
+    "hint": "Démarrez le serveur webpack du remote puis actualisez. Détails : {{details}}"
+  },
+  "chaos": {
+    "updateRate": "Mettre à jour le taux",
+    "saving": "Enregistrement…",
+    "currentRate": "Taux actuel",
+    "failureRate": "Taux d'échec",
+    "rateInvalid": "Le taux doit être un nombre entre 0 et 1",
+    "loadFailed": "Échec du chargement du taux d'échec",
+    "updateFailed": "Échec de la mise à jour du taux d'échec"
+  },
+  "requestFailed": "Requête échouée ({{status}})"
+}

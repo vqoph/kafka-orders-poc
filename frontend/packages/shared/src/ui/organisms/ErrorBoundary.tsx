@@ -1,16 +1,21 @@
 import { Component, type ErrorInfo, type ReactNode } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '../atoms/Button';
 
-type Props = {
+type ErrorBoundaryProps = {
   name: string;
   children: ReactNode;
+};
+
+type InnerProps = ErrorBoundaryProps & {
+  t: (key: string, options?: Record<string, unknown>) => string;
 };
 
 type State = {
   error: Error | null;
 };
 
-export class ErrorBoundary extends Component<Props, State> {
+class ErrorBoundaryInner extends Component<InnerProps, State> {
   state: State = { error: null };
 
   static getDerivedStateFromError(error: Error): State {
@@ -22,19 +27,22 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   render() {
+    const { t } = this.props;
     if (this.state.error) {
       return (
         <div className="rounded-xl border border-danger/40 bg-danger/10 p-6 text-danger">
-          <h2 className="text-lg font-semibold">Remote unavailable: {this.props.name}</h2>
+          <h2 className="text-lg font-semibold">
+            {t('errorBoundary.title', { name: this.props.name })}
+          </h2>
           <p className="mt-2 text-sm opacity-90">
-            Start the remote webpack server and refresh. Details: {this.state.error.message}
+            {t('errorBoundary.hint', { details: this.state.error.message })}
           </p>
           <Button
             variant="danger"
             className="mt-4"
             onClick={() => this.setState({ error: null })}
           >
-            Retry
+            {t('retry')}
           </Button>
         </div>
       );
@@ -42,4 +50,9 @@ export class ErrorBoundary extends Component<Props, State> {
 
     return this.props.children;
   }
+}
+
+export function ErrorBoundary(props: ErrorBoundaryProps) {
+  const { t } = useTranslation('common');
+  return <ErrorBoundaryInner {...props} t={t} />;
 }

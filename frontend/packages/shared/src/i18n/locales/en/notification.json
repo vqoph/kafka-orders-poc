@@ -1,0 +1,10 @@
+{
+  "title": "Notifications",
+  "subtitle": "Live SSE stream plus optional order filter.",
+  "sseConnected": "SSE connected",
+  "sseDisconnected": "SSE disconnected",
+  "filterLabel": "Filter by order id",
+  "filterPlaceholder": "optional",
+  "loadFailed": "Failed to load notifications",
+  "empty": "No notifications yet."
+}

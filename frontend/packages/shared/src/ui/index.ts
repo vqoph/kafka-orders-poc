@@ -15,5 +15,6 @@ export * from './organisms/ChaosRateForm';
 export * from './organisms/ErrorBoundary';
 export * from './organisms/PageShell';
 export * from './organisms/SidePanel';
+export * from './organisms/LanguageSwitcher';
 export * from './organisms/ThemeSwitcher';
 export * from './organisms/useChaosRateForm';

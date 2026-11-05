@@ -1,0 +1,10 @@
+{
+  "title": "Notifications",
+  "subtitle": "Flux SSE en direct avec filtre optionnel par commande.",
+  "sseConnected": "SSE connecté",
+  "sseDisconnected": "SSE déconnecté",
+  "filterLabel": "Filtrer par id de commande",
+  "filterPlaceholder": "optionnel",
+  "loadFailed": "Échec du chargement des notifications",
+  "empty": "Aucune notification pour le moment."
+}

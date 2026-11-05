@@ -1,0 +1,12 @@
+{
+  "brand": "Kafka Orders POC",
+  "title": "Shell microfrontend",
+  "nav": {
+    "orders": "Commandes",
+    "payment": "Paiement",
+    "inventory": "Inventaire",
+    "notifications": "Notifications"
+  },
+  "unknownRoute": "Route inconnue. Utilisez la navigation ci-dessus.",
+  "loadingRemote": "Chargement de {{name}}…"
+}
