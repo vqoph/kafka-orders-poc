@@ -11,9 +11,10 @@ target/
 .project
 .settings/
 
-# Node / Next.js
+# Node / frontend
 node_modules/
 .next/
+dist/
 out/
 .turbo/
 .env

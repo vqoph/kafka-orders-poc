@@ -17,7 +17,9 @@ Objectif : comprendre Kafka (et ses subtilités) en construisant un petit systè
 ## Le projet en une image
 
 ```
-Next.js (web) --REST--> order-service --outbox--> Kafka: orders.created
+Browser / microfronts --REST/SSE--> order / payment / inventory / notification
+                                         |
+                    order-service --outbox--> Kafka: orders.created
                                                       |
                               +-----------------------+-----------------------+
                               v                                               v
@@ -30,7 +32,7 @@ Next.js (web) --REST--> order-service --outbox--> Kafka: orders.created
                                                       |
                                                 orders.status
                                                       v
-                                          notification-service --SSE--> web
+                                          notification-service --SSE--> UI
 ```
 
 - Topics : 3 partitions, clé de message = `orderId`.
@@ -42,7 +44,7 @@ Next.js (web) --REST--> order-service --outbox--> Kafka: orders.created
 - Java 21 LTS, Spring Boot 3.5.x, Maven multi-module (le module `events` joue le rôle de `ts-shared`).
 - Spring Kafka, Spring Web, Spring Data JPA, Flyway, springdoc-openapi, Actuator.
 - Kafka en KRaft (image `apache/kafka`, pas de Zookeeper) + Kafka UI + Postgres (une base par service).
-- Front : Next 16, React 19, Tailwind 4, TypeScript 5.9, RTK Query + codegen OpenAPI, react-hook-form, zod.
+- Front (hors parcours tuto) : microfrontends sous `frontend/` (shell + remotes), lancés via `scripts/frontend-*.sh`.
 - Tests : JUnit 5 + Testcontainers (peu, ciblés).
 
 ## Correspondances NestJS vers Spring
@@ -73,7 +75,7 @@ cp doc/fr/TODO.md.sample doc/fr/TODO.md
 
 ## Étape 0 : environnement WSL
 
-**Pourquoi** : Docker est déjà dans ton WSL, mais il manque Java et Maven. Node 26 / npm 11 sont requis pour le front Next.js.
+**Pourquoi** : Docker est déjà dans ton WSL, mais il manque Java et Maven. Node / npm sont utiles plus tard pour le front sous `frontend/` (hors parcours).
 
 ```bash
 # Install SDKMAN (manages JDK and Maven versions, like nvm for Node)
@@ -148,33 +150,34 @@ docker compose exec -it kafka /opt/kafka/bin/kafka-console-consumer.sh \
 
 **Concepts**
 
-- **Layout groupé** (proche Nest `apps/` + `libs/`) :
+- **Layout groupé** (proche Nest `apps/` + `libs/`), sous `backend/` :
   ```text
-  pom.xml                   # parent multi-module (à créer EN PREMIER)
-  libs/events/              # contrat partagé (records d'événements)
-  services/order-service/
-  services/payment-service/
-  services/inventory-service/
-  services/notification-service/
-  apps/web/                 # Next.js, étape 9
+  backend/
+    pom.xml                   # parent multi-module (à créer EN PREMIER)
+    libs/events/              # contrat partagé (records d'événements)
+    services/order-service/
+    services/payment-service/
+    services/inventory-service/
+    services/notification-service/
+  frontend/                   # UI hors parcours tuto (scripts/)
   ```
 - **Parent pom** : versions et dépendances communes (équivalent d'un `package.json` racine avec workspaces + `turbo`).
 - **Spring Boot BOM** (`spring-boot-starter-parent`) : on ne précise pas les versions des libs Spring, elles sont cohérentes entre elles.
-- **Module** `libs/events` : records Java partagés (`OrderCreated`, `PaymentProcessed`, ...). C'est le contrat entre services.
+- **Module** `backend/libs/events` : records Java partagés (`OrderCreated`, `PaymentProcessed`, ...). C'est le contrat entre services.
 - Un `record` Java = classe immuable avec getters/equals/hashCode générés (proche d'un type TS `readonly`).
 
-**Ordre recommandé** : parent → `libs/events` → générer les services (CLI) → rattacher chaque service au parent.  
+**Ordre recommandé** : parent → `backend/libs/events` → générer les services (CLI) → rattacher chaque service au parent.  
 `spring init` produit toujours un projet autonome (parent = `spring-boot-starter-parent`) : le reparenting est normal.
 
 > start.spring.io n'accepte plus Spring Boot 3.5.x (compatibilité ≥ 4.0). On fige **4.1.2**.
 
-### 2.1 Parent `pom.xml` (racine)
+### 2.1 Parent `backend/pom.xml`
 
 `packaging=pom` : agrégateur seulement (pas de jar). Il hérite de `spring-boot-starter-parent` **4.1.2**, fixe `java.version=21`, et déclare les `<modules>`.
 
-### 2.2 Module `libs/events`
+### 2.2 Module `backend/libs/events`
 
-Jar simple (pas d'app Spring, pas de `spring-boot-maven-plugin`). Son `<parent>` pointe vers `../../pom.xml`. Package placeholder : `com.example.orders.events`.
+Jar simple (pas d'app Spring, pas de `spring-boot-maven-plugin`). Son `<parent>` pointe vers `../../pom.xml` (le parent sous `backend/`). Package placeholder : `com.example.orders.events`.
 
 ### 2.3 Générer les services (Spring Boot CLI)
 
@@ -189,30 +192,30 @@ spring init --build=maven --boot-version=4.1.2 --java-version=21 \
   --group-id=com.example.orders --artifact-id=order-service --name=order-service \
   --package-name=com.example.orders.order \
   --dependencies=web,data-jpa,flyway,postgresql,validation,actuator,kafka \
-  --extract services/order-service
+  --extract backend/services/order-service
 
 spring init --build=maven --boot-version=4.1.2 --java-version=21 \
   --group-id=com.example.orders --artifact-id=payment-service --name=payment-service \
   --package-name=com.example.orders.payment \
   --dependencies=web,data-jpa,flyway,postgresql,validation,actuator,kafka \
-  --extract services/payment-service
+  --extract backend/services/payment-service
 
 spring init --build=maven --boot-version=4.1.2 --java-version=21 \
   --group-id=com.example.orders --artifact-id=inventory-service --name=inventory-service \
   --package-name=com.example.orders.inventory \
   --dependencies=web,data-jpa,flyway,postgresql,validation,actuator,kafka \
-  --extract services/inventory-service
+  --extract backend/services/inventory-service
 
 spring init --build=maven --boot-version=4.1.2 --java-version=21 \
   --group-id=com.example.orders --artifact-id=notification-service --name=notification-service \
   --package-name=com.example.orders.notification \
   --dependencies=web,actuator,kafka \
-  --extract services/notification-service
+  --extract backend/services/notification-service
 ```
 
 ### 2.4 Rattacher chaque service au parent
 
-Dans chaque `services/*/pom.xml`, remplacer le parent Initializr par :
+Dans chaque `backend/services/*/pom.xml`, remplacer le parent Initializr par :
 
 ```xml
 <parent>
@@ -228,23 +231,23 @@ Puis retirer du module enfant : `groupId`, `version`, `java.version` (hérités)
 ### 2.5 Build
 
 ```bash
-mvn -q -DskipTests install
+mvn -f backend/pom.xml -q -DskipTests install
 # -pl = project list (chemin du module depuis la racine)
-mvn -pl services/order-service spring-boot:run
+mvn -f backend/pom.xml -pl services/order-service spring-boot:run
 ```
 
-**Piège `-am` + `spring-boot:run`** : `-am` (*also make*) rebuild bien les modules dont tu dépends (`libs/events`, …), mais Maven applique aussi la goal `run` au **parent** (`packaging=pom`, pas de `main`) → `Unable to find a suitable main class`.
+**Piège `-am` + `spring-boot:run`** : `-am` (*also make*) rebuild bien les modules dont tu dépends (`backend/libs/events`, …), mais Maven applique aussi la goal `run` au **parent** (`packaging=pom`, pas de `main`) → `Unable to find a suitable main class`.
 
 ```bash
 # OK : installer les deps du reactor, puis run uniquement le service
-mvn -pl services/order-service -am -DskipTests install
-mvn -pl services/order-service spring-boot:run
+mvn -f backend/pom.xml -pl services/order-service -am -DskipTests install
+mvn -f backend/pom.xml -pl services/order-service spring-boot:run
 
 # OK aussi si events n’a pas changé (déjà dans ~/.m2)
-mvn -pl services/order-service spring-boot:run
+mvn -f backend/pom.xml -pl services/order-service spring-boot:run
 
 # KO : run propagé au parent
-mvn -pl services/order-service -am spring-boot:run
+mvn -f backend/pom.xml -pl services/order-service -am spring-boot:run
 ```
 
 **À observer** : le build passe. Un `order-service` pleinement `UP` sur `/actuator/health` attendra la config Postgres (étape 3).
@@ -308,7 +311,7 @@ curl localhost:8081/orders/<id>
 - Topics créés en code via beans `NewTopic` (ici 3 partitions). Auto-create est désactivé dans Docker Compose.
 - Dual-write simple : `save` en base puis `send` Kafka (pas atomique). L’outbox vient à l’étape 11.
 
-### 4.1 Contrat `OrderCreated` (`libs/events`)
+### 4.1 Contrat `OrderCreated` (`backend/libs/events`)
 
 Record partagé = contrat entre services (comme un type dans `ts-shared`).
 
@@ -343,8 +346,8 @@ Endpoint : `POST /labs/kafka/orders/{id}/republish?keyMode=ORDER_ID|NONE`
 
 ```bash
 # Voir étape 2.5 : ne pas combiner -am avec spring-boot:run
-mvn -pl services/order-service -am -DskipTests install
-mvn -pl services/order-service spring-boot:run
+mvn -f backend/pom.xml -pl services/order-service -am -DskipTests install
+mvn -f backend/pom.xml -pl services/order-service spring-boot:run
 
 curl -X POST localhost:8081/orders -H 'content-type: application/json' \
   -d '{"customerId":"c1","items":[{"sku":"A","quantity":2}],"amount":42.5}'
@@ -376,13 +379,13 @@ Le Lab 2 te fait **voir** les consumer groups (répartition, rebalance, idle, se
 | `@EventPattern('orders.created')` | `@KafkaListener(topics = "orders.created", groupId = "…")` |
 | `ClientKafka` / emit | `KafkaTemplate.send(topic, key, value)` |
 | transport `groupId` dans la config microservice | `groupId` sur le listener (ou `spring.kafka.consumer.group-id`) |
-| type partagé `ts-shared` | record `PaymentProcessed` dans `libs/events` |
+| type partagé `ts-shared` | record `PaymentProcessed` dans `backend/libs/events` |
 
-### 5.1 Contrat `PaymentProcessed` (`libs/events`)
+### 5.1 Contrat `PaymentProcessed` (`backend/libs/events`)
 
 Record partagé = contrat entre services (comme `OrderCreated`).
 
-Chemin cible : `libs/events/src/main/java/com/example/orders/events/PaymentProcessed.java`
+Chemin cible : `backend/libs/events/src/main/java/com/example/orders/events/PaymentProcessed.java`
 
 ```java
 public record PaymentProcessed(
@@ -399,7 +402,7 @@ Topic : `payments.processed`. Clé Kafka recommandée : **`orderId`** (ordre par
 
 À poser / expliquer avant le lab (tu ne codes pas ça dans le Lab 2) :
 
-- dépendance Maven `events` dans `services/payment-service/pom.xml`
+- dépendance Maven `events` dans `backend/services/payment-service/pom.xml`
 - `application.yml` : port **8082**, datasource **`jdbc:…/payments`**, Kafka bootstrap **`localhost:29092`**, consumer + producer JSON, propriété `payment.failure-rate`
 - Flyway `V1__create_payments.sql` + entité `Payment` / `PaymentRepository` (même dual-write DB→Kafka que order-service)
 - `KafkaTopics` + `KafkaTopicsConfig` : bean `NewTopic` pour `payments.processed` (**3 partitions**, RF 1)
@@ -419,18 +422,18 @@ Détail et indices : Lab 2 partie A.
 **Exercice** : [Lab 2 — Consumer groups](./appendices/exercises/lab-02-consumer-groups.md)  
 → Partie A = Java (`decideSuccess`) ; Partie B = Kafka UI / `kafka-consumer-groups.sh`.
 
-**Lancer (chemin Maven correct)** — jamais `mvn -pl payment-service` seul (module introuvable depuis la racine) :
+**Lancer (chemin Maven correct)** — jamais `mvn -f backend/pom.xml -pl payment-service` seul (module introuvable depuis la racine) :
 
 ```bash
 # Voir étape 2.5 : ne pas combiner -am avec spring-boot:run
-mvn -pl services/payment-service -am -DskipTests install
-mvn -pl services/payment-service spring-boot:run
+mvn -f backend/pom.xml -pl services/payment-service -am -DskipTests install
+mvn -f backend/pom.xml -pl services/payment-service spring-boot:run
 ```
 
 2ᵉ instance pour le lab (port **8083**) :
 
 ```bash
-mvn -pl services/payment-service spring-boot:run \
+mvn -f backend/pom.xml -pl services/payment-service spring-boot:run \
   -Dspring-boot.run.arguments=--server.port=8083
 ```
 
@@ -473,9 +476,9 @@ Le Lab 3 te fait **coder** la règle de réservation + l’agrégation, puis **o
 | Stock | inventory-service | in `orders.created` → out `inventory.reserved` ; in `inventory.release.requested` |
 | Cerveau saga | order-service | in `payments.processed` + `inventory.reserved` → out `orders.status` (+ compensations) |
 
-### 6.1 Contrats événements (`libs/events` — boilerplate)
+### 6.1 Contrats événements (`backend/libs/events` — boilerplate)
 
-Records partagés (chemins sous `libs/events/.../events/`) :
+Records partagés (chemins sous `backend/libs/events/.../events/`) :
 
 ```java
 public record InventoryReserved(UUID orderId, boolean success, Instant reservedAt) {}
@@ -526,11 +529,11 @@ Boilerplate :
 **Lancer** (trois services ; jamais `-am` avec `spring-boot:run`) :
 
 ```bash
-mvn -pl services/order-service,services/payment-service,services/inventory-service -am -DskipTests install
+mvn -f backend/pom.xml -pl services/order-service,services/payment-service,services/inventory-service -am -DskipTests install
 
-mvn -pl services/order-service spring-boot:run          # 8081
-mvn -pl services/payment-service spring-boot:run        # 8082
-mvn -pl services/inventory-service spring-boot:run      # 8085
+mvn -f backend/pom.xml -pl services/order-service spring-boot:run          # 8081
+mvn -f backend/pom.xml -pl services/payment-service spring-boot:run        # 8082
+mvn -f backend/pom.xml -pl services/inventory-service spring-boot:run      # 8085
 ```
 
 **Smoke (aperçu)** : `POST /orders` avec SKU `A` → `GET` order `CONFIRMED` + messages `inventory.reserved` / `orders.status`.  
@@ -581,23 +584,9 @@ Crée une commande dans un autre terminal : l'événement apparaît dans le flux
 
 ---
 
-## Étape 9 : front Next.js
+## Étape 9 : UI (hors parcours)
 
-**Concepts**
-
-- Socle front : Next 16 (App Router), React 19, Tailwind 4, TypeScript 5.9, RTK Query avec codegen depuis l'OpenAPI de springdoc, react-hook-form + zod.
-- `rewrites` dans `next.config` vers les services Java : pas de CORS.
-- `EventSource` côté client pour le live.
-- Pages : création de commande, liste avec statut live, détail avec timeline d'événements, panneau "chaos" (taux d'échec du paiement, etc.).
-
-**Commandes (toi, jamais moi)**
-
-```bash
-cd apps/web
-npm install
-npm run codegen   # needs order-service running (reads its /v3/api-docs)
-npm run dev
-```
+Le front n’est **plus** dans le tutoriel. L’UI microfrontend vit sous `frontend/` (shell + remotes) et se lance via `scripts/frontend-install.sh` / `scripts/frontend-dev.sh`. Les services Java exposent déjà le contrat REST/SSE + CORS pour `localhost:5000-5004`.
 
 ---
 
@@ -606,7 +595,7 @@ npm run dev
 **Concepts**
 
 - Dockerfile multi-stage : étape de build Maven puis image runtime avec JRE seulement (layers Spring Boot pour de meilleurs caches).
-- Image Next.js en `output: 'standalone'`.
+- Image front optionnelle (hors scope pour l’instant).
 - Dans le réseau Docker, les services parlent à `kafka:9092` et `postgres:5432`. Depuis ton WSL, c'est `localhost:29092`. Deux profils Spring : `local` et `docker`.
 - Healthchecks + `depends_on: condition: service_healthy`.
 
@@ -654,9 +643,10 @@ docker compose --profile apps up --build
 ## Commandes utiles
 
 ```bash
-# Run a service (never: mvn -pl … -am spring-boot:run — fails on parent pom)
-mvn -pl services/order-service -am -DskipTests install
-mvn -pl services/order-service spring-boot:run
+# Run a service (never: mvn -f backend/pom.xml -pl … -am spring-boot:run — fails on parent pom)
+# From repo root; or: ./scripts/backend-install.sh then ./scripts/backend-run.sh order-service
+mvn -f backend/pom.xml -pl services/order-service -am -DskipTests install
+mvn -f backend/pom.xml -pl services/order-service spring-boot:run
 
 # List topics
 docker compose exec kafka /opt/kafka/bin/kafka-topics.sh --bootstrap-server kafka:9092 --list
@@ -683,4 +673,4 @@ docker compose down -v
 - payment-service : 8082
 - inventory-service : 8085
 - notification-service : 8084
-- web (Next.js) : 3000
+- frontend shell / remotes : 5000–5004 (hors parcours)

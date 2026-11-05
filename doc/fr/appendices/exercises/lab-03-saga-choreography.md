@@ -5,8 +5,8 @@ But : **réserver du stock** à partir de `OrderCreated`, puis **agréger** paie
 
 Fichiers à compléter une fois le boilerplate posé (cherche `TODO Lab 3`) — chemins cibles :
 
-- `services/inventory-service/.../InventoryReservation.java` (ou équivalent) — décider succès / décrémenter le stock
-- `services/order-service/.../SagaService.java` (ou équivalent) — quand les deux résultats sont connus, trancher + compenser
+- `backend/services/inventory-service/.../InventoryReservation.java` (ou équivalent) — décider succès / décrémenter le stock
+- `backend/services/order-service/.../SagaService.java` (ou équivalent) — quand les deux résultats sont connus, trancher + compenser
 
 Le boilerplate (events, Flyway inventory / saga columns, topics, listeners, publishers, refund listener) est **posé par l’assistant**.
 
@@ -118,10 +118,10 @@ Réservation : boucle items → `stock.quantity >= qty` pour tous, sinon `succes
 ### A.3 Compiler / relancer
 
 ```bash
-mvn -pl services/order-service,services/payment-service,services/inventory-service -am -DskipTests install
-mvn -pl services/order-service spring-boot:run
-mvn -pl services/payment-service spring-boot:run
-mvn -pl services/inventory-service spring-boot:run
+mvn -f backend/pom.xml -pl services/order-service,services/payment-service,services/inventory-service -am -DskipTests install
+mvn -f backend/pom.xml -pl services/order-service spring-boot:run
+mvn -f backend/pom.xml -pl services/payment-service spring-boot:run
+mvn -f backend/pom.xml -pl services/inventory-service spring-boot:run
 ```
 
 Ports : order **8081**, payment **8082**, inventory **8085**.
@@ -151,7 +151,7 @@ curl -s -X POST localhost:8081/orders -H 'content-type: application/json' \
 1. Relance payment-service avec échec forcé :
 
 ```bash
-mvn -pl services/payment-service spring-boot:run \
+mvn -f backend/pom.xml -pl services/payment-service spring-boot:run \
   -Dspring-boot.run.arguments=--payment.failure-rate=1.0
 ```
 

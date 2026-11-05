@@ -5,8 +5,8 @@ But : **écrire un peu de Java** (publisher + résolution de clé), puis voir l�
 
 Fichiers à compléter (cherche `TODO Lab 1`) :
 
-- [`OrderEventPublisher.java`](../../../../services/order-service/src/main/java/com/example/orders/order/kafka/OrderEventPublisher.java) — `publishOrderCreatedWithKey`
-- [`KafkaLabController.java`](../../../../services/order-service/src/main/java/com/example/orders/order/kafka/KafkaLabController.java) — `resolveKey`
+- [`OrderEventPublisher.java`](../../../../../backend/services/order-service/src/main/java/com/example/orders/order/kafka/OrderEventPublisher.java) — `publishOrderCreatedWithKey`
+- [`KafkaLabController.java`](../../../../../backend/services/order-service/src/main/java/com/example/orders/order/kafka/KafkaLabController.java) — `resolveKey`
 
 Le chemin « prod » (`publishOrderCreated(Order)` après un `POST /orders`) est déjà branché.
 
@@ -27,7 +27,7 @@ private final KafkaTemplate<String, OrderCreated> kafkaTemplate;
 | Type | Rôle |
 |---|---|
 | `Order` | Entité JPA (base) — ne va **pas** sur Kafka |
-| `OrderCreated` | Contrat d’événement (`libs/events`) — ce qu’on publie |
+| `OrderCreated` | Contrat d’événement (`backend/libs/events`) — ce qu’on publie |
 | `toEvent(order)` | Mapping entité → événement |
 
 Pourquoi pas `KafkaTemplate<String, Object>` ? Avec `Object`, `send(..., order)` **compile** alors que c’est faux métier. Avec `OrderCreated`, le compilateur / linter refuse l’entité : on est forcé de passer par `toEvent`.  
@@ -75,8 +75,8 @@ Consignes aussi en commentaire markdown au-dessus de `resolveKey` dans le source
 ### A.3 Compiler / relancer
 
 ```bash
-mvn -pl services/order-service -am -DskipTests install
-mvn -pl services/order-service spring-boot:run
+mvn -f backend/pom.xml -pl services/order-service -am -DskipTests install
+mvn -f backend/pom.xml -pl services/order-service spring-boot:run
 # (ne pas combiner -am avec spring-boot:run — voir tuto §2.5)
 ```
 

@@ -5,9 +5,9 @@ But : **comprendre le premier consumer** Spring Kafka (écouter `orders.created`
 
 Fichier à compléter une fois le boilerplate posé (cherche `TODO Lab 2` / commentaire Lab 2) :
 
-- `services/payment-service/src/main/java/com/example/orders/payment/PaymentDecision.java` — méthode `decideSuccess()`
+- `backend/services/payment-service/src/main/java/com/example/orders/payment/PaymentDecision.java` — méthode `decideSuccess()`
 
-Contrat déjà dans `libs/events` :
+Contrat déjà dans `backend/libs/events` :
 
 - `PaymentProcessed` — record `(orderId, amount, success, processedAt)`
 
@@ -41,7 +41,7 @@ public void onOrderCreated(OrderCreated event) {
 | Élément | Rôle |
 |---|---|
 | `groupId = "payment-service"` | Identité du **groupe** : toutes les instances avec ce même id **partagent** les partitions |
-| `OrderCreated` | Contrat entrant (`libs/events`) — pas une entité JPA |
+| `OrderCreated` | Contrat entrant (`backend/libs/events`) — pas une entité JPA |
 | Table / entité `Payment` | Persistance dans la base **`payments`** (Flyway) avant publish |
 | `PaymentProcessed` | Contrat sortant — ce qu’on publie (même `processedAt` que la ligne DB) |
 | `payment.failure-rate` | Probabilité d’échec simulé (ex. `0.2`) — injectée dans `PaymentDecision` |
@@ -76,10 +76,10 @@ Vérifie mentalement / dans le code :
 ### A.3 Compiler / relancer
 
 ```bash
-mvn -pl services/payment-service -am -DskipTests install
-mvn -pl services/payment-service spring-boot:run
+mvn -f backend/pom.xml -pl services/payment-service -am -DskipTests install
+mvn -f backend/pom.xml -pl services/payment-service spring-boot:run
 # (ne pas combiner -am avec spring-boot:run — voir tuto §2.5)
-# (ne pas faire: mvn -pl payment-service … → module introuvable)
+# (ne pas faire: mvn -f backend/pom.xml -pl payment-service … → module introuvable)
 ```
 
 `order-service` reste sur **8081** ; payment sur **8082**.
@@ -135,7 +135,7 @@ done
 Dans un **second** terminal :
 
 ```bash
-mvn -pl services/payment-service spring-boot:run \
+mvn -f backend/pom.xml -pl services/payment-service spring-boot:run \
   -Dspring-boot.run.arguments=--server.port=8083
 ```
 
@@ -207,7 +207,7 @@ Une partition n’est assignée qu’à **un** consumer d’un groupe donné à 
 ## Critères de réussite
 
 - [ ] `decideSuccess()` OK ; flux `OrderCreated` → DB `payments` → `PaymentProcessed` (clé = orderId)
-- [ ] Compile + run OK (`mvn -pl services/payment-service …`) + smoke `POST /orders`
+- [ ] Compile + run OK (`mvn -f backend/pom.xml -pl services/payment-service …`) + smoke `POST /orders`
 - [ ] B.1–B.3 observés (1 instance, rebalance à 2, reprise après kill)
 - [ ] B.4 compris (idle si membres > partitions)
 - [ ] B.5 compris (autre `groupId` = flux complet)

@@ -5,8 +5,8 @@ Plus simple que le Lab 1 : tu complètes **2 méthodes Java** pour comprendre DT
 
 Fichiers à compléter (cherche `TODO Lab 0`) :
 
-- [`OrderResponse.java`](../../../../services/order-service/src/main/java/com/example/orders/order/api/OrderResponse.java) — `from(Order)`
-- [`OrderService.java`](../../../../services/order-service/src/main/java/com/example/orders/order/api/OrderService.java) — `findById(UUID)`
+- [`OrderResponse.java`](../../../../../backend/services/order-service/src/main/java/com/example/orders/order/api/OrderResponse.java) — `from(Order)`
+- [`OrderService.java`](../../../../../backend/services/order-service/src/main/java/com/example/orders/order/api/OrderService.java) — `findById(UUID)`
 
 Le reste (entité, repository, `POST /orders`, Flyway, config) est déjà en place pour que tu te concentres sur le mapping et la lecture.
 
@@ -16,9 +16,9 @@ Le reste (entité, repository, `POST /orders`, Flyway, config) est déjà en pla
 - Compile / run :
 
 ```bash
-mvn -pl services/order-service -am -DskipTests install
-mvn -pl services/order-service spring-boot:run
-# (ne pas faire: mvn -pl … -am spring-boot:run → erreur mainClass sur le parent)
+mvn -f backend/pom.xml -pl services/order-service -am -DskipTests install
+mvn -f backend/pom.xml -pl services/order-service spring-boot:run
+# (ne pas faire: mvn -f backend/pom.xml -pl … -am spring-boot:run → erreur mainClass sur le parent)
 ```
 
 ---
@@ -32,7 +32,7 @@ mvn -pl services/order-service spring-boot:run
 À faire :
 
 1. Mapper chaque `OrderItem` → `new ItemResponse(sku, quantity)` (stream + `map` + `toList()`).
-2. Retourner `new OrderResponse(id, customerId, amount, status, createdAt, items)`.
+2. Retourner `new OrderResponse(id, customerId, amount, status, createdAt, items, paymentSuccess, inventorySuccess)` (les deux derniers peuvent être `null` avant la saga).
 3. Utiliser les getters de `Order` / `OrderItem`.
 
 **Indices**
@@ -60,8 +60,8 @@ mvn -pl services/order-service spring-boot:run
 ### A.3 Vérifier
 
 ```bash
-mvn -pl services/order-service -am -DskipTests install
-mvn -pl services/order-service spring-boot:run
+mvn -f backend/pom.xml -pl services/order-service -am -DskipTests install
+mvn -f backend/pom.xml -pl services/order-service spring-boot:run
 ```
 
 <details>
@@ -79,8 +79,9 @@ return new OrderResponse(
         order.getAmount(),
         order.getStatus(),
         order.getCreatedAt(),
-        items
-);
+        items,
+        order.getPaymentSuccess(),
+        order.getInventorySuccess());
 ```
 
 `findById` :
