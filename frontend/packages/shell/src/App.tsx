@@ -1,7 +1,7 @@
 import { lazy } from 'react';
 import { NavLink, Navigate, Route, Routes } from 'react-router-dom';
 import { RemoteOutlet } from './components/RemoteOutlet';
-import { ThemeToggle } from './components/ThemeToggle';
+import { ThemeSwitcher } from './components/ThemeSwitcher';
 
 const OrdersApp = lazy(() => import('orders/App'));
 const PaymentApp = lazy(() => import('payment/App'));
@@ -25,7 +25,7 @@ export default function App() {
             <p className="text-xs uppercase tracking-[0.2em] text-accent">Kafka Orders POC</p>
             <h1 className="text-lg font-semibold text-foreground">Microfrontend shell</h1>
           </div>
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex flex-wrap items-center gap-3">
             <nav className="flex flex-wrap gap-1">
               <NavLink to="/orders" className={navClass}>
                 Orders
@@ -40,7 +40,7 @@ export default function App() {
                 Notifications
               </NavLink>
             </nav>
-            <ThemeToggle />
+            <ThemeSwitcher />
           </div>
         </div>
       </header>

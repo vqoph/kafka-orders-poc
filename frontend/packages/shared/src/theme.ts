@@ -1,52 +1,44 @@
-export type ThemeMode = 'light' | 'dark';
+export type ThemePreference = 'system' | 'light' | 'dark';
 
 const STORAGE_KEY = 'poc-theme';
+const ORDER: ThemePreference[] = ['system', 'light', 'dark'];
 
-export function getTheme(): ThemeMode {
-  if (typeof document !== 'undefined') {
-    const current = document.documentElement.dataset.theme;
-    if (current === 'light' || current === 'dark') return current;
-  }
-
-  if (typeof localStorage !== 'undefined') {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored === 'light' || stored === 'dark') return stored;
-  }
-
-  if (typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-    return 'dark';
-  }
-
-  return 'light';
+function isPreference(value: string | null): value is ThemePreference {
+  return value === 'system' || value === 'light' || value === 'dark';
 }
 
-export function applyTheme(theme: ThemeMode): void {
-  if (typeof document === 'undefined') return;
-  document.documentElement.dataset.theme = theme;
-  localStorage.setItem(STORAGE_KEY, theme);
-  window.dispatchEvent(new CustomEvent('poc:theme-changed', { detail: { theme } }));
+function resolvedTheme(preference: ThemePreference): 'light' | 'dark' {
+  if (preference !== 'system') return preference;
+  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
 }
 
-export function initTheme(): ThemeMode {
-  const theme = getTheme();
-  applyTheme(theme);
-  return theme;
+export function getThemePreference(): ThemePreference {
+  const stored = localStorage.getItem(STORAGE_KEY);
+  return isPreference(stored) ? stored : 'system';
 }
 
-export function toggleTheme(): ThemeMode {
-  const next: ThemeMode = getTheme() === 'dark' ? 'light' : 'dark';
-  applyTheme(next);
-  return next;
+export function setTheme(preference: ThemePreference): void {
+  localStorage.setItem(STORAGE_KEY, preference);
+  document.documentElement.dataset.theme = resolvedTheme(preference);
+  window.dispatchEvent(new CustomEvent('poc:theme-changed', { detail: preference }));
 }
 
-export function onThemeChange(handler: (theme: ThemeMode) => void): () => void {
-  if (typeof window === 'undefined') return () => undefined;
+export function initTheme(): void {
+  setTheme(getThemePreference());
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+    if (getThemePreference() === 'system') setTheme('system');
+  });
+}
 
+export function toggleTheme(): void {
+  const current = getThemePreference();
+  setTheme(ORDER[(ORDER.indexOf(current) + 1) % ORDER.length]!);
+}
+
+export function onThemeChange(handler: (preference: ThemePreference) => void): () => void {
   const listener = (event: Event) => {
-    const custom = event as CustomEvent<{ theme: ThemeMode }>;
-    handler(custom.detail.theme);
+    handler((event as CustomEvent<ThemePreference>).detail);
   };
-
   window.addEventListener('poc:theme-changed', listener);
   return () => window.removeEventListener('poc:theme-changed', listener);
 }
