@@ -3,19 +3,22 @@
 Exercice de l’[étape 6 du tutoriel](../../TUTORIAL.md#étape-6--inventory-service-et-saga-chorégraphie).  
 But : **réserver du stock** à partir de `OrderCreated`, puis **agréger** paiement + inventory côté order-service pour `CONFIRMED` / `CANCELLED` (+ compensations), et **observer** happy path vs échec paiement.
 
-Fichiers à compléter une fois le boilerplate posé (cherche `TODO Lab 3`) — chemins cibles :
+Fichiers à compléter une fois le boilerplate posé (cherche `TODO Lab 3` / commentaires Lab 3) :
 
-- `backend/services/inventory-service/.../InventoryReservation.java` (ou équivalent) — décider succès / décrémenter le stock
-- `backend/services/order-service/.../SagaService.java` (ou équivalent) — quand les deux résultats sont connus, trancher + compenser
+- [`InventoryReservation.java`](../../../../backend/services/inventory-service/src/main/java/com/example/orders/inventory/InventoryReservation.java) — `reserve(OrderCreated)`
+- [`SagaService.java`](../../../../backend/services/order-service/src/main/java/com/example/orders/order/saga/SagaService.java) — `tryComplete(Order)`
 
-Le boilerplate (events, Flyway inventory / saga columns, topics, listeners, publishers, refund listener) est **posé par l’assistant**.
+Helpers utiles sur `Order` : `hasBothSagaResults()`, `hasBothSagaSuccess()`, `confirm()`, `cancel()`.
+
+Le boilerplate (events, Flyway, topics, listeners, publishers, refund/release, chaos `/chaos/failure-rate`) est **posé par l’assistant**.
 
 ## Prérequis
 
 - Infra Docker up (`kafka`, `kafka-ui`, `postgres`) — bases `orders`, `payments`, `inventory`.
 - Étapes 4–5 OK : `order-service` + `payment-service` publient / consomment correctement.
-- Boilerplate étape 6 en place (inventory **8085**, saga columns, topics `inventory.reserved`, `orders.status`, compensations).
+- Boilerplate étape 6 en place (inventory **8085**, saga columns, topics compensations / `orders.status`).
 - Kafka UI : http://localhost:8080
+- Build depuis la **racine** : `mvn -f backend/pom.xml …` ou `./scripts/backend-run.sh`
 
 ## Contexte (à lire avant de coder)
 
@@ -88,30 +91,27 @@ Quand un `PaymentProcessed` ou `InventoryReserved` arrive :
 Agrégation (pseudo) :
 
 ```java
-if (order.getPaymentSuccess() == null || order.getInventorySuccess() == null) {
-    return; // wait
+if (order.getStatus() != OrderStatus.PENDING || !order.hasBothSagaResults()) {
+    return;
 }
-if (order.getStatus() != OrderStatus.PENDING) {
-    return; // already terminal
-}
-boolean ok = Boolean.TRUE.equals(order.getPaymentSuccess())
-        && Boolean.TRUE.equals(order.getInventorySuccess());
-if (ok) {
+if (order.hasBothSagaSuccess()) {
     order.confirm();
-    publishStatus(order);
-} else {
-    order.cancel();
-    publishStatus(order);
-    if (Boolean.TRUE.equals(order.getPaymentSuccess())) {
-        publishRefund(order);
-    }
-    if (Boolean.TRUE.equals(order.getInventorySuccess())) {
-        publishRelease(order);
-    }
+    orderRepository.save(order);
+    sagaEventPublisher.publishStatusChanged(order);
+    return;
+}
+order.cancel();
+orderRepository.save(order);
+sagaEventPublisher.publishStatusChanged(order);
+if (order.getPaymentSuccess()) {
+    sagaEventPublisher.publishRefundRequested(order);
+}
+if (order.getInventorySuccess()) {
+    sagaEventPublisher.publishReleaseRequested(order);
 }
 ```
 
-Réservation : boucle items → `stock.quantity >= qty` pour tous, sinon `success=false` ; sinon décrémente et `success=true`.
+Réservation : merge qty par SKU → check stock → décrément + `Reservation(success=true)` ; sinon `failReservation` (persist `success=false`).
 
 </details>
 
@@ -119,12 +119,12 @@ Réservation : boucle items → `stock.quantity >= qty` pour tous, sinon `succes
 
 ```bash
 mvn -f backend/pom.xml -pl services/order-service,services/payment-service,services/inventory-service -am -DskipTests install
-mvn -f backend/pom.xml -pl services/order-service spring-boot:run
-mvn -f backend/pom.xml -pl services/payment-service spring-boot:run
-mvn -f backend/pom.xml -pl services/inventory-service spring-boot:run
+
+# trois terminaux, ou :
+./scripts/backend-run.sh
 ```
 
-Ports : order **8081**, payment **8082**, inventory **8085**.
+Ports : order **8081**, payment **8082**, inventory **8085** (notification **8084** si script `all`).
 
 ---
 
@@ -148,17 +148,21 @@ curl -s -X POST localhost:8081/orders -H 'content-type: application/json' \
 
 ### B.2 Échec paiement → CANCELLED + release
 
-1. Relance payment-service avec échec forcé :
+1. Force l’échec paiement **sans** redémarrer (chaos API) :
 
 ```bash
-mvn -f backend/pom.xml -pl services/payment-service spring-boot:run \
-  -Dspring-boot.run.arguments=--payment.failure-rate=1.0
+curl -s -X PUT localhost:8082/chaos/failure-rate \
+  -H 'content-type: application/json' -d '1.0'
 ```
+
+(Alternative : relancer avec `--payment.failure-rate=1.0`.)
 
 2. Nouvelle commande (même payload SKU `A`).
 3. `GET` → **`CANCELLED`**.
 4. Kafka UI : `payments.processed` `success=false` ; `inventory.reserved` souvent `success=true` (parallèle) ; puis `inventory.release.requested` + `orders.status` `CANCELLED`.
-5. Logs inventory : release ; stock restauré (ou réservation annulée).
+5. Logs inventory : release ; stock restauré.
+
+Remets le chaos à `0.0` (ou `0.2`) après le test.
 
 **Conclure** : chorégraphie + compensation — inventory avait pu réussir avant de savoir que le paiement échouerait.
 
