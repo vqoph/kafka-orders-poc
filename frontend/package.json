@@ -12,6 +12,8 @@
     "format": "prettier --write \"**/*.{ts,tsx,js,json,css,md}\"",
     "generate:api": "turbo run generate:api --filter=@poc/orders --filter=@poc/payment --filter=@poc/notification --filter=@poc/inventory",
     "fetch:openapi": "node ./scripts/fetch-openapi.mjs",
+    "storybook": "npm run storybook -w @poc/shared",
+    "build-storybook": "npm run build-storybook -w @poc/shared",
     "sync:api": "npm run fetch:openapi && npm run generate:api"
   },
   "devDependencies": {
@@ -23,5 +25,8 @@
   "packageManager": "npm@10.9.2",
   "engines": {
     "node": ">=20"
+  },
+  "allowScripts": {
+    "esbuild@0.25.12": true
   }
 }
