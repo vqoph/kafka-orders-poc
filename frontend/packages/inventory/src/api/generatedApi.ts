@@ -1,12 +1,6 @@
 import { emptySplitApi as api } from './emptyApi';
 const injectedRtkApi = api.injectEndpoints({
   endpoints: (build) => ({
-    listStock: build.query<ListStockApiResponse, ListStockApiArg>({
-      query: () => ({ url: `/stock` }),
-    }),
-    getStock: build.query<GetStockApiResponse, GetStockApiArg>({
-      query: (queryArg) => ({ url: `/stock/${queryArg.sku}` }),
-    }),
     getInventoryFailureRate: build.query<
       GetInventoryFailureRateApiResponse,
       GetInventoryFailureRateApiArg
@@ -23,35 +17,41 @@ const injectedRtkApi = api.injectEndpoints({
         body: queryArg.failureRateRequest,
       }),
     }),
+    listStock: build.query<ListStockApiResponse, ListStockApiArg>({
+      query: () => ({ url: `/stock` }),
+    }),
+    getStock: build.query<GetStockApiResponse, GetStockApiArg>({
+      query: (queryArg) => ({ url: `/stock/${queryArg.sku}` }),
+    }),
   }),
   overrideExisting: false,
 });
 export { injectedRtkApi as generatedApi };
-export type ListStockApiResponse = /** status 200 OK */ StockResponse[];
-export type ListStockApiArg = void;
-export type GetStockApiResponse = /** status 200 OK */ StockResponse;
-export type GetStockApiArg = {
-  sku: string;
-};
 export type GetInventoryFailureRateApiResponse = /** status 200 OK */ FailureRateResponse;
 export type GetInventoryFailureRateApiArg = void;
 export type SetInventoryFailureRateApiResponse = /** status 200 OK */ FailureRateResponse;
 export type SetInventoryFailureRateApiArg = {
   failureRateRequest: FailureRateRequest;
 };
-export type StockResponse = {
+export type ListStockApiResponse = /** status 200 OK */ StockResponse[];
+export type ListStockApiArg = void;
+export type GetStockApiResponse = /** status 200 OK */ StockResponse;
+export type GetStockApiArg = {
   sku: string;
-  quantity: number;
 };
 export type FailureRateResponse = {
-  rate: number;
+  rate?: number;
 };
 export type FailureRateRequest = {
   rate: number;
 };
+export type StockResponse = {
+  sku?: string;
+  quantity?: number;
+};
 export const {
-  useListStockQuery,
-  useGetStockQuery,
   useGetInventoryFailureRateQuery,
   useSetInventoryFailureRateMutation,
+  useListStockQuery,
+  useGetStockQuery,
 } = injectedRtkApi;

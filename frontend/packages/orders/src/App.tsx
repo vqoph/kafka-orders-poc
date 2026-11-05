@@ -1,3 +1,4 @@
+import { useMemo, useState } from 'react';
 import { Provider } from 'react-redux';
 import { Link, Route, Routes, useNavigate, useParams } from 'react-router-dom';
 import { useFieldArray, useForm } from 'react-hook-form';
@@ -9,9 +10,26 @@ import {
   useGetOrderQuery,
   useListOrdersQuery,
 } from './api/ordersApi';
-import type { ItemResponse } from './api/generatedApi';
+import type { ItemResponse, OrderResponse } from './api/generatedApi';
 import { store } from './store';
 import './styles.css';
+
+type SortMode = 'date-asc' | 'date-desc' | 'status';
+
+const SORT_OPTIONS: { value: SortMode; label: string }[] = [
+  { value: 'date-desc', label: 'date desc' },
+  { value: 'date-asc', label: 'date asc' },
+  { value: 'status', label: 'status' },
+];
+
+function compareOrders(a: OrderResponse, b: OrderResponse, mode: SortMode): number {
+  if (mode === 'status') {
+    return a.status.localeCompare(b.status);
+  }
+  const aTime = a.createdAt ? Date.parse(a.createdAt) : 0;
+  const bTime = b.createdAt ? Date.parse(b.createdAt) : 0;
+  return mode === 'date-asc' ? aTime - bTime : bTime - aTime;
+}
 
 const createOrderSchema = z.object({
   customerId: z.string().min(1, 'Customer id is required'),
@@ -51,12 +69,32 @@ function formatItemsSummary(items?: ItemResponse[]): string {
 function OrdersList() {
   const { data: orders = [], error, isLoading, isFetching, refetch } =
     useListOrdersQuery();
+  const [sortMode, setSortMode] = useState<SortMode>('date-desc');
+
+  const sortedOrders = useMemo(
+    () => [...orders].sort((a, b) => compareOrders(a, b, sortMode)),
+    [orders, sortMode],
+  );
 
   return (
     <section className="space-y-4">
-      <div className="flex items-center justify-between gap-3">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <h2 className="text-xl font-semibold text-foreground">Orders</h2>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
+          <label className="flex items-center gap-2 text-sm text-muted">
+            <span>sort</span>
+            <select
+              value={sortMode}
+              onChange={(e) => setSortMode(e.target.value as SortMode)}
+              className="rounded-md border border-default bg-panel-muted px-2 py-1.5 text-foreground"
+            >
+              {SORT_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </label>
           <button
             type="button"
             onClick={() => void refetch()}
@@ -78,7 +116,7 @@ function OrdersList() {
         <p className="text-muted">No orders yet.</p>
       )}
       <ul className="space-y-2">
-        {orders.map((order) => (
+        {sortedOrders.map((order) => (
           <li key={order.id}>
             <Link
               to={order.id}

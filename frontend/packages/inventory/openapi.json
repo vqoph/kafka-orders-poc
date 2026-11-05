@@ -1,22 +1,80 @@
 {
-  "openapi": "3.0.3",
+  "openapi": "3.1.0",
   "info": {
-    "title": "inventory-service",
-    "version": "0.0.1"
+    "title": "OpenAPI definition",
+    "version": "v0"
   },
-  "servers": [{ "url": "http://localhost:8085" }],
+  "servers": [
+    {
+      "url": "http://localhost:8085",
+      "description": "Generated server url"
+    }
+  ],
   "paths": {
+    "/chaos/failure-rate": {
+      "get": {
+        "tags": [
+          "chaos-controller"
+        ],
+        "operationId": "getInventoryFailureRate",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/FailureRateResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "chaos-controller"
+        ],
+        "operationId": "setInventoryFailureRate",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FailureRateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/FailureRateResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/stock": {
       "get": {
+        "tags": [
+          "stock-controller"
+        ],
         "operationId": "listStock",
         "responses": {
           "200": {
             "description": "OK",
             "content": {
-              "application/json": {
+              "*/*": {
                 "schema": {
                   "type": "array",
-                  "items": { "$ref": "#/components/schemas/StockResponse" }
+                  "items": {
+                    "$ref": "#/components/schemas/StockResponse"
+                  }
                 }
               }
             }
@@ -26,57 +84,28 @@
     },
     "/stock/{sku}": {
       "get": {
+        "tags": [
+          "stock-controller"
+        ],
         "operationId": "getStock",
         "parameters": [
           {
             "name": "sku",
             "in": "path",
             "required": true,
-            "schema": { "type": "string" }
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
           "200": {
             "description": "OK",
             "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/StockResponse" }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/chaos/failure-rate": {
-      "get": {
-        "operationId": "getInventoryFailureRate",
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/FailureRateResponse" }
-              }
-            }
-          }
-        }
-      },
-      "put": {
-        "operationId": "setInventoryFailureRate",
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": { "$ref": "#/components/schemas/FailureRateRequest" }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/FailureRateResponse" }
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/StockResponse"
+                }
               }
             }
           }
@@ -86,26 +115,39 @@
   },
   "components": {
     "schemas": {
-      "StockResponse": {
-        "type": "object",
-        "required": ["sku", "quantity"],
-        "properties": {
-          "sku": { "type": "string" },
-          "quantity": { "type": "integer" }
-        }
-      },
       "FailureRateRequest": {
         "type": "object",
-        "required": ["rate"],
         "properties": {
-          "rate": { "type": "number", "minimum": 0, "maximum": 1 }
-        }
+          "rate": {
+            "type": "number",
+            "format": "double",
+            "maximum": 1,
+            "minimum": 0
+          }
+        },
+        "required": [
+          "rate"
+        ]
       },
       "FailureRateResponse": {
         "type": "object",
-        "required": ["rate"],
         "properties": {
-          "rate": { "type": "number" }
+          "rate": {
+            "type": "number",
+            "format": "double"
+          }
+        }
+      },
+      "StockResponse": {
+        "type": "object",
+        "properties": {
+          "sku": {
+            "type": "string"
+          },
+          "quantity": {
+            "type": "integer",
+            "format": "int32"
+          }
         }
       }
     }

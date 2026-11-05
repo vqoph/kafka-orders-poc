@@ -14,6 +14,10 @@
     },
     "test": {
       "dependsOn": ["^build"]
+    },
+    "generate:api": {
+      "cache": false,
+      "outputs": ["src/api/generatedApi.ts"]
     }
   }
 }

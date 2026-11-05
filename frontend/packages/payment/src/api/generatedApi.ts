@@ -28,7 +28,7 @@ export type SetPaymentFailureRateApiArg = {
   failureRateRequest: FailureRateRequest;
 };
 export type FailureRateResponse = {
-  rate: number;
+  rate?: number;
 };
 export type FailureRateRequest = {
   rate: number;
