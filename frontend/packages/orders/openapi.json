@@ -180,6 +180,7 @@
           }
         },
         "required": [
+          "quantity",
           "sku"
         ]
       },
@@ -193,7 +194,11 @@
             "type": "integer",
             "format": "int32"
           }
-        }
+        },
+        "required": [
+          "quantity",
+          "sku"
+        ]
       },
       "OrderResponse": {
         "type": "object",
@@ -227,12 +232,26 @@
             }
           },
           "paymentSuccess": {
-            "type": "boolean"
+            "type": [
+              "boolean",
+              "null"
+            ]
           },
           "inventorySuccess": {
-            "type": "boolean"
+            "type": [
+              "boolean",
+              "null"
+            ]
           }
-        }
+        },
+        "required": [
+          "amount",
+          "createdAt",
+          "customerId",
+          "id",
+          "items",
+          "status"
+        ]
       }
     }
   }

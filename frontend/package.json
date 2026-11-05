@@ -11,7 +11,8 @@
     "test": "turbo run test",
     "format": "prettier --write \"**/*.{ts,tsx,js,json,css,md}\"",
     "generate:api": "turbo run generate:api --filter=@poc/orders --filter=@poc/payment --filter=@poc/notification --filter=@poc/inventory",
-    "fetch:openapi": "node ./scripts/fetch-openapi.mjs"
+    "fetch:openapi": "node ./scripts/fetch-openapi.mjs",
+    "sync:api": "npm run fetch:openapi && npm run generate:api"
   },
   "devDependencies": {
     "@rtk-query/codegen-openapi": "^2.2.0",

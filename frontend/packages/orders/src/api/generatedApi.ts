@@ -41,22 +41,22 @@ export type GetOrderApiArg = {
   id: string;
 };
 export type ItemResponse = {
-  sku?: string;
-  quantity?: number;
+  sku: string;
+  quantity: number;
 };
 export type OrderResponse = {
-  id?: string;
-  customerId?: string;
-  amount?: number;
-  status?: 'PENDING' | 'CONFIRMED' | 'CANCELLED';
-  createdAt?: string;
-  items?: ItemResponse[];
-  paymentSuccess?: boolean;
-  inventorySuccess?: boolean;
+  id: string;
+  customerId: string;
+  amount: number;
+  status: 'PENDING' | 'CONFIRMED' | 'CANCELLED';
+  createdAt: string;
+  items: ItemResponse[];
+  paymentSuccess?: boolean | null;
+  inventorySuccess?: boolean | null;
 };
 export type OrderItemRequest = {
   sku: string;
-  quantity?: number;
+  quantity: number;
 };
 export type CreateOrderRequest = {
   customerId: string;

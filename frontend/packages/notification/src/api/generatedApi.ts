@@ -18,9 +18,9 @@ export type ListNotificationsApiArg = {
   orderId?: string;
 };
 export type NotificationEvent = {
-  orderId?: string;
-  type?: string;
-  message?: string;
-  at?: string;
+  orderId?: string | null;
+  type: string;
+  message: string;
+  at: string;
 };
 export const { useListNotificationsQuery } = injectedRtkApi;

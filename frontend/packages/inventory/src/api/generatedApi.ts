@@ -40,14 +40,14 @@ export type GetStockApiArg = {
   sku: string;
 };
 export type FailureRateResponse = {
-  rate?: number;
+  rate: number;
 };
 export type FailureRateRequest = {
   rate: number;
 };
 export type StockResponse = {
-  sku?: string;
-  quantity?: number;
+  sku: string;
+  quantity: number;
 };
 export const {
   useGetInventoryFailureRateQuery,

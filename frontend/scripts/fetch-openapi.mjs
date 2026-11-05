@@ -78,7 +78,7 @@ try {
   for (const service of SERVICES) {
     await fetchSpec(service);
   }
-  console.log('Done. Run: npm run generate:api');
+  console.log('Done. Run: npm run generate:api (or npm run sync:api)');
 } catch (error) {
   console.error(error instanceof Error ? error.message : error);
   process.exit(1);

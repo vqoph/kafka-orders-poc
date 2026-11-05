@@ -52,7 +52,10 @@
         "type": "object",
         "properties": {
           "orderId": {
-            "type": "string",
+            "type": [
+              "string",
+              "null"
+            ],
             "format": "uuid"
           },
           "type": {
@@ -65,7 +68,12 @@
             "type": "string",
             "format": "date-time"
           }
-        }
+        },
+        "required": [
+          "at",
+          "message",
+          "type"
+        ]
       }
     }
   }

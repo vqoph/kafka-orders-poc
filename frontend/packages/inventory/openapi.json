@@ -136,7 +136,10 @@
             "type": "number",
             "format": "double"
           }
-        }
+        },
+        "required": [
+          "rate"
+        ]
       },
       "StockResponse": {
         "type": "object",
@@ -148,7 +151,11 @@
             "type": "integer",
             "format": "int32"
           }
-        }
+        },
+        "required": [
+          "quantity",
+          "sku"
+        ]
       }
     }
   }
