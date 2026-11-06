@@ -35,6 +35,8 @@ Browser / microfronts --REST/SSE--> order / payment / inventory / notification
                                           notification-service --SSE--> UI
 ```
 
+(`notification-service` s’abonne aussi à `payments.processed` et `inventory.reserved` — même journal métier, autre consumer group ; pas un second bus “notif”.)
+
 - Topics : 3 partitions, clé de message = `orderId`.
 - Saga en chorégraphie : pas de chef d'orchestre, chaque service réagit aux événements des autres.
 - Compensation : paiement OK + stock KO (ou l'inverse) => annulation + remboursement / libération du stock.
@@ -62,7 +64,7 @@ kafka-orders-poc/
     services/payment-service/    # :8082
     services/inventory-service/  # :8085
     services/notification-service/ # :8084 SSE
-  frontend/                 # shell + remotes (hors parcours Kafka ; UI étape 10)
+  frontend/                 # shell + remotes (hors parcours Kafka ; UI étape 9)
   docker-compose.yml
   docker/postgres/init/     # CREATE DATABASE orders|payments|inventory
   scripts/backend-build.sh
@@ -596,7 +598,42 @@ Nouvelle commande → `CANCELLED` + `inventory.release.requested`.
 
 ---
 
-## Étape 7 : fiabilité (labs 5 et 6)
+## Étape 7 : notification-service, SSE et invalidation RTK
+
+**Concepts**
+
+- Kafka reste le **journal métier**. `notification-service` est un **abonné de plus** (`groupId=notification-service`) sur `orders.status`, `payments.processed`, `inventory.reserved` — **pas** un second bus “notif”, **pas** de POST HTTP métier → notif.
+- Même topic, autre groupe : ex. `orders.status` est lu par `order-service` **et** par `notification-service` (chaque groupe reçoit le flux complet — pub/sub).
+- SSE (`SseEmitter`) : push navigateur ; le front fait `invalidateTags` RTK (listes + détails orders / stock / payments).
+- Limite POC : connexions SSE **locales** à l’instance (pas de fan-out multi-replicas).
+
+### 7.1 Boilerplate (assistant)
+
+- Dep `libs/events` ; Kafka `localhost:29092` ; `JacksonJsonDeserializer` + `trusted.packages`
+- `SseHub` (registre emitters) + `NotificationController` (`GET /stream`, list stub)
+- 3 listeners mince + stubs **`TODO Lab 5`**
+- Front : singleton `subscribeNotificationStream` (`@poc/shared`) + hooks `invalidateTags` par remote
+
+### 7.2 Exercice
+
+**Exercice** : [Lab 5 — Notification SSE](./appendices/exercises/lab-05-notification-sse.md)
+
+**Lancer**
+
+```bash
+mvn -f backend/pom.xml -pl services/notification-service -am -DskipTests install
+./scripts/backend-run.sh
+# stream :
+curl -N localhost:8084/notifications/stream
+```
+
+Crée une commande (`POST localhost:8081/orders`) : events SSE `PAYMENT_PROCESSED` / `INVENTORY_RESERVED` / `ORDER_STATUS` ; UI se rafraîchit sans bouton Refresh.
+
+**Étape 7 ok** : Lab 5 A + B.
+
+---
+
+## Étape 8 : fiabilité (labs 6 et 7)
 
 **Concepts**
 
@@ -606,12 +643,12 @@ Nouvelle commande → `CANCELLED` + `inventory.release.requested`.
 - **Erreurs** : `DefaultErrorHandler` + `ExponentialBackOff`, puis `DeadLetterPublishingRecoverer` vers `<topic>.DLT`. `@RetryableTopic` crée des topics de retry intermédiaires.
 - **Poison pill** : un message qui fait planter le consumer à chaque tentative et bloque la partition s'il n'y a pas de DLT.
 
-**Lab 5 : at-least-once**
+**Lab 6 : at-least-once**
 
 1. Ajoute un `Thread.sleep` + un `System.exit` après le traitement et avant le commit.
 2. Relance : le message est retraité. Sans idempotence, double paiement. Avec la table `processed_events`, le doublon est ignoré.
 
-**Lab 6 : retries et DLT**
+**Lab 7 : retries et DLT**
 
 1. Envoie un message invalide (JSON cassé, ou `amount` négatif).
 2. Observe les retries avec backoff dans les logs, puis le message dans `orders.created.DLT` (Kafka UI).
@@ -619,35 +656,11 @@ Nouvelle commande → `CANCELLED` + `inventory.release.requested`.
 
 ---
 
-## Étape 8 : notification-service et SSE
-
-**Concepts**
-
-- Consumer group dédié (`notification-service`) : lit `orders.status` **sans** rejoindre le groupe `order-service` (chaque groupe reçoit tout le flux — pub/sub).
-- SSE avec `SseEmitter` (connexion HTTP longue) ; CORS ouvert pour le shell front.
-- Limite : connexions SSE **locales** à l’instance (pas de fan-out multi-replicas dans ce POC).
-
-**Lancer**
-
-```bash
-mvn -f backend/pom.xml -pl services/notification-service -am -DskipTests install
-mvn -f backend/pom.xml -pl services/notification-service spring-boot:run
-# ou : ./scripts/backend-run.sh notification-service
-```
-
-```bash
-curl -N localhost:8084/notifications/stream
-```
-
-Crée une commande (`POST localhost:8081/orders`) dans un autre terminal : l’événement de statut apparaît dans le flux.
-
----
-
 ## Étape 9 : UI microfrontends (hors parcours Kafka)
 
 Pas une app Next monolithique : shell + remotes sous `frontend/` (Module Federation), i18n, clients **générés** depuis OpenAPI (springdoc → `openapi.json` → RTK Query).
 
-Nav cible : **Commandes** → **Stocks** (CRUD catalogue, Lab 4 B) → **Paiements** (liste Lab 4 A + chaos). Notifications hors nav jusqu’à l’étape 8 faite côté produit.
+Nav cible : **Commandes** → **Stocks** (CRUD catalogue, Lab 4 B) → **Paiements** (liste Lab 4 A + chaos). Live refresh via étape 7 (SSE + tags RTK).
 
 ```bash
 ./scripts/frontend-dev.sh          # shell http://localhost:5000
@@ -676,24 +689,24 @@ docker compose --profile apps up --build
 
 ## Étape 11 : labs avancés
 
-Numérotation **après** Lab 4 (REST étapes 5–6) et Labs 5–6 (fiabilité étape 7).
+Numérotation **après** Lab 4 (REST étapes 5–6), Lab 5 (SSE étape 7) et Labs 6–7 (fiabilité étape 8).
 
-**Lab 7 : dual write et outbox**
+**Lab 8 : dual write et outbox**
 
 - Problème : "save en base puis `kafka.send`" n'est pas atomique. Plante entre les deux et tu perds l'événement (ou inversement).
 - Solution : table `outbox` écrite dans la **même transaction** que la commande, puis un poller qui publie et marque comme envoyé. Bonus : Debezium.
 
-**Lab 8 : config du producer**
+**Lab 9 : config du producer**
 
 - `acks=all`, `enable.idempotence=true`, `linger.ms`, `batch.size`, `compression.type`. Mesure l'effet sur latence/débit avec un petit générateur de charge.
 
-**Lab 9 : rétention et rejeu**
+**Lab 10 : rétention et rejeu**
 
 - Nouveau consumer group avec `auto.offset.reset=earliest` : il relit tout l'historique.
 - `kafka-consumer-groups.sh --reset-offsets` pour rejouer.
 - Topic **compacté** (`cleanup.policy=compact`) pour garder le dernier état par clé (ex. stock).
 
-**Lab 10 : sérialisation**
+**Lab 11 : sérialisation**
 
 - Pièges des type headers JSON entre services, `JacksonJsonDeserializer.TRUSTED_PACKAGES`.
 - Bonus : Avro + Schema Registry, évolution de schéma compatible.

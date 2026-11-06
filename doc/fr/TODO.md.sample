@@ -13,8 +13,8 @@ cp doc/fr/TODO.md.sample doc/fr/TODO.md
 - [ ] Étape 4 : publier `orders.created` et lab 1 (clés et partitions)
 - [ ] Étape 5 : `payment-service` (premier consumer) + lab 2 + Lab 4 A (liste paiements)
 - [ ] Étape 6 : `inventory-service` + Lab 4 B (CRUD stock) + saga / lab 3
-- [ ] Étape 7 : fiabilité : lab 5 (offsets, idempotence) et lab 6 (retries, DLT)
-- [ ] Étape 8 : `notification-service` et SSE
+- [ ] Étape 7 : `notification-service` SSE + Lab 5 (Kafka → SSE → invalidateTags RTK)
+- [ ] Étape 8 : fiabilité : lab 6 (offsets, idempotence) et lab 7 (retries, DLT)
 - [ ] Étape 9 : UI hors parcours (`frontend/` / scripts)
 - [ ] Étape 10 : tout dans Docker
 - [ ] Étape 11 : labs avancés (outbox, config producer, rejeu, sérialisation, multi-broker, virtual threads)
