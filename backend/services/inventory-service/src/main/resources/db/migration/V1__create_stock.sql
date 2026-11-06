@@ -21,5 +21,5 @@ CREATE TABLE reservation_items (
 
 CREATE INDEX idx_reservations_order_id ON reservations (order_id);
 
--- Seed for tutorial curls (sku A).
-INSERT INTO stock (sku, quantity) VALUES ('A', 1000);
+-- Seed for tutorial curls / UI (uniform SKU-NNN).
+INSERT INTO stock (sku, quantity) VALUES ('SKU-001', 1000);
