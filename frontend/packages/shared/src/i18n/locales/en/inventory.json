@@ -1,12 +1,25 @@
 {
-  "stock": "Stock",
+  "title": "Stock",
   "refresh": "Refresh",
+  "newProduct": "New product",
   "loadFailed": "Failed to load inventory",
-  "empty": "No stock rows returned.",
+  "empty": "No stock rows yet. Create a product.",
   "qty": "qty {{quantity}}",
-  "chaos": {
-    "title": "Inventory chaos",
-    "description": "Artificial failure rate for inventory-service (0–1).",
-    "updated": "Inventory chaos rate updated"
+  "edit": "Edit",
+  "delete": "Delete",
+  "deleteConfirm": "Delete SKU {{sku}}?",
+  "createTitle": "Create product",
+  "editTitle": "Edit stock",
+  "form": {
+    "sku": "SKU",
+    "quantity": "Quantity",
+    "fillDemo": "Fill with sample data",
+    "skuRequired": "SKU is required",
+    "quantityMin": "Quantity must be >= 0",
+    "save": "Save",
+    "saving": "Saving…",
+    "createFailed": "Failed to create product",
+    "updateFailed": "Failed to update stock",
+    "deleteFailed": "Failed to delete product"
   }
 }

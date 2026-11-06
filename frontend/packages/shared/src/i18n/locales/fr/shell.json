@@ -3,8 +3,8 @@
   "title": "Shell microfrontend",
   "nav": {
     "orders": "Commandes",
-    "payment": "Paiement",
-    "inventory": "Inventaire",
+    "payment": "Paiements",
+    "inventory": "Stocks",
     "notifications": "Notifications"
   },
   "unknownRoute": "Route inconnue. Utilisez la navigation ci-dessus.",

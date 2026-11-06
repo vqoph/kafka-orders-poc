@@ -9,10 +9,18 @@ export const paymentApi = generatedApi.enhanceEndpoints({
     setPaymentFailureRate: {
       invalidatesTags: ['Chaos'],
     },
+    listPayments: {
+      providesTags: ['Payments'],
+    },
+    getPayment: {
+      providesTags: (_result, _error, arg) => [{ type: 'Payments', id: arg.id }],
+    },
   },
 });
 
 export const {
   useGetPaymentFailureRateQuery,
   useSetPaymentFailureRateMutation,
+  useListPaymentsQuery,
+  useGetPaymentQuery,
 } = paymentApi;

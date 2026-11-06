@@ -3,8 +3,8 @@
   "title": "Microfrontend shell",
   "nav": {
     "orders": "Orders",
-    "payment": "Payment",
-    "inventory": "Inventory",
+    "payment": "Payments",
+    "inventory": "Stocks",
     "notifications": "Notifications"
   },
   "unknownRoute": "Unknown route. Use the navigation above.",

@@ -4,6 +4,6 @@ import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 export const emptySplitApi = createApi({
   reducerPath: 'paymentApi',
   baseQuery: fetchBaseQuery({ baseUrl: 'http://localhost:8082' }),
-  tagTypes: ['Chaos'],
+  tagTypes: ['Chaos', 'Payments'],
   endpoints: () => ({}),
 });

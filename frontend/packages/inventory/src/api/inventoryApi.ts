@@ -6,6 +6,18 @@ export const inventoryApi = generatedApi.enhanceEndpoints({
     listStock: {
       providesTags: ['Stock'],
     },
+    getStock: {
+      providesTags: (_result, _error, arg) => [{ type: 'Stock', id: arg.sku }],
+    },
+    createStock: {
+      invalidatesTags: ['Stock'],
+    },
+    updateStock: {
+      invalidatesTags: ['Stock'],
+    },
+    deleteStock: {
+      invalidatesTags: ['Stock'],
+    },
     getInventoryFailureRate: {
       providesTags: ['Chaos'],
     },
@@ -17,6 +29,10 @@ export const inventoryApi = generatedApi.enhanceEndpoints({
 
 export const {
   useListStockQuery,
+  useGetStockQuery,
+  useCreateStockMutation,
+  useUpdateStockMutation,
+  useDeleteStockMutation,
   useGetInventoryFailureRateQuery,
   useSetInventoryFailureRateMutation,
 } = inventoryApi;

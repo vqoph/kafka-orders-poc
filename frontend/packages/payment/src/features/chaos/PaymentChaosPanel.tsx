@@ -1,10 +1,11 @@
-import { ChaosRateForm, PageShell, useChaosRateForm, useTranslation } from '@poc/shared';
+import { ChaosRateForm, useChaosRateForm, useTranslation } from '@poc/shared';
 import {
   useGetPaymentFailureRateQuery,
   useSetPaymentFailureRateMutation,
 } from '../../api/paymentApi';
 
-export function PaymentChaosPage() {
+/** Chaos controls only (embedded next to the payments list). */
+export function PaymentChaosPanel() {
   const { t } = useTranslation('payment');
   const { data, error, isLoading } = useGetPaymentFailureRateQuery();
   const [setPaymentFailureRate, { error: saveError, isLoading: saving, isSuccess }] =
@@ -23,19 +24,17 @@ export function PaymentChaosPage() {
   });
 
   return (
-    <PageShell maxWidth="sm">
-      <ChaosRateForm
-        title={t('chaos.title')}
-        description={t('chaos.description')}
-        currentRate={data?.rate}
-        value={chaos.draft}
-        onChange={chaos.setDraft}
-        onSubmit={chaos.onSubmit}
-        loading={isLoading}
-        saving={chaos.saving}
-        error={chaos.displayError}
-        successMessage={chaos.successMessage}
-      />
-    </PageShell>
+    <ChaosRateForm
+      title={t('chaos.title')}
+      description={t('chaos.description')}
+      currentRate={data?.rate}
+      value={chaos.draft}
+      onChange={chaos.setDraft}
+      onSubmit={chaos.onSubmit}
+      loading={isLoading}
+      saving={chaos.saving}
+      error={chaos.displayError}
+      successMessage={chaos.successMessage}
+    />
   );
 }

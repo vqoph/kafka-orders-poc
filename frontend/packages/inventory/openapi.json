@@ -13,9 +13,7 @@
   "paths": {
     "/chaos/failure-rate": {
       "get": {
-        "tags": [
-          "chaos-controller"
-        ],
+        "tags": ["chaos-controller"],
         "operationId": "getInventoryFailureRate",
         "responses": {
           "200": {
@@ -31,9 +29,7 @@
         }
       },
       "put": {
-        "tags": [
-          "chaos-controller"
-        ],
+        "tags": ["chaos-controller"],
         "operationId": "setInventoryFailureRate",
         "requestBody": {
           "content": {
@@ -61,9 +57,7 @@
     },
     "/stock": {
       "get": {
-        "tags": [
-          "stock-controller"
-        ],
+        "tags": ["stock-controller"],
         "operationId": "listStock",
         "responses": {
           "200": {
@@ -80,13 +74,37 @@
             }
           }
         }
+      },
+      "post": {
+        "tags": ["stock-controller"],
+        "operationId": "createStock",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateStockRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/StockResponse"
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/stock/{sku}": {
       "get": {
-        "tags": [
-          "stock-controller"
-        ],
+        "tags": ["stock-controller"],
         "operationId": "getStock",
         "parameters": [
           {
@@ -110,6 +128,61 @@
             }
           }
         }
+      },
+      "put": {
+        "tags": ["stock-controller"],
+        "operationId": "updateStock",
+        "parameters": [
+          {
+            "name": "sku",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateStockRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/StockResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["stock-controller"],
+        "operationId": "deleteStock",
+        "parameters": [
+          {
+            "name": "sku",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        }
       }
     }
   },
@@ -125,9 +198,7 @@
             "minimum": 0
           }
         },
-        "required": [
-          "rate"
-        ]
+        "required": ["rate"]
       },
       "FailureRateResponse": {
         "type": "object",
@@ -137,9 +208,7 @@
             "format": "double"
           }
         },
-        "required": [
-          "rate"
-        ]
+        "required": ["rate"]
       },
       "StockResponse": {
         "type": "object",
@@ -152,10 +221,32 @@
             "format": "int32"
           }
         },
-        "required": [
-          "quantity",
-          "sku"
-        ]
+        "required": ["quantity", "sku"]
+      },
+      "CreateStockRequest": {
+        "type": "object",
+        "properties": {
+          "sku": {
+            "type": "string"
+          },
+          "quantity": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          }
+        },
+        "required": ["sku", "quantity"]
+      },
+      "UpdateStockRequest": {
+        "type": "object",
+        "properties": {
+          "quantity": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          }
+        },
+        "required": ["quantity"]
       }
     }
   }

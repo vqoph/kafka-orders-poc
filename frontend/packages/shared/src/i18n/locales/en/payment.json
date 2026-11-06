@@ -1,4 +1,11 @@
 {
+  "title": "Payments",
+  "refresh": "Refresh",
+  "loadFailed": "Failed to load payments",
+  "empty": "No payments yet. Create an order first.",
+  "listMeta": "order {{orderId}} · amount {{amount}}",
+  "success": "success",
+  "failed": "failed",
   "chaos": {
     "title": "Payment chaos",
     "description": "Control the payment-service artificial failure rate (0 = none, 1 = always fail).",

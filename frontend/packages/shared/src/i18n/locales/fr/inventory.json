@@ -1,12 +1,25 @@
 {
-  "stock": "Stock",
+  "title": "Stocks",
   "refresh": "Actualiser",
+  "newProduct": "Nouveau produit",
   "loadFailed": "Échec du chargement de l'inventaire",
-  "empty": "Aucune ligne de stock retournée.",
+  "empty": "Aucun stock pour le moment. Créez un produit.",
   "qty": "qté {{quantity}}",
-  "chaos": {
-    "title": "Chaos inventaire",
-    "description": "Taux d'échec artificiel pour inventory-service (0–1).",
-    "updated": "Taux de chaos inventaire mis à jour"
+  "edit": "Modifier",
+  "delete": "Supprimer",
+  "deleteConfirm": "Supprimer le SKU {{sku}} ?",
+  "createTitle": "Créer un produit",
+  "editTitle": "Modifier le stock",
+  "form": {
+    "sku": "SKU",
+    "quantity": "Quantité",
+    "fillDemo": "Remplir avec des données d'exemple",
+    "skuRequired": "Le SKU est requis",
+    "quantityMin": "La quantité doit être >= 0",
+    "save": "Enregistrer",
+    "saving": "Enregistrement…",
+    "createFailed": "Échec de la création du produit",
+    "updateFailed": "Échec de la mise à jour du stock",
+    "deleteFailed": "Échec de la suppression du produit"
   }
 }

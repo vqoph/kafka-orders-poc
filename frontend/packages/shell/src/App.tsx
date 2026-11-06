@@ -35,14 +35,11 @@ export default function App() {
               <NavLink to="/orders" className={navClass}>
                 {t('nav.orders')}
               </NavLink>
-              <NavLink to="/payment" className={navClass}>
-                {t('nav.payment')}
-              </NavLink>
               <NavLink to="/inventory" className={navClass}>
                 {t('nav.inventory')}
               </NavLink>
-              <NavLink to="/notifications" className={navClass}>
-                {t('nav.notifications')}
+              <NavLink to="/payment" className={navClass}>
+                {t('nav.payment')}
               </NavLink>
             </nav>
             <LanguageSwitcher />
@@ -59,12 +56,12 @@ export default function App() {
             element={<RemoteOutlet name="orders" remote={OrdersApp} />}
           />
           <Route
-            path="/payment/*"
-            element={<RemoteOutlet name="payment" remote={PaymentApp} />}
-          />
-          <Route
             path="/inventory/*"
             element={<RemoteOutlet name="inventory" remote={InventoryApp} />}
+          />
+          <Route
+            path="/payment/*"
+            element={<RemoteOutlet name="payment" remote={PaymentApp} />}
           />
           <Route
             path="/notifications/*"

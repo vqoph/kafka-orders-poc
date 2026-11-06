@@ -1,4 +1,11 @@
 {
+  "title": "Paiements",
+  "refresh": "Actualiser",
+  "loadFailed": "Échec du chargement des paiements",
+  "empty": "Aucun paiement pour le moment. Créez d'abord une commande.",
+  "listMeta": "commande {{orderId}} · montant {{amount}}",
+  "success": "succès",
+  "failed": "échec",
   "chaos": {
     "title": "Chaos paiement",
     "description": "Contrôlez le taux d'échec artificiel du payment-service (0 = aucun, 1 = toujours en échec).",

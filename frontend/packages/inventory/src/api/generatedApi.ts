@@ -20,8 +20,25 @@ const injectedRtkApi = api.injectEndpoints({
     listStock: build.query<ListStockApiResponse, ListStockApiArg>({
       query: () => ({ url: `/stock` }),
     }),
+    createStock: build.mutation<CreateStockApiResponse, CreateStockApiArg>({
+      query: (queryArg) => ({
+        url: `/stock`,
+        method: 'POST',
+        body: queryArg.createStockRequest,
+      }),
+    }),
     getStock: build.query<GetStockApiResponse, GetStockApiArg>({
       query: (queryArg) => ({ url: `/stock/${queryArg.sku}` }),
+    }),
+    updateStock: build.mutation<UpdateStockApiResponse, UpdateStockApiArg>({
+      query: (queryArg) => ({
+        url: `/stock/${queryArg.sku}`,
+        method: 'PUT',
+        body: queryArg.updateStockRequest,
+      }),
+    }),
+    deleteStock: build.mutation<DeleteStockApiResponse, DeleteStockApiArg>({
+      query: (queryArg) => ({ url: `/stock/${queryArg.sku}`, method: 'DELETE' }),
     }),
   }),
   overrideExisting: false,
@@ -35,8 +52,21 @@ export type SetInventoryFailureRateApiArg = {
 };
 export type ListStockApiResponse = /** status 200 OK */ StockResponse[];
 export type ListStockApiArg = void;
+export type CreateStockApiResponse = /** status 201 Created */ StockResponse;
+export type CreateStockApiArg = {
+  createStockRequest: CreateStockRequest;
+};
 export type GetStockApiResponse = /** status 200 OK */ StockResponse;
 export type GetStockApiArg = {
+  sku: string;
+};
+export type UpdateStockApiResponse = /** status 200 OK */ StockResponse;
+export type UpdateStockApiArg = {
+  sku: string;
+  updateStockRequest: UpdateStockRequest;
+};
+export type DeleteStockApiResponse = /** status 204 No Content */ undefined;
+export type DeleteStockApiArg = {
   sku: string;
 };
 export type FailureRateResponse = {
@@ -49,9 +79,19 @@ export type StockResponse = {
   sku: string;
   quantity: number;
 };
+export type CreateStockRequest = {
+  sku: string;
+  quantity: number;
+};
+export type UpdateStockRequest = {
+  quantity: number;
+};
 export const {
   useGetInventoryFailureRateQuery,
   useSetInventoryFailureRateMutation,
   useListStockQuery,
+  useCreateStockMutation,
   useGetStockQuery,
+  useUpdateStockMutation,
+  useDeleteStockMutation,
 } = injectedRtkApi;

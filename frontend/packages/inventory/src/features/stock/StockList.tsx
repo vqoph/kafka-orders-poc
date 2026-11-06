@@ -1,5 +1,7 @@
+import { Link } from 'react-router-dom';
 import {
   Button,
+  buttonClassName,
   EmptyState,
   ErrorText,
   ListCard,
@@ -8,7 +10,7 @@ import {
   errorMessage,
   useTranslation,
 } from '@poc/shared';
-import { useListStockQuery } from '../../api/inventoryApi';
+import { useDeleteStockMutation, useListStockQuery } from '../../api/inventoryApi';
 
 export function StockList() {
   const { t } = useTranslation('inventory');
@@ -19,20 +21,38 @@ export function StockList() {
     isFetching: stockFetching,
     refetch: refetchStock,
   } = useListStockQuery();
+  const [deleteStock, { error: deleteError }] = useDeleteStockMutation();
+
+  const onDelete = async (sku: string) => {
+    if (!window.confirm(t('deleteConfirm', { sku }))) return;
+    try {
+      await deleteStock({ sku }).unwrap();
+    } catch {
+      // surfaced via deleteError
+    }
+  };
 
   return (
     <section className="space-y-4">
       <PageHeader
-        title={t('stock')}
+        title={t('title')}
         actions={
-          <Button variant="secondary" onClick={() => void refetchStock()}>
-            {t('refresh')}
-          </Button>
+          <>
+            <Button variant="secondary" onClick={() => void refetchStock()}>
+              {t('refresh')}
+            </Button>
+            <Link to="new" className={buttonClassName('primary')}>
+              {t('newProduct')}
+            </Link>
+          </>
         }
       />
       {(stockLoading || stockFetching) && <LoadingText />}
       {stockError && (
         <ErrorText>{errorMessage(stockError, t('loadFailed'))}</ErrorText>
+      )}
+      {deleteError && (
+        <ErrorText>{errorMessage(deleteError, t('form.deleteFailed'))}</ErrorText>
       )}
       {!stockLoading && stock.length === 0 && !stockError && (
         <EmptyState>{t('empty')}</EmptyState>
@@ -41,11 +61,28 @@ export function StockList() {
         {stock.map((item) => (
           <li key={item.sku}>
             <ListCard>
-              <div className="flex items-center justify-between gap-2">
-                <span className="font-mono text-accent">{item.sku}</span>
-                <span className="text-sm text-foreground">
-                  {t('qty', { quantity: item.quantity })}
-                </span>
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div className="flex items-center gap-3">
+                  <span className="font-mono text-accent">{item.sku}</span>
+                  <span className="text-sm text-foreground">
+                    {t('qty', { quantity: item.quantity })}
+                  </span>
+                </div>
+                <div className="flex gap-2">
+                  <Link
+                    to={`edit/${encodeURIComponent(item.sku)}`}
+                    className={buttonClassName('secondary')}
+                  >
+                    {t('edit')}
+                  </Link>
+                  <Button
+                    variant="secondary"
+                    onClick={() => void onDelete(item.sku)}
+                    className="text-muted hover:border-danger hover:text-danger"
+                  >
+                    {t('delete')}
+                  </Button>
+                </div>
               </div>
             </ListCard>
           </li>
