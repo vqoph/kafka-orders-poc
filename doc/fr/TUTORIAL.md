@@ -568,7 +568,7 @@ mvn -f backend/pom.xml -pl services/inventory-service spring-boot:run
 Chaos paiement sans restart :
 
 ```bash
-curl -s -X PUT localhost:8082/chaos/failure-rate -H 'content-type: application/json' -d '1.0'
+curl -s -X PUT localhost:8082/chaos/failure-rate -H 'content-type: application/json' -d '{"rate":1.0}'
 ```
 
 Nouvelle commande → `CANCELLED` + `inventory.release.requested`.
@@ -711,8 +711,8 @@ mvn -f backend/pom.xml -pl services/order-service spring-boot:run
 
 # Chaos (sans restart)
 curl -s localhost:8082/chaos/failure-rate
-curl -s -X PUT localhost:8082/chaos/failure-rate -H 'content-type: application/json' -d '1.0'
-curl -s -X PUT localhost:8085/chaos/failure-rate -H 'content-type: application/json' -d '0.5'
+curl -s -X PUT localhost:8082/chaos/failure-rate -H 'content-type: application/json' -d '{"rate":1.0}'
+curl -s -X PUT localhost:8085/chaos/failure-rate -H 'content-type: application/json' -d '{"rate":0.5}'
 
 # Kafka
 docker compose exec kafka /opt/kafka/bin/kafka-topics.sh --bootstrap-server kafka:9092 --list

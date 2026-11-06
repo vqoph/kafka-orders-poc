@@ -152,7 +152,7 @@ curl -s -X POST localhost:8081/orders -H 'content-type: application/json' \
 
 ```bash
 curl -s -X PUT localhost:8082/chaos/failure-rate \
-  -H 'content-type: application/json' -d '1.0'
+  -H 'content-type: application/json' -d '{"rate":1.0}'
 ```
 
 (Alternative : relancer avec `--payment.failure-rate=1.0`.)
