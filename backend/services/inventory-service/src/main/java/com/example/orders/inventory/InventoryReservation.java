@@ -57,7 +57,7 @@ public class InventoryReservation {
         // If the failure rate is greater than 0 and the random number is less than the
         // failure rate, return a failed reservation
         if (failureRate > 0 && Math.random() < failureRate) {
-            return failReservation(order);
+            return failReservation(order, "Inventory reservation failed");
         }
 
         // Defense in depth: merge qty by SKU
@@ -72,12 +72,16 @@ public class InventoryReservation {
 
         List<ReservationItem> items = new ArrayList<>();
         for (Map.Entry<String, Integer> entry : qtyBySku.entrySet()) {
-            Stock stock = stocks.get(entry.getKey());
+            String sku = entry.getKey();
+            Stock stock = stocks.get(sku);
             int quantity = entry.getValue();
-            if (stock == null || stock.getQuantity() < quantity) {
-                return failReservation(order);
+            if (stock == null) {
+                return failReservation(order, "Unknown SKU: " + sku);
             }
-            items.add(new ReservationItem(entry.getKey(), quantity));
+            if (stock.getQuantity() < quantity) {
+                return failReservation(order, "Insufficient stock for SKU: " + sku);
+            }
+            items.add(new ReservationItem(sku, quantity));
         }
 
         for (ReservationItem item : items) {
@@ -104,10 +108,15 @@ public class InventoryReservation {
         this.failureRate = failureRate;
     }
 
-    private Reservation failReservation(OrderCreated order) {
-        Reservation reservation = new Reservation(order.orderId(), false, Collections.emptyList());
+    private Reservation failReservation(OrderCreated order, String failureReason) {
+        Reservation reservation = new Reservation(
+                order.orderId(),
+                false,
+                Collections.emptyList(),
+                failureReason
+        );
         reservationRepository.save(reservation);
-        log.info("Failed reservation for orderId=" + order.orderId());
+        log.info("Failed reservation for orderId=" + order.orderId() + " reason=" + failureReason);
         return reservation;
     }
 }

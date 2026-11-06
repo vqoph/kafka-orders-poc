@@ -7,6 +7,7 @@ import java.util.UUID;
 public record InventoryReserved(
         UUID orderId,
         boolean success,
-        Instant reservedAt
+        Instant reservedAt,
+        String failureReason
 ) {
 }

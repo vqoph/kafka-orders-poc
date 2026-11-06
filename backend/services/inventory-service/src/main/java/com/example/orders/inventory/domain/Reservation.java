@@ -29,6 +29,9 @@ public class Reservation {
     @Column(name = "reserved_at", nullable = false)
     private Instant reservedAt;
 
+    @Column(name = "failure_reason", length = 512)
+    private String failureReason;
+
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "reservation_items", joinColumns = @JoinColumn(name = "reservation_id"))
     private List<ReservationItem> items = new ArrayList<>();
@@ -38,11 +41,16 @@ public class Reservation {
     }
 
     public Reservation(UUID orderId, boolean success, List<ReservationItem> items) {
+        this(orderId, success, items, null);
+    }
+
+    public Reservation(UUID orderId, boolean success, List<ReservationItem> items, String failureReason) {
         this.id = UUID.randomUUID();
         this.orderId = orderId;
         this.success = success;
         this.reservedAt = Instant.now();
         this.items = new ArrayList<>(items);
+        this.failureReason = failureReason;
     }
 
     public UUID getId() {
@@ -59,6 +67,10 @@ public class Reservation {
 
     public Instant getReservedAt() {
         return reservedAt;
+    }
+
+    public String getFailureReason() {
+        return failureReason;
     }
 
     public List<ReservationItem> getItems() {

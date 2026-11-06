@@ -22,7 +22,8 @@ public class InventoryEventPublisher {
         InventoryReserved event = new InventoryReserved(
                 reservation.getOrderId(),
                 reservation.isSuccess(),
-                reservation.getReservedAt()
+                reservation.getReservedAt(),
+                reservation.getFailureReason()
         );
         String key = reservation.getOrderId().toString();
         kafkaTemplate.send(KafkaTopics.INVENTORY_RESERVED, key, event);

@@ -8,6 +8,7 @@ public record PaymentProcessed(
         UUID orderId,
         BigDecimal amount,
         boolean success,
-        Instant processedAt) {
+        Instant processedAt,
+        String failureReason) {
 
 }
