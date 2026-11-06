@@ -12,3 +12,5 @@ export const store = configureStore({
       .concat(ordersApi.middleware)
       .concat(inventoryStockApi.middleware),
 });
+
+export type AppDispatch = typeof store.dispatch;

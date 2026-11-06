@@ -12,9 +12,11 @@ export type StockResponse = {
 export const inventoryStockApi = createApi({
   reducerPath: 'inventoryStockApi',
   baseQuery: fetchBaseQuery({ baseUrl: 'http://localhost:8085' }),
+  tagTypes: ['Stock'],
   endpoints: (build) => ({
     listStockForOrders: build.query<StockResponse[], void>({
       query: () => ({ url: '/stock' }),
+      providesTags: ['Stock'],
     }),
   }),
 });

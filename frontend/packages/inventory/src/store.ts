@@ -8,3 +8,5 @@ export const store = configureStore({
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware().concat(inventoryApi.middleware),
 });
+
+export type AppDispatch = typeof store.dispatch;
