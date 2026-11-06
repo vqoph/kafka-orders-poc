@@ -35,7 +35,7 @@ public class SagaService {
         if (order == null) {
             return;
         }
-        order.recordPaymentResult(event.success());
+        order.recordPaymentResult(event.success(), event.failureReason());
         tryComplete(order);
     }
 
@@ -45,7 +45,7 @@ public class SagaService {
         if (order == null) {
             return;
         }
-        order.recordInventoryResult(event.success());
+        order.recordInventoryResult(event.success(), event.failureReason());
         tryComplete(order);
     }
 

@@ -50,6 +50,10 @@ public class Order {
     @Column(name = "inventory_success")
     private Boolean inventorySuccess;
 
+    /** Set when a saga step fails; populated on CANCELLED orders. */
+    @Column(name = "error_message", length = 512)
+    private String errorMessage;
+
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "order_items", joinColumns = @JoinColumn(name = "order_id"))
     private List<OrderItem> items = new ArrayList<>();
@@ -67,12 +71,29 @@ public class Order {
         this.items = new ArrayList<>(items);
     }
 
-    public void recordPaymentResult(boolean success) {
+    public void recordPaymentResult(boolean success, String failureReason) {
         this.paymentSuccess = success;
+        if (!success) {
+            appendErrorMessage(failureReason);
+        }
     }
 
-    public void recordInventoryResult(boolean success) {
+    public void recordInventoryResult(boolean success, String failureReason) {
         this.inventorySuccess = success;
+        if (!success) {
+            appendErrorMessage(failureReason);
+        }
+    }
+
+    private void appendErrorMessage(String failureReason) {
+        if (failureReason == null || failureReason.isBlank()) {
+            return;
+        }
+        if (this.errorMessage == null || this.errorMessage.isBlank()) {
+            this.errorMessage = failureReason;
+        } else {
+            this.errorMessage = this.errorMessage + "; " + failureReason;
+        }
     }
 
     public void confirm() {
@@ -121,6 +142,10 @@ public class Order {
 
     public Boolean getInventorySuccess() {
         return inventorySuccess;
+    }
+
+    public String getErrorMessage() {
+        return errorMessage;
     }
 
     public List<OrderItem> getItems() {

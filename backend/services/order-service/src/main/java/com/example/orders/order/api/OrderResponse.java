@@ -22,7 +22,8 @@ public record OrderResponse(
         Instant createdAt,
         List<ItemResponse> items,
         @Schema(nullable = true) Boolean paymentSuccess,
-        @Schema(nullable = true) Boolean inventorySuccess) {
+        @Schema(nullable = true) Boolean inventorySuccess,
+        @Schema(nullable = true) String errorMessage) {
     @Schema(requiredProperties = {"sku", "quantity"})
     public record ItemResponse(String sku, int quantity) {
     }
@@ -39,6 +40,7 @@ public record OrderResponse(
                 order.getCreatedAt(),
                 items,
                 order.getPaymentSuccess(),
-                order.getInventorySuccess());
+                order.getInventorySuccess(),
+                order.getErrorMessage());
     }
 }

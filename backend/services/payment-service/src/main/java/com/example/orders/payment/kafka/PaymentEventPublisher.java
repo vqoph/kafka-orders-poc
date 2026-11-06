@@ -27,7 +27,8 @@ public class PaymentEventPublisher {
                 payment.getOrderId(),
                 payment.getAmount(),
                 payment.isSuccess(),
-                payment.getProcessedAt()
+                payment.getProcessedAt(),
+                payment.isSuccess() ? null : "Payment failed"
         );
         String key = payment.getOrderId().toString();
         kafkaTemplate.send(KafkaTopics.PAYMENTS_PROCESSED, key, event);
