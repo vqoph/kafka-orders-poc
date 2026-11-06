@@ -30,7 +30,7 @@ const injectedRtkApi = api.injectEndpoints({
   overrideExisting: false,
 });
 export { injectedRtkApi as generatedApi };
-export type ListOrdersApiResponse = /** status 200 OK */ PageOrderResponse;
+export type ListOrdersApiResponse = /** status 200 OK */ PagedModelOrderResponse;
 export type ListOrdersApiArg = {
   /** Zero-based page index (0..N) */
   page?: number;
@@ -66,31 +66,15 @@ export type OrderResponse = {
   paymentSuccess?: boolean | null;
   inventorySuccess?: boolean | null;
 };
-export type SortObject = {
-  empty?: boolean;
-  sorted?: boolean;
-  unsorted?: boolean;
+export type PageMetadata = {
+  size: number;
+  number: number;
+  totalElements: number;
+  totalPages: number;
 };
-export type PageableObject = {
-  offset?: number;
-  paged?: boolean;
-  pageNumber?: number;
-  pageSize?: number;
-  sort?: SortObject;
-  unpaged?: boolean;
-};
-export type PageOrderResponse = {
-  totalPages?: number;
-  totalElements?: number;
-  size?: number;
-  content?: OrderResponse[];
-  number?: number;
-  sort?: SortObject;
-  pageable?: PageableObject;
-  numberOfElements?: number;
-  first?: boolean;
-  last?: boolean;
-  empty?: boolean;
+export type PagedModelOrderResponse = {
+  content: OrderResponse[];
+  page: PageMetadata;
 };
 export type OrderItemRequest = {
   sku: string;

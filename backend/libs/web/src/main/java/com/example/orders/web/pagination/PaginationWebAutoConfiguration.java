@@ -3,12 +3,16 @@ package com.example.orders.web.pagination;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.web.config.EnableSpringDataWebSupport;
+import org.springframework.data.web.config.EnableSpringDataWebSupport.PageSerializationMode;
 import org.springframework.data.web.config.PageableHandlerMethodArgumentResolverCustomizer;
 
 /**
  * Aligns Spring Data {@code Pageable} defaults across services that depend on this module.
+ * Serializes {@code Page} responses as stable {@code PagedModel} JSON ({@code content} + {@code page}).
  */
 @AutoConfiguration
+@EnableSpringDataWebSupport(pageSerializationMode = PageSerializationMode.VIA_DTO)
 public class PaginationWebAutoConfiguration {
 
     public static final int DEFAULT_PAGE_SIZE = 8;

@@ -9,18 +9,20 @@ export type PageableParams = {
 };
 
 /**
- * Minimal TypeScript port of Spring Data {@code Page<T>} JSON body.
- * @see org.springframework.data.domain.Page
+ * Minimal TypeScript port of Spring Data {@code PagedModel<T>} JSON body
+ * ({@code pageSerializationMode = VIA_DTO}).
+ * @see org.springframework.data.web.PagedModel
  */
-export type PageResponse<T> = {
-  content: T[];
+export type PageMetadata = {
+  size: number;
+  number: number;
   totalElements: number;
   totalPages: number;
-  number: number;
-  size: number;
-  first: boolean;
-  last: boolean;
-  empty: boolean;
+};
+
+export type PageResponse<T> = {
+  content: T[];
+  page: PageMetadata;
 };
 
 export const DEFAULT_PAGE_SIZE = 8;

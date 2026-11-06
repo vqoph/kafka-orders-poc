@@ -62,7 +62,7 @@
             "content": {
               "*/*": {
                 "schema": {
-                  "$ref": "#/components/schemas/PageOrderResponse"
+                  "$ref": "#/components/schemas/PagedModelOrderResponse"
                 }
               }
             }
@@ -311,91 +311,50 @@
           "topic"
         ]
       },
-      "PageOrderResponse": {
+      "PageMetadata": {
         "type": "object",
         "properties": {
-          "totalPages": {
+          "size": {
             "type": "integer",
-            "format": "int32"
+            "format": "int64"
+          },
+          "number": {
+            "type": "integer",
+            "format": "int64"
           },
           "totalElements": {
             "type": "integer",
             "format": "int64"
           },
-          "size": {
+          "totalPages": {
             "type": "integer",
-            "format": "int32"
-          },
+            "format": "int64"
+          }
+        },
+        "required": [
+          "number",
+          "size",
+          "totalElements",
+          "totalPages"
+        ]
+      },
+      "PagedModelOrderResponse": {
+        "type": "object",
+        "properties": {
           "content": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/OrderResponse"
             }
           },
-          "number": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "sort": {
-            "$ref": "#/components/schemas/SortObject"
-          },
-          "pageable": {
-            "$ref": "#/components/schemas/PageableObject"
-          },
-          "numberOfElements": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "first": {
-            "type": "boolean"
-          },
-          "last": {
-            "type": "boolean"
-          },
-          "empty": {
-            "type": "boolean"
+          "page": {
+            "$ref": "#/components/schemas/PageMetadata"
           }
-        }
-      },
-      "PageableObject": {
-        "type": "object",
-        "properties": {
-          "offset": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "paged": {
-            "type": "boolean"
-          },
-          "pageNumber": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "pageSize": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "sort": {
-            "$ref": "#/components/schemas/SortObject"
-          },
-          "unpaged": {
-            "type": "boolean"
-          }
-        }
-      },
-      "SortObject": {
-        "type": "object",
-        "properties": {
-          "empty": {
-            "type": "boolean"
-          },
-          "sorted": {
-            "type": "boolean"
-          },
-          "unsorted": {
-            "type": "boolean"
-          }
-        }
+        },
+        "required": [
+          "content",
+          "page"
+        ]
       }
     }
   }

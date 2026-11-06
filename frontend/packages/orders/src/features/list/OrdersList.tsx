@@ -14,6 +14,7 @@ import {
   Select,
   emitPocEvent,
   errorMessage,
+  fromPagedModel,
   useTranslation,
 } from '@poc/shared';
 import { useListOrdersQuery } from '../../api/ordersApi';
@@ -38,10 +39,7 @@ export function OrdersList() {
     sort: [toPageableSort(sortMode)],
   });
 
-  const orders = data?.content ?? [];
-  const totalPages = data?.totalPages ?? 0;
-  const first = data?.first ?? true;
-  const last = data?.last ?? true;
+  const { content: orders, totalPages, first, last } = fromPagedModel(data);
 
   return (
     <section className="space-y-4">

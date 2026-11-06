@@ -42,7 +42,7 @@ Browser / microfronts --REST/SSE--> order / payment / inventory / notification
 ## Stack
 
 - Java 21 LTS, **Spring Boot 4.1.2**, Maven multi-module sous `**backend/`\*\*.
-- Modules partagés : `libs/events` (contrats Kafka ≈ `ts-shared`) et `libs/web` (pagination Spring commune).
+- Modules partagés : `libs/events` (contrats Kafka ≈ `ts-shared`) et `libs/web` (pagination Spring commune : `Pageable` + sérialisation `VIA_DTO` / `PagedModel`).
 - Spring Kafka, Spring Web, Spring Data JPA, Flyway, springdoc-openapi, Actuator.
 - Sérialisation Kafka : `JacksonJsonSerializer` / `JacksonJsonDeserializer` (Jackson **3**, Boot 4 — pas les `Json`\* Jackson 2).
 - Kafka en KRaft (image `apache/kafka`, pas de Zookeeper) + Kafka UI + Postgres (une base par service).
@@ -178,7 +178,7 @@ docker compose exec -it kafka /opt/kafka/bin/kafka-console-consumer.sh \
 - **Parent pom** : versions et dépendances communes (équivalent d'un `package.json` racine avec workspaces).
 - **Spring Boot BOM** (`spring-boot-starter-parent` **4.1.2**) : on ne précise pas les versions des libs Spring.
 - `**backend/libs/events**` : records partagés (`OrderCreated`, `PaymentProcessed`, …).
-- `**backend/libs/web**` (ajouté plus tard) : helpers web partagés (ex. pagination `Pageable` côté order-service).
+- `**backend/libs/web**` (ajouté plus tard) : helpers web partagés (pagination `Pageable` + `pageSerializationMode = VIA_DTO` → JSON stable `{ content, page }` côté order-service).
 - Un `record` Java = classe immuable avec getters/equals/hashCode générés (proche d'un type TS `readonly`).
 
 **Ordre recommandé** : parent → `libs/events` → générer les services (CLI) → rattacher chaque service au parent → (plus tard) `libs/web`.  
@@ -538,7 +538,7 @@ Boilerplate :
 - `SagaEventPublisher` : `orders.status` + compensations
 - Garde-fou terminal : ignorer si déjà `CONFIRMED` / `CANCELLED`
 - **Reject HTTP 400** si le `POST /orders` contient le **même SKU sur plusieurs lignes** (PK `(order_id, sku)` ; merge qty = variante UX panier, non retenue ici)
-- Liste paginée via `libs/web` (`Pageable` sur `GET /orders`)
+- Liste paginée via `libs/web` (`Pageable` sur `GET /orders`, réponse `PagedModel` via `VIA_DTO`)
 
 **À coder (Lab 3)** — chemins :
 
