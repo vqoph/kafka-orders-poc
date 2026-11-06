@@ -48,6 +48,7 @@
     "createdAt": "createdAt",
     "paymentSuccess": "paymentSuccess",
     "inventorySuccess": "inventorySuccess",
+    "errorMessage": "errorMessage",
     "items": "items",
     "sku": "sku",
     "quantity": "quantity",

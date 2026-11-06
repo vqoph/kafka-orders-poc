@@ -44,6 +44,12 @@ export function OrderDetail() {
           <dt className="text-muted">{t('detail.inventorySuccess')}</dt>
           <dd className="font-mono">{nullableBool(order.inventorySuccess, t)}</dd>
         </div>
+        {order.errorMessage ? (
+          <div className="sm:col-span-2">
+            <dt className="text-muted">{t('detail.errorMessage')}</dt>
+            <dd className="text-danger">{order.errorMessage}</dd>
+          </div>
+        ) : null}
       </dl>
       <div>
         <h3 className="mb-2 text-sm font-medium text-foreground">{t('detail.items')}</h3>

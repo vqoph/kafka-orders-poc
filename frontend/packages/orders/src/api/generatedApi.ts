@@ -65,6 +65,7 @@ export type OrderResponse = {
   items: ItemResponse[];
   paymentSuccess?: boolean | null;
   inventorySuccess?: boolean | null;
+  errorMessage?: string | null;
 };
 export type PageMetadata = {
   size: number;

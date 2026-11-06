@@ -277,6 +277,12 @@
               "boolean",
               "null"
             ]
+          },
+          "errorMessage": {
+            "type": [
+              "string",
+              "null"
+            ]
           }
         },
         "required": [
