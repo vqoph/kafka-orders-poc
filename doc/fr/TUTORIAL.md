@@ -47,7 +47,7 @@ Browser / microfronts --REST/SSE--> order / payment / inventory / notification
 - Sérialisation Kafka : `JacksonJsonSerializer` / `JacksonJsonDeserializer` (Jackson **3**, Boot 4 — pas les `Json`\* Jackson 2).
 - Kafka en KRaft (image `apache/kafka`, pas de Zookeeper) + Kafka UI + Postgres (une base par service).
 - Front (hors parcours Kafka) : microfrontends sous `frontend/` (shell + remotes, ports 5000–5004), OpenAPI → RTK Query.
-- Scripts racine : `./scripts/backend-run.sh`, `./scripts/frontend-dev.sh`.
+- Scripts racine : `./scripts/backend-build.sh`, `./scripts/backend-run.sh`, `./scripts/frontend-dev.sh`.
 - Tests : JUnit 5 + Testcontainers (peu, ciblés).
 
 ## Architecture repo (état actuel)
@@ -65,12 +65,14 @@ kafka-orders-poc/
   frontend/                 # shell + remotes (hors parcours Kafka ; UI étape 10)
   docker-compose.yml
   docker/postgres/init/     # CREATE DATABASE orders|payments|inventory
+  scripts/backend-build.sh
   scripts/backend-run.sh
   scripts/frontend-dev.sh
   doc/fr/                   # ce tutoriel + labs
 ```
 
 Maven : toujours depuis la racine du repo avec `**-f backend/pom.xml**`.  
+Raccourci build : `./scripts/backend-build.sh` (tous) ou `./scripts/backend-build.sh order-service`.  
 Raccourci run : `./scripts/backend-run.sh` (tous) ou `./scripts/backend-run.sh order-service`.
 
 ## Correspondances NestJS vers Spring
@@ -717,12 +719,14 @@ docker compose up -d
 docker compose down -v
 
 # Build backend (racine du repo)
+./scripts/backend-build.sh                       # all modules
+./scripts/backend-build.sh order-service
 mvn -f backend/pom.xml -DskipTests install
+mvn -f backend/pom.xml -pl services/order-service -am -DskipTests install
 
 # Run services (jamais : -am spring-boot:run)
 ./scripts/backend-run.sh                         # order+payment+inventory+notification
 ./scripts/backend-run.sh order-service
-mvn -f backend/pom.xml -pl services/order-service -am -DskipTests install
 mvn -f backend/pom.xml -pl services/order-service spring-boot:run
 
 # Front (hors parcours)
