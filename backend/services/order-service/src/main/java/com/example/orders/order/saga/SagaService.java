@@ -51,19 +51,6 @@ public class SagaService {
 
     /*
      * ## Lab 3 — tryComplete (à coder)
-     *
-     * If either paymentSuccess or inventorySuccess is still null → return (wait).
-     * If status is not PENDING → return.
-     * Both true → order.confirm(), save, publishStatusChanged.
-     * Else → order.cancel(), save, publishStatusChanged;
-     * if payment was true → publishRefundRequested;
-     * if inventory was true → publishReleaseRequested.
-     *
-     * Helpers on Order: hasBothSagaResults(), getPaymentSuccess(),
-     * getInventorySuccess(),
-     * confirm(), cancel(). Publisher: sagaEventPublisher.
-     *
-     * See doc/fr/appendices/exercises/lab-03-saga-choreography.md (A.2).
      */
     private void tryComplete(Order order) {
         if (order.getStatus() != OrderStatus.PENDING || !order.hasBothSagaResults()) {
@@ -90,7 +77,7 @@ public class SagaService {
     }
 
     private Order getOrderAndValidate(UUID orderId) {
-        Order order = orderRepository.findById(orderId).orElse(null);
+        Order order = orderRepository.findByIdForUpdate(orderId).orElse(null);
         if (order == null) {
             log.warn("Unknown orderId={}", orderId);
             return null;
