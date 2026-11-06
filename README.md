@@ -18,6 +18,8 @@ docker compose up -d
 ./scripts/frontend-dev.sh                # http://localhost:5000
 ```
 
+Backend services include Spring Boot DevTools: after a change, recompile (IDE auto-build, or `mvn -f backend/pom.xml -pl services/<name> compile`) and the running app restarts. Shared libs (`libs/events`, `libs/web`) still need `./scripts/backend-build.sh` then a service restart.
+
 ### Frontend API-first (OpenAPI → RTK Query)
 
 Each microfrontend owns **one** business API. Clients are generated from OpenAPI (not hand-written):
