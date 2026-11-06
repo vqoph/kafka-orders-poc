@@ -1,11 +1,19 @@
 package com.example.orders.inventory.api;
 
+import com.example.orders.inventory.api.StockController.StockResponse;
+import com.example.orders.inventory.domain.Stock;
 import com.example.orders.inventory.domain.StockRepository;
+
+import java.util.Optional;
+
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 /**
- * Stock catalog use-cases (Lab 4). GET list/by-sku stay on {@link StockController};
+ * Stock catalog use-cases (Lab 4). GET list/by-sku stay on
+ * {@link StockController};
  * you implement create / update / delete here — search {@code TODO Lab 4}.
  */
 @Service
@@ -17,42 +25,51 @@ public class StockService {
         this.stockRepository = stockRepository;
     }
 
-    /**
-     * Create a stock row.
-     * <ul>
-     *   <li>If {@code sku} already exists → {@code 409 CONFLICT}</li>
-     *   <li>Else save {@code new Stock(sku, quantity)} → return {@link StockController.StockResponse}</li>
-     * </ul>
+    /*
+     * ## Create a stock row
+     *
+     * - If `sku` already exists → `409 CONFLICT`
+     * - Else save `new Stock(sku, quantity)` → return `StockResponse.from(...)`
      */
     @Transactional
-    public StockController.StockResponse create(CreateStockRequest request) {
-        // TODO Lab 4: implement create (409 if sku exists, else save + return StockResponse.from)
-        throw new UnsupportedOperationException("TODO Lab 4");
+    public StockResponse create(CreateStockRequest request) {
+        if (stockRepository.existsById(request.sku())) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "Stock with SKU " + request.sku() + " already exists");
+        }
+        Stock stock = new Stock(request.sku(), request.quantity());
+        stockRepository.save(stock);
+        return StockResponse.from(stock);
     }
 
-    /**
-     * Update quantity for an existing SKU.
-     * <ul>
-     *   <li>Unknown sku → {@code 404 NOT_FOUND}</li>
-     *   <li>Else {@code stock.setQuantity(...)} + save → return response</li>
-     * </ul>
+    /*
+     * ## Update quantity for an existing SKU
+     *
+     * - Unknown sku → `404 NOT_FOUND`
+     * - Else `stock.setQuantity(...)` + save → return response
      */
     @Transactional
-    public StockController.StockResponse update(String sku, UpdateStockRequest request) {
-        // TODO Lab 4: implement update (404 if missing, else setQuantity + save)
-        throw new UnsupportedOperationException("TODO Lab 4");
+    public StockResponse update(String sku, UpdateStockRequest request) {
+        Stock stock = stockRepository.findById(sku)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        "Stock with SKU " + sku + " not found"));
+        stock.setQuantity(request.quantity());
+        stockRepository.save(stock);
+        return StockResponse.from(stock);
     }
 
-    /**
-     * Delete a stock row.
-     * <ul>
-     *   <li>Unknown sku → {@code 404 NOT_FOUND}</li>
-     *   <li>Else delete → void ({@code 204} from controller)</li>
-     * </ul>
+    /*
+     * ## Delete a stock row
+     *
+     * - Unknown sku → `404 NOT_FOUND`
+     * - Else delete → void (`204` from controller)
      */
     @Transactional
     public void delete(String sku) {
-        // TODO Lab 4: implement delete (404 if missing, else deleteById)
-        throw new UnsupportedOperationException("TODO Lab 4");
+        if (!stockRepository.existsById(sku)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND,
+                    "Stock with SKU " + sku + " not found");
+        }
+        stockRepository.deleteById(sku);
     }
 }
