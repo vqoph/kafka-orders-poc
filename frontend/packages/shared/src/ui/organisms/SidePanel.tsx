@@ -9,11 +9,19 @@ const EXIT_MS = 200;
 export type SidePanelProps = {
   title: string;
   onClose: () => void;
+  /** Called as soon as the user requests close (before the exit animation). */
+  onExitStart?: () => void;
   children: ReactNode;
   className?: string;
 };
 
-export function SidePanel({ title, onClose, children, className }: SidePanelProps) {
+export function SidePanel({
+  title,
+  onClose,
+  onExitStart,
+  children,
+  className,
+}: SidePanelProps) {
   const { t } = useTranslation('common');
   const [entered, setEntered] = useState(false);
   const [exiting, setExiting] = useState(false);
@@ -32,8 +40,10 @@ export function SidePanel({ title, onClose, children, className }: SidePanelProp
   }, []);
 
   const requestClose = useCallback(() => {
+    if (exiting || closedRef.current) return;
+    onExitStart?.();
     setExiting(true);
-  }, []);
+  }, [exiting, onExitStart]);
 
   useEffect(() => {
     if (!exiting) return;

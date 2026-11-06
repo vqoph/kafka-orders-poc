@@ -22,6 +22,7 @@
     "qty": "Qté",
     "addItem": "Ajouter un article",
     "remove": "Retirer",
+    "fillDemo": "Remplir avec des données d'exemple",
     "creating": "Création…",
     "submit": "Créer la commande",
     "failed": "Échec de la création de la commande",
