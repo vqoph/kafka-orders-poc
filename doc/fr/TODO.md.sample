@@ -11,9 +11,9 @@ cp doc/fr/TODO.md.sample doc/fr/TODO.md
 - [ ] Étape 2 : squelette Maven sous `backend/` (`libs/` + `services/`) + module `events`
 - [ ] Étape 3 : `order-service` (REST, JPA, Flyway) + Lab 0
 - [ ] Étape 4 : publier `orders.created` et lab 1 (clés et partitions)
-- [ ] Étape 5 : `payment-service` (premier consumer) et lab 2 (consumer groups)
-- [ ] Étape 6 : `inventory-service` et saga (chorégraphie) + lab 3
-- [ ] Étape 7 : fiabilité : lab 4 (offsets, idempotence) et lab 5 (retries, DLT)
+- [ ] Étape 5 : `payment-service` (premier consumer) + lab 2 + Lab 4 A (liste paiements)
+- [ ] Étape 6 : `inventory-service` + Lab 4 B (CRUD stock) + saga / lab 3
+- [ ] Étape 7 : fiabilité : lab 5 (offsets, idempotence) et lab 6 (retries, DLT)
 - [ ] Étape 8 : `notification-service` et SSE
 - [ ] Étape 9 : UI hors parcours (`frontend/` / scripts)
 - [ ] Étape 10 : tout dans Docker

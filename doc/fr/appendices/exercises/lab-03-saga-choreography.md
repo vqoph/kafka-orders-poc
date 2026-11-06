@@ -63,7 +63,7 @@ Si **les deux** OK → `CONFIRMED`, **aucune** compensation.
 
 **Indices**
 
-- SKU seed **`A`** (voir Flyway inventory) — les curls du tuto utilisent souvent `"sku":"A"`.
+- SKU seed **`SKU-001`** (voir Flyway inventory) — les curls du tuto utilisent `"sku":"SKU-001"`.
 - Garde le traitement dans une `@Transactional` (décrément + insert reservation atomiques).
 - Chaos optionnel : si `inventory.failure-rate` > 0, tu peux forcer un échec **après** ou **à la place** de la règle stock (selon ce que le boilerplate expose).
 
@@ -137,12 +137,12 @@ Ports : order **8081**, payment **8082**, inventory **8085** (notification **808
 
 ```bash
 curl -s -X POST localhost:8081/orders -H 'content-type: application/json' \
-  -d '{"customerId":"c1","items":[{"sku":"A","quantity":1}],"amount":10}'
+  -d '{"customerId":"c1","items":[{"sku":"SKU-001","quantity":1}],"amount":10}'
 ```
 
 3. `GET /orders/{id}` → statut **`CONFIRMED`**.
 4. Kafka UI : `payments.processed` (`success=true`), `inventory.reserved` (`success=true`), `orders.status` (`CONFIRMED`).
-5. Optionnel : stock SKU `A` décrémenté en base `inventory`.
+5. Optionnel : stock SKU `SKU-001` décrémenté en base `inventory`.
 
 **Conclure** : les deux branches OK → confirmation sans compensation.
 
@@ -157,7 +157,7 @@ curl -s -X PUT localhost:8082/chaos/failure-rate \
 
 (Alternative : relancer avec `--payment.failure-rate=1.0`.)
 
-2. Nouvelle commande (même payload SKU `A`).
+2. Nouvelle commande (même payload SKU `SKU-001`).
 3. `GET` → **`CANCELLED`**.
 4. Kafka UI : `payments.processed` `success=false` ; `inventory.reserved` souvent `success=true` (parallèle) ; puis `inventory.release.requested` + `orders.status` `CANCELLED`.
 5. Logs inventory : release ; stock restauré.

@@ -101,7 +101,7 @@ return OrderResponse.from(order);
 ```bash
 # Create
 curl -s -X POST localhost:8081/orders -H 'content-type: application/json' \
-  -d '{"customerId":"c1","items":[{"sku":"A","quantity":2}],"amount":42.5}'
+  -d '{"customerId":"c1","items":[{"sku":"SKU-001","quantity":2}],"amount":42.5}'
 echo
 
 # List

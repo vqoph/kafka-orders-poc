@@ -62,7 +62,7 @@ kafka-orders-poc/
     services/payment-service/    # :8082
     services/inventory-service/  # :8085
     services/notification-service/ # :8084 SSE
-  frontend/                 # shell + remotes (hors parcours étapes 0–7)
+  frontend/                 # shell + remotes (hors parcours Kafka ; UI étape 10)
   docker-compose.yml
   docker/postgres/init/     # CREATE DATABASE orders|payments|inventory
   scripts/backend-run.sh
@@ -313,7 +313,7 @@ Tu implémentes `OrderResponse.from` et `OrderService.findById` (`TODO Lab 0`). 
 
 ```bash
 curl -X POST localhost:8081/orders -H 'content-type: application/json' \
-  -d '{"customerId":"c1","items":[{"sku":"A","quantity":2}],"amount":42.5}'
+  -d '{"customerId":"c1","items":[{"sku":"SKU-001","quantity":2}],"amount":42.5}'
 curl localhost:8081/orders
 curl localhost:8081/orders/<id>
 # Swagger UI: http://localhost:8081/swagger-ui.html
@@ -371,7 +371,7 @@ mvn -f backend/pom.xml -pl services/order-service -am -DskipTests install
 mvn -f backend/pom.xml -pl services/order-service spring-boot:run
 
 curl -X POST localhost:8081/orders -H 'content-type: application/json' \
-  -d '{"customerId":"c1","items":[{"sku":"A","quantity":2}],"amount":42.5}'
+  -d '{"customerId":"c1","items":[{"sku":"SKU-001","quantity":2}],"amount":42.5}'
 ```
 
 **Étape 4 ok** : smoke OK + Lab 1 partie A (code) + partie B (observations + question).
@@ -468,7 +468,17 @@ mvn -f backend/pom.xml -pl services/payment-service spring-boot:run \
 4. 4ᵉ consumer **même** `groupId` → **idle**.
 5. Autre `groupId` → reçoit **tous** les messages (pub/sub vs file).
 
-**Étape 5 ok** : smoke OK + Lab 2 partie A (code) + partie B (observations consumer groups).
+### 5.5 Lab 4 partie A — liste des paiements (REST)
+
+Une fois le consumer OK, expose les lignes `payments` déjà persistées (lecture seule, pagination comme `GET /orders`).
+
+- Boilerplate : `PaymentController` + stubs `TODO Lab 4` (`PaymentResponse.from`, `PaymentService`).
+- Dépendance `libs/web` pour le JSON `PagedModel`.
+
+**Exercice** : [Lab 4 — Partie A](./appendices/exercises/lab-04-stock-payment-rest.md#partie-a--liste-paiements-étape-5)  
+(La partie B stock se fait à l’étape 6.)
+
+**Étape 5 ok** : smoke OK + Lab 2 A/B + Lab 4 partie A (`GET /payments`).
 
 Complément : [Architecture Kafka — consumer group](./appendices/architecture-kafka-essentials.md#consumer-group).
 
@@ -515,21 +525,28 @@ public record OrderStatusChanged(UUID orderId, String status, Instant changedAt)
 
 ### 6.2 inventory-service (boilerplate — assistant)
 
-À poser avant le lab (tu ne recodes pas le câblage Kafka) :
+À poser avant les labs (tu ne recodes pas le câblage Kafka) :
 
-- dépendance Maven `events` ; port **8085** ; datasource `**jdbc:…/inventory`** ; Kafka `**localhost:29092\*_`;`JacksonJson_`
-- Flyway : `stock(sku, quantity)` + `reservations(...)` ; seed SKU `**A**`
+- dépendance Maven `events` ; port **8085** ; datasource `**jdbc:…/inventory`** ; Kafka `**localhost:29092**` ; `JacksonJson*`
+- Flyway : `stock(sku, quantity)` + `reservations(...)` ; seed `**SKU-001**` + V2 (`SKU-002`, `SKU-003`)
 - Topics `NewTopic` : `inventory.reserved`, `inventory.release.requested` (**3 partitions**)
 - Listener mince `orders.created` → réserve → persist → publish `InventoryReserved` (clé = `orderId`)
 - Listener `inventory.release.requested` → remet le stock (compensation)
-- `inventory.failure-rate` (yml) + `**PUT /chaos/failure-rate**` pour changer le taux **sans** redémarrer
+- REST catalogue : `GET /stock` déjà là ; stubs `TODO Lab 4` pour `POST` / `PUT` / `DELETE` (`StockService`) — **c’est l’exercice REST de ce service** (pas le chaos)
+- Chaos inventory (`inventory.failure-rate` + `PUT /chaos/failure-rate`) : **optionnel** (curl) pour forcer un échec sans vider le stock — le chaos UI / démo saga reste surtout **payment**
 
-### 6.3 payment-service — compensation + chaos (boilerplate)
+### 6.3 Lab 4 partie B — CRUD stock (REST)
+
+Avant la saga : tu sais créer / maj / supprimer des SKUs que la réservation consommera.
+
+**Exercice** : [Lab 4 — Partie B](./appendices/exercises/lab-04-stock-payment-rest.md#partie-b--crud-stock-étape-6)
+
+### 6.4 payment-service — compensation + chaos (boilerplate)
 
 - Topic / listener `payments.refund.requested` : marque le paiement remboursé (`refunded_at`).
-- Même idée chaos : `payment.failure-rate` + `**PUT http://localhost:8082/chaos/failure-rate**`.
+- Chaos **payment** (celui qu’on utilise en démo) : `payment.failure-rate` + `**PUT http://localhost:8082/chaos/failure-rate**`.
 
-### 6.4 order-service — état saga (boilerplate + Lab 3)
+### 6.5 order-service — état saga (boilerplate + Lab 3)
 
 Boilerplate :
 
@@ -545,10 +562,10 @@ Boilerplate :
 1. [`InventoryReservation.reserve`](../../backend/services/inventory-service/src/main/java/com/example/orders/inventory/InventoryReservation.java) — stock / merge défensif par SKU / `failureRate`
 2. [`SagaService.tryComplete`](../../backend/services/order-service/src/main/java/com/example/orders/order/saga/SagaService.java) — agrégation (`hasBothSagaResults` / `hasBothSagaSuccess` + compensations)
 
-### 6.5 Exercice (à coder + observer)
+### 6.6 Exercice saga (à coder + observer)
 
 **Exercice** : [Lab 3 — Saga chorégraphiée](./appendices/exercises/lab-03-saga-choreography.md)  
-→ Partie A = Java ; Partie B = smoke happy path + échec paiement (chaos).
+→ Partie A = Java ; Partie B = smoke happy path + échec **paiement** (chaos 8082).
 
 **Lancer** (jamais `-am` avec `spring-boot:run`) :
 
@@ -564,7 +581,7 @@ mvn -f backend/pom.xml -pl services/inventory-service spring-boot:run
 ./scripts/backend-run.sh
 ```
 
-**Smoke (aperçu)** : `POST /orders` SKU `A` → `GET` → `CONFIRMED`.  
+**Smoke (aperçu)** : `POST /orders` SKU `SKU-001` → `GET` → `CONFIRMED`.  
 Chaos paiement sans restart :
 
 ```bash
@@ -573,11 +590,11 @@ curl -s -X PUT localhost:8082/chaos/failure-rate -H 'content-type: application/j
 
 Nouvelle commande → `CANCELLED` + `inventory.release.requested`.
 
-**Étape 6 ok** : Lab 3 A + B (happy path + compensation après échec paiement).
+**Étape 6 ok** : Lab 4 partie B (CRUD stock) + Lab 3 A + B (happy path + compensation après échec paiement).
 
 ---
 
-## Étape 7 : fiabilité (labs 4 et 5)
+## Étape 7 : fiabilité (labs 5 et 6)
 
 **Concepts**
 
@@ -587,12 +604,12 @@ Nouvelle commande → `CANCELLED` + `inventory.release.requested`.
 - **Erreurs** : `DefaultErrorHandler` + `ExponentialBackOff`, puis `DeadLetterPublishingRecoverer` vers `<topic>.DLT`. `@RetryableTopic` crée des topics de retry intermédiaires.
 - **Poison pill** : un message qui fait planter le consumer à chaque tentative et bloque la partition s'il n'y a pas de DLT.
 
-**Lab 4 : at-least-once**
+**Lab 5 : at-least-once**
 
 1. Ajoute un `Thread.sleep` + un `System.exit` après le traitement et avant le commit.
 2. Relance : le message est retraité. Sans idempotence, double paiement. Avec la table `processed_events`, le doublon est ignoré.
 
-**Lab 5 : retries et DLT**
+**Lab 6 : retries et DLT**
 
 1. Envoie un message invalide (JSON cassé, ou `amount` négatif).
 2. Observe les retries avec backoff dans les logs, puis le message dans `orders.created.DLT` (Kafka UI).
@@ -628,13 +645,15 @@ Crée une commande (`POST localhost:8081/orders`) dans un autre terminal : l’�
 
 Pas une app Next monolithique : shell + remotes sous `frontend/` (Module Federation), i18n, clients **générés** depuis OpenAPI (springdoc → `openapi.json` → RTK Query).
 
+Nav cible : **Commandes** → **Stocks** (CRUD catalogue, Lab 4 B) → **Paiements** (liste Lab 4 A + chaos). Notifications hors nav jusqu’à l’étape 8 faite côté produit.
+
 ```bash
 ./scripts/frontend-dev.sh          # shell http://localhost:5000
-# optionnel, services up :
+# optionnel, services up + Lab 4 fait :
 cd frontend && npm run fetch:openapi && npm run generate:api
 ```
 
-Les chaos panels payment/inventory du front appellent les `PUT /chaos/failure-rate` des services.
+Le chaos panel **payment** appelle `PUT /chaos/failure-rate` (8082). Inventory chaos reste via curl (8085) si besoin — pas exposé au front Stocks.
 
 ---
 
@@ -655,24 +674,24 @@ docker compose --profile apps up --build
 
 ## Étape 11 : labs avancés
 
-Numérotation **après** Lab 3 (saga) et Labs 4–5 (fiabilité étape 7).
+Numérotation **après** Lab 4 (REST étapes 5–6) et Labs 5–6 (fiabilité étape 7).
 
-**Lab 6 : dual write et outbox**
+**Lab 7 : dual write et outbox**
 
 - Problème : "save en base puis `kafka.send`" n'est pas atomique. Plante entre les deux et tu perds l'événement (ou inversement).
 - Solution : table `outbox` écrite dans la **même transaction** que la commande, puis un poller qui publie et marque comme envoyé. Bonus : Debezium.
 
-**Lab 7 : config du producer**
+**Lab 8 : config du producer**
 
 - `acks=all`, `enable.idempotence=true`, `linger.ms`, `batch.size`, `compression.type`. Mesure l'effet sur latence/débit avec un petit générateur de charge.
 
-**Lab 8 : rétention et rejeu**
+**Lab 9 : rétention et rejeu**
 
 - Nouveau consumer group avec `auto.offset.reset=earliest` : il relit tout l'historique.
 - `kafka-consumer-groups.sh --reset-offsets` pour rejouer.
 - Topic **compacté** (`cleanup.policy=compact`) pour garder le dernier état par clé (ex. stock).
 
-**Lab 9 : sérialisation**
+**Lab 10 : sérialisation**
 
 - Pièges des type headers JSON entre services, `JacksonJsonDeserializer.TRUSTED_PACKAGES`.
 - Bonus : Avro + Schema Registry, évolution de schéma compatible.

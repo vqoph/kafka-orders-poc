@@ -110,7 +110,7 @@ return switch (keyMode) {
 
 ```bash
 curl -s -X POST localhost:8081/orders -H 'content-type: application/json' \
-  -d '{"customerId":"c1","items":[{"sku":"A","quantity":1}],"amount":10}'
+  -d '{"customerId":"c1","items":[{"sku":"SKU-001","quantity":1}],"amount":10}'
 echo
 ```
 
@@ -121,13 +121,13 @@ Kafka UI → `orders.created` : clé = UUID de la réponse. Payload = JSON `Orde
 ```bash
 for i in 1 2 3 4 5; do
   curl -s -X POST localhost:8081/orders -H 'content-type: application/json' \
-    -d "{\"customerId\":\"c1\",\"items\":[{\"sku\":\"A\",\"quantity\":1}],\"amount\":10}"
+    -d "{\"customerId\":\"c1\",\"items\":[{\"sku\":\"SKU-001\",\"quantity\":1}],\"amount\":10}"
   echo
 done
 
 for i in 1 2 3 4 5; do
   curl -s -X POST localhost:8081/orders -H 'content-type: application/json' \
-    -d "{\"customerId\":\"c2\",\"items\":[{\"sku\":\"B\",\"quantity\":1}],\"amount\":20}"
+    -d "{\"customerId\":\"c2\",\"items\":[{\"sku\":\"SKU-002\",\"quantity\":1}],\"amount\":20}"
   echo
 done
 ```

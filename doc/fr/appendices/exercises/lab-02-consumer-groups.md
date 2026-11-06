@@ -117,7 +117,7 @@ Tu dois voir les **membres**, les **partitions assignées**, et le **lag**.
 ```bash
 for i in 1 2 3 4 5; do
   curl -s -X POST localhost:8081/orders -H 'content-type: application/json' \
-    -d '{"customerId":"c1","items":[{"sku":"A","quantity":1}],"amount":10}'
+    -d '{"customerId":"c1","items":[{"sku":"SKU-001","quantity":1}],"amount":10}'
   echo
 done
 ```
