@@ -20,12 +20,25 @@ public class Stock {
         // JPA
     }
 
+    public Stock(String sku, int quantity) {
+        this.sku = sku;
+        this.quantity = quantity;
+    }
+
     public String getSku() {
         return sku;
     }
 
     public int getQuantity() {
         return quantity;
+    }
+
+    /** Replace absolute quantity (Lab 4 update). Quantity must be {@code >= 0}. */
+    public void setQuantity(int quantity) {
+        if (quantity < 0) {
+            throw new IllegalArgumentException("quantity must be >= 0");
+        }
+        this.quantity = quantity;
     }
 
     public void decrement(int amount) {
