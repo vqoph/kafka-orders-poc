@@ -58,7 +58,12 @@ export function OrderCreateForm() {
         <Input {...register('customerId')} />
       </Field>
       <Field label={t('create.amount')} error={errors.amount?.message}>
-        <Input type="number" step="0.01" min={0.01} {...register('amount')} />
+        <Input
+          type="number"
+          step="0.01"
+          min={0.01}
+          {...register('amount', { valueAsNumber: true })}
+        />
       </Field>
       <div className="space-y-2">
         <div className="flex items-center justify-between">
@@ -92,7 +97,7 @@ export function OrderCreateForm() {
                 <Input
                   type="number"
                   min={1}
-                  {...register(`items.${index}.quantity`)}
+                  {...register(`items.${index}.quantity`, { valueAsNumber: true })}
                 />
               </Field>
               <div className={clsx(index === 0 && 'pt-6')}>
