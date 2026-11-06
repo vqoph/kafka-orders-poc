@@ -6,5 +6,5 @@
       "@poc/shared/*": ["../shared/src/*"]
     }
   },
-  "include": ["src", "../config/typescript/css.d.ts"]
+  "include": ["src", "../config/typescript/css.d.ts", "../config/typescript/env.d.ts"]
 }

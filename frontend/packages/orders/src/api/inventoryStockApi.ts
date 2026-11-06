@@ -1,4 +1,5 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
+import { INVENTORY_API_BASE_URL } from '@poc/shared';
 
 export type StockResponse = {
   sku: string;
@@ -11,7 +12,7 @@ export type StockResponse = {
  */
 export const inventoryStockApi = createApi({
   reducerPath: 'inventoryStockApi',
-  baseQuery: fetchBaseQuery({ baseUrl: 'http://localhost:8085' }),
+  baseQuery: fetchBaseQuery({ baseUrl: INVENTORY_API_BASE_URL }),
   tagTypes: ['Stock'],
   endpoints: (build) => ({
     listStockForOrders: build.query<StockResponse[], void>({

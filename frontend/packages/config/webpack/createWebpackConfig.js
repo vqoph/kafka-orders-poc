@@ -1,6 +1,32 @@
 const path = require("path");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
+const webpack = require("webpack");
 const { ModuleFederationPlugin } = require("webpack").container;
+const { config: loadDotenv } = require("dotenv");
+
+const FRONTEND_ROOT = path.resolve(__dirname, "../../..");
+
+const API_ENV_DEFAULTS = {
+  ORDERS_API_BASE_URL: "http://localhost:8081",
+  PAYMENT_API_BASE_URL: "http://localhost:8082",
+  NOTIFICATION_API_BASE_URL: "http://localhost:8084",
+  INVENTORY_API_BASE_URL: "http://localhost:8085",
+};
+
+function loadFrontendEnv() {
+  loadDotenv({ path: path.join(FRONTEND_ROOT, ".env") });
+  loadDotenv({ path: path.join(FRONTEND_ROOT, ".env.example") });
+}
+
+function apiEnvDefines() {
+  loadFrontendEnv();
+  /** @type {Record<string, string>} */
+  const defines = {};
+  for (const [key, fallback] of Object.entries(API_ENV_DEFAULTS)) {
+    defines[`process.env.${key}`] = JSON.stringify(process.env[key] || fallback);
+  }
+  return defines;
+}
 
 /**
  * @param {{
@@ -115,6 +141,7 @@ function createWebpackConfig(options) {
       new HtmlWebpackPlugin({
         template: path.join(dirname, "public/index.html"),
       }),
+      new webpack.DefinePlugin(apiEnvDefines()),
     ],
     devServer: {
       port,

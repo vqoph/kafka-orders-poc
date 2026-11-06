@@ -1,11 +1,11 @@
+import { NOTIFICATION_STREAM_URL } from '../env/apiBaseUrls';
+
 export type PocNotificationEvent = {
   orderId?: string | null;
   type: string;
   message: string;
   at: string;
 };
-
-export const NOTIFICATION_STREAM_URL = 'http://localhost:8084/notifications/stream';
 
 type Handler = (event: PocNotificationEvent) => void;
 type ConnectionHandler = (connected: boolean) => void;
