@@ -7,9 +7,10 @@ import java.time.Instant;
 import java.util.UUID;
 
 /**
- * HTTP DTO for a payment row (Lab 4). Keep separate from the JPA {@link Payment} entity.
+ * HTTP DTO for a payment row (Lab 4). Keep separate from the JPA
+ * {@link Payment} entity.
  */
-@Schema(requiredProperties = {"id", "orderId", "amount", "success", "processedAt"})
+@Schema(requiredProperties = { "id", "orderId", "amount", "success", "processedAt" })
 public record PaymentResponse(
         UUID id,
         UUID orderId,
@@ -20,10 +21,14 @@ public record PaymentResponse(
 
     /**
      * Map entity → response.
-     * TODO Lab 4: return {@code new PaymentResponse(...)} using getters on {@code payment}.
      */
     public static PaymentResponse from(Payment payment) {
-        // TODO Lab 4: map Payment → PaymentResponse (id, orderId, amount, success, processedAt, refundedAt)
-        throw new UnsupportedOperationException("TODO Lab 4");
+        return new PaymentResponse(
+                payment.getId(),
+                payment.getOrderId(),
+                payment.getAmount(),
+                payment.isSuccess(),
+                payment.getProcessedAt(),
+                payment.getRefundedAt());
     }
 }

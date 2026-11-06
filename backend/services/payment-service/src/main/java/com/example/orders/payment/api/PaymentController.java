@@ -14,16 +14,16 @@ import org.springframework.web.bind.annotation.RestController;
 
 /**
  * REST adapter for payment reads (Lab 4). Chaos stays on {@link ChaosController}.
- * Controllers stay thin — logic lives in {@link PaymentService}.
+ * Controllers stay thin — logic lives in {@link PaymentQueryService}.
  */
 @RestController
 @RequestMapping("/payments")
 public class PaymentController {
 
-    private final PaymentService paymentService;
+    private final PaymentQueryService paymentQueryService;
 
-    public PaymentController(PaymentService paymentService) {
-        this.paymentService = paymentService;
+    public PaymentController(PaymentQueryService paymentQueryService) {
+        this.paymentQueryService = paymentQueryService;
     }
 
     @GetMapping
@@ -32,12 +32,12 @@ public class PaymentController {
             @ParameterObject
             @PageableDefault(sort = "processedAt", direction = Sort.Direction.DESC)
             Pageable pageable) {
-        return paymentService.findAll(pageable);
+        return paymentQueryService.findAll(pageable);
     }
 
     @GetMapping("/{id}")
     @Operation(operationId = "getPayment")
     public PaymentResponse getById(@PathVariable UUID id) {
-        return paymentService.findById(id);
+        return paymentQueryService.findById(id);
     }
 }

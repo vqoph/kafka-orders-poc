@@ -4,8 +4,6 @@ import com.example.orders.inventory.api.StockController.StockResponse;
 import com.example.orders.inventory.domain.Stock;
 import com.example.orders.inventory.domain.StockRepository;
 
-import java.util.Optional;
-
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
