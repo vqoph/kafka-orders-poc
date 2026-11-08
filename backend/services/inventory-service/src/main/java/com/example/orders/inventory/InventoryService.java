@@ -44,8 +44,10 @@ public class InventoryService {
             throw new IllegalArgumentException(
                     "Inventory rejected: negative amount for orderId=" + order.orderId());
         }
-
-        // TODO Lab 6 — idempotent skip on redelivery (see lab-06-at-least-once.md)
+        if (reservationRepository.existsByOrderId(order.orderId())) {
+            log.info("Skipping already processed inventory orderId={}", order.orderId());
+            return;
+        }
 
         Reservation reservation = inventoryReservation.reserve(order);
         inventoryEventPublisher.publishReserved(reservation);

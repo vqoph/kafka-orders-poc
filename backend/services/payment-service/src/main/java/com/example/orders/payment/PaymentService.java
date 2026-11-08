@@ -37,7 +37,10 @@ public class PaymentService {
             throw new IllegalArgumentException("Payment rejected: negative amount for orderId=" + order.orderId());
         }
 
-        // TODO Lab 6 — idempotent skip on redelivery (see lab-06-at-least-once.md)
+        if (paymentRepository.existsByOrderId(order.orderId())) {
+            log.info("Skipping already processed payment orderId={}", order.orderId());
+            return;
+        }
 
         boolean success = paymentDecision.decideSuccess();
 
