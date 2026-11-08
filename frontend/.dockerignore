@@ -1,0 +1,10 @@
+**/node_modules/
+**/dist/
+**/.turbo/
+**/.storybook/
+**/storybook-static/
+**/*.md
+**/.env
+**/.env.local
+**/coverage/
+**/openapi-config.cjs

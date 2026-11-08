@@ -1,0 +1,7 @@
+# Demo / Docker profile: service hostnames on the compose network (no localhost).
+spring:
+  data:
+    redis:
+      host: redis
+  kafka:
+    bootstrap-servers: kafka:9092

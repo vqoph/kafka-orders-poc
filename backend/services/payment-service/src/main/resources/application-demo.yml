@@ -1,0 +1,6 @@
+# Demo / Docker profile: service hostnames on the compose network (no localhost).
+spring:
+  datasource:
+    url: jdbc:postgresql://postgres:5432/payments
+  kafka:
+    bootstrap-servers: kafka:9092

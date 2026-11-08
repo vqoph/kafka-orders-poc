@@ -13,6 +13,14 @@ const API_ENV_DEFAULTS = {
   INVENTORY_API_BASE_URL: "http://localhost:8085",
 };
 
+/** Same-origin Module Federation remotes (nginx demo / VPS). */
+const SAME_ORIGIN_REMOTES = {
+  orders: "orders@/mf/orders/remoteEntry.js",
+  payment: "payment@/mf/payment/remoteEntry.js",
+  inventory: "inventory@/mf/inventory/remoteEntry.js",
+  notification: "notification@/mf/notification/remoteEntry.js",
+};
+
 function loadFrontendEnv() {
   loadDotenv({ path: path.join(FRONTEND_ROOT, ".env") });
   loadDotenv({ path: path.join(FRONTEND_ROOT, ".env.example") });
@@ -23,9 +31,24 @@ function apiEnvDefines() {
   /** @type {Record<string, string>} */
   const defines = {};
   for (const [key, fallback] of Object.entries(API_ENV_DEFAULTS)) {
-    defines[`process.env.${key}`] = JSON.stringify(process.env[key] || fallback);
+    // Prefer ?? so an intentional empty string is kept (same-origin APIs).
+    defines[`process.env.${key}`] = JSON.stringify(process.env[key] ?? fallback);
   }
   return defines;
+}
+
+function resolvePublicPath(port) {
+  if (process.env.MF_PUBLIC_PATH) {
+    return process.env.MF_PUBLIC_PATH;
+  }
+  return `http://localhost:${port}/`;
+}
+
+function resolveRemotes(remotes, isHost) {
+  if (isHost && process.env.MF_SAME_ORIGIN === "true") {
+    return SAME_ORIGIN_REMOTES;
+  }
+  return remotes;
 }
 
 /**
@@ -41,6 +64,7 @@ function apiEnvDefines() {
 function createWebpackConfig(options) {
   const { name, port, dirname, exposes = {}, remotes = {}, isHost = false } = options;
   const deps = require(path.join(dirname, "package.json")).dependencies || {};
+  const resolvedRemotes = resolveRemotes(remotes, isHost);
 
   return {
     entry: path.join(dirname, "src/index.tsx"),
@@ -48,7 +72,7 @@ function createWebpackConfig(options) {
     devtool: "source-map",
     output: {
       path: path.join(dirname, "dist"),
-      publicPath: `http://localhost:${port}/`,
+      publicPath: resolvePublicPath(port),
       clean: true,
       uniqueName: name,
     },
@@ -89,7 +113,7 @@ function createWebpackConfig(options) {
         name,
         filename: "remoteEntry.js",
         exposes,
-        remotes,
+        remotes: resolvedRemotes,
         shared: {
           react: {
             singleton: true,
