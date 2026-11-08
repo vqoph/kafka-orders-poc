@@ -8,13 +8,15 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
 @Entity
-@Table(name = "reservations")
+@Table(name = "reservations", uniqueConstraints = @UniqueConstraint(
+        name = "uk_reservations_order_id", columnNames = "order_id"))
 public class Reservation {
 
     @Id
