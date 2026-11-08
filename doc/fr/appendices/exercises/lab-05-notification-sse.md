@@ -48,7 +48,8 @@ Pour chaque emitter enregistré :
 
 Dans chaque `on…` : construire un `NotificationEvent` puis `sseHub.broadcast(...)`.
 
-Constantes utiles sur `NotificationEvent` : `TYPE_ORDER_STATUS`, `TYPE_PAYMENT_PROCESSED`, `TYPE_INVENTORY_RESERVED`.
+Constantes utiles sur `NotificationEvent` : `TYPE_ORDER_STATUS`, `TYPE_PAYMENT_PROCESSED`, `TYPE_INVENTORY_RESERVED`.  
+Champ `success` (`Boolean`, nullable) : `event.success()` pour paiement / stock ; pour `ORDER_STATUS` → `CONFIRMED` = true, `CANCELLED` = false ; `CONNECTED` → `null`.
 
 ---
 

@@ -6,5 +6,7 @@
   "filterLabel": "Filtrer par id de commande",
   "filterPlaceholder": "optionnel",
   "loadFailed": "Échec du chargement des notifications",
-  "empty": "Aucune notification pour le moment."
+  "empty": "Aucune notification pour le moment.",
+  "outcomeOk": "succès",
+  "outcomeKo": "échec"
 }

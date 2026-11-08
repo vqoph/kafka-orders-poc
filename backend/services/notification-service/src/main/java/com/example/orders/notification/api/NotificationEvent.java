@@ -13,6 +13,8 @@ public record NotificationEvent(
         @Schema(nullable = true) UUID orderId,
         String type,
         String message,
+        @Schema(nullable = true, description = "Outcome when applicable (null for CONNECTED / unknown)")
+        Boolean success,
         Instant at) {
 
     public static final String TYPE_CONNECTED = "CONNECTED";

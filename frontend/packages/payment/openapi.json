@@ -13,7 +13,9 @@
   "paths": {
     "/chaos/failure-rate": {
       "get": {
-        "tags": ["chaos-controller"],
+        "tags": [
+          "chaos-controller"
+        ],
         "operationId": "getPaymentFailureRate",
         "responses": {
           "200": {
@@ -29,7 +31,9 @@
         }
       },
       "put": {
-        "tags": ["chaos-controller"],
+        "tags": [
+          "chaos-controller"
+        ],
         "operationId": "setPaymentFailureRate",
         "requestBody": {
           "content": {
@@ -57,7 +61,9 @@
     },
     "/payments": {
       "get": {
-        "tags": ["payment-controller"],
+        "tags": [
+          "payment-controller"
+        ],
         "operationId": "listPayments",
         "parameters": [
           {
@@ -85,11 +91,13 @@
           {
             "name": "sort",
             "in": "query",
-            "description": "Sorting criteria in the format: property,(asc|desc).",
+            "description": "Sorting criteria in the format: property,(asc|desc). Default sort order is ascending. Multiple sort criteria are supported.",
             "required": false,
             "schema": {
               "type": "array",
-              "default": ["processedAt,DESC"],
+              "default": [
+                "processedAt,DESC"
+              ],
               "items": {
                 "type": "string"
               }
@@ -112,7 +120,9 @@
     },
     "/payments/{id}": {
       "get": {
-        "tags": ["payment-controller"],
+        "tags": [
+          "payment-controller"
+        ],
         "operationId": "getPayment",
         "parameters": [
           {
@@ -152,7 +162,9 @@
             "minimum": 0
           }
         },
-        "required": ["rate"]
+        "required": [
+          "rate"
+        ]
       },
       "FailureRateResponse": {
         "type": "object",
@@ -162,7 +174,54 @@
             "format": "double"
           }
         },
-        "required": ["rate"]
+        "required": [
+          "rate"
+        ]
+      },
+      "PageMetadata": {
+        "type": "object",
+        "properties": {
+          "size": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "number": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "totalElements": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "totalPages": {
+            "type": "integer",
+            "format": "int64"
+          }
+        },
+        "required": [
+          "number",
+          "size",
+          "totalElements",
+          "totalPages"
+        ]
+      },
+      "PagedModelPaymentResponse": {
+        "type": "object",
+        "properties": {
+          "content": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PaymentResponse"
+            }
+          },
+          "page": {
+            "$ref": "#/components/schemas/PageMetadata"
+          }
+        },
+        "required": [
+          "content",
+          "page"
+        ]
       },
       "PaymentResponse": {
         "type": "object",
@@ -186,49 +245,20 @@
             "format": "date-time"
           },
           "refundedAt": {
-            "type": "string",
-            "format": "date-time",
-            "nullable": true
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
           }
         },
-        "required": ["id", "orderId", "amount", "success", "processedAt"]
-      },
-      "PageMetadata": {
-        "type": "object",
-        "properties": {
-          "size": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "number": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "totalElements": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "totalPages": {
-            "type": "integer",
-            "format": "int32"
-          }
-        },
-        "required": ["number", "size", "totalElements", "totalPages"]
-      },
-      "PagedModelPaymentResponse": {
-        "type": "object",
-        "properties": {
-          "content": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/PaymentResponse"
-            }
-          },
-          "page": {
-            "$ref": "#/components/schemas/PageMetadata"
-          }
-        },
-        "required": ["content", "page"]
+        "required": [
+          "amount",
+          "id",
+          "orderId",
+          "processedAt",
+          "success"
+        ]
       }
     }
   }

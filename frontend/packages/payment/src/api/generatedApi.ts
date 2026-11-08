@@ -42,8 +42,11 @@ export type SetPaymentFailureRateApiArg = {
 };
 export type ListPaymentsApiResponse = /** status 200 OK */ PagedModelPaymentResponse;
 export type ListPaymentsApiArg = {
+  /** Zero-based page index (0..N) */
   page?: number;
+  /** The size of the page to be returned */
   size?: number;
+  /** Sorting criteria in the format: property,(asc|desc). Default sort order is ascending. Multiple sort criteria are supported. */
   sort?: string[];
 };
 export type GetPaymentApiResponse = /** status 200 OK */ PaymentResponse;

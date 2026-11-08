@@ -21,6 +21,8 @@ export type NotificationEvent = {
   orderId?: string | null;
   type: string;
   message: string;
+  /** Outcome when applicable (null for CONNECTED / unknown) */
+  success?: boolean | null;
   at: string;
 };
 export const { useListNotificationsQuery } = injectedRtkApi;

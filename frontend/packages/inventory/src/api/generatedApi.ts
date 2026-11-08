@@ -1,6 +1,19 @@
 import { emptySplitApi as api } from './emptyApi';
 const injectedRtkApi = api.injectEndpoints({
   endpoints: (build) => ({
+    getStock: build.query<GetStockApiResponse, GetStockApiArg>({
+      query: (queryArg) => ({ url: `/stock/${queryArg.sku}` }),
+    }),
+    updateStock: build.mutation<UpdateStockApiResponse, UpdateStockApiArg>({
+      query: (queryArg) => ({
+        url: `/stock/${queryArg.sku}`,
+        method: 'PUT',
+        body: queryArg.updateStockRequest,
+      }),
+    }),
+    deleteStock: build.mutation<DeleteStockApiResponse, DeleteStockApiArg>({
+      query: (queryArg) => ({ url: `/stock/${queryArg.sku}`, method: 'DELETE' }),
+    }),
     getInventoryFailureRate: build.query<
       GetInventoryFailureRateApiResponse,
       GetInventoryFailureRateApiArg
@@ -21,29 +34,25 @@ const injectedRtkApi = api.injectEndpoints({
       query: () => ({ url: `/stock` }),
     }),
     createStock: build.mutation<CreateStockApiResponse, CreateStockApiArg>({
-      query: (queryArg) => ({
-        url: `/stock`,
-        method: 'POST',
-        body: queryArg.createStockRequest,
-      }),
-    }),
-    getStock: build.query<GetStockApiResponse, GetStockApiArg>({
-      query: (queryArg) => ({ url: `/stock/${queryArg.sku}` }),
-    }),
-    updateStock: build.mutation<UpdateStockApiResponse, UpdateStockApiArg>({
-      query: (queryArg) => ({
-        url: `/stock/${queryArg.sku}`,
-        method: 'PUT',
-        body: queryArg.updateStockRequest,
-      }),
-    }),
-    deleteStock: build.mutation<DeleteStockApiResponse, DeleteStockApiArg>({
-      query: (queryArg) => ({ url: `/stock/${queryArg.sku}`, method: 'DELETE' }),
+      query: (queryArg) => ({ url: `/stock`, method: 'POST', body: queryArg.createStockRequest }),
     }),
   }),
   overrideExisting: false,
 });
 export { injectedRtkApi as generatedApi };
+export type GetStockApiResponse = /** status 200 OK */ StockResponse;
+export type GetStockApiArg = {
+  sku: string;
+};
+export type UpdateStockApiResponse = /** status 200 OK */ StockResponse;
+export type UpdateStockApiArg = {
+  sku: string;
+  updateStockRequest: UpdateStockRequest;
+};
+export type DeleteStockApiResponse = unknown;
+export type DeleteStockApiArg = {
+  sku: string;
+};
 export type GetInventoryFailureRateApiResponse = /** status 200 OK */ FailureRateResponse;
 export type GetInventoryFailureRateApiArg = void;
 export type SetInventoryFailureRateApiResponse = /** status 200 OK */ FailureRateResponse;
@@ -56,18 +65,12 @@ export type CreateStockApiResponse = /** status 201 Created */ StockResponse;
 export type CreateStockApiArg = {
   createStockRequest: CreateStockRequest;
 };
-export type GetStockApiResponse = /** status 200 OK */ StockResponse;
-export type GetStockApiArg = {
+export type StockResponse = {
   sku: string;
+  quantity: number;
 };
-export type UpdateStockApiResponse = /** status 200 OK */ StockResponse;
-export type UpdateStockApiArg = {
-  sku: string;
-  updateStockRequest: UpdateStockRequest;
-};
-export type DeleteStockApiResponse = /** status 204 No Content */ undefined;
-export type DeleteStockApiArg = {
-  sku: string;
+export type UpdateStockRequest = {
+  quantity: number;
 };
 export type FailureRateResponse = {
   rate: number;
@@ -75,23 +78,16 @@ export type FailureRateResponse = {
 export type FailureRateRequest = {
   rate: number;
 };
-export type StockResponse = {
-  sku: string;
-  quantity: number;
-};
 export type CreateStockRequest = {
   sku: string;
   quantity: number;
 };
-export type UpdateStockRequest = {
-  quantity: number;
-};
 export const {
+  useGetStockQuery,
+  useUpdateStockMutation,
+  useDeleteStockMutation,
   useGetInventoryFailureRateQuery,
   useSetInventoryFailureRateMutation,
   useListStockQuery,
   useCreateStockMutation,
-  useGetStockQuery,
-  useUpdateStockMutation,
-  useDeleteStockMutation,
 } = injectedRtkApi;

@@ -1,7 +1,11 @@
 package com.example.orders.notification.kafka;
 
 import com.example.orders.events.PaymentProcessed;
+import com.example.orders.notification.api.NotificationEvent;
 import com.example.orders.notification.sse.SseHub;
+
+import java.time.Instant;
+
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
 
@@ -20,16 +24,12 @@ public class PaymentProcessedListener {
 
     @KafkaListener(topics = KafkaTopics.PAYMENTS_PROCESSED, groupId = "notification-service")
     public void onPaymentProcessed(PaymentProcessed event) {
-        /*
-         * ## Lab 5 — map + broadcast (à coder)
-         *
-         * type = NotificationEvent.TYPE_PAYMENT_PROCESSED
-         * message e.g. "Payment " + (event.success() ? "OK" : "KO")
-         * then sseHub.broadcast(...).
-         */
-        if (sseHub == null || event == null) {
-            return;
-        }
-        // TODO Lab 5
+        NotificationEvent notificationEvent = new NotificationEvent(
+                event.orderId(),
+                NotificationEvent.TYPE_PAYMENT_PROCESSED,
+                "Payment " + (event.success() ? "OK" : "KO"),
+                event.success(),
+                event.processedAt() != null ? event.processedAt() : Instant.now());
+        sseHub.broadcast(notificationEvent);
     }
 }

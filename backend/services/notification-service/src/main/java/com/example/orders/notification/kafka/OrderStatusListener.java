@@ -1,7 +1,11 @@
 package com.example.orders.notification.kafka;
 
 import com.example.orders.events.OrderStatusChanged;
+import com.example.orders.notification.api.NotificationEvent;
 import com.example.orders.notification.sse.SseHub;
+
+import java.time.Instant;
+
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
 
@@ -21,20 +25,17 @@ public class OrderStatusListener {
 
     @KafkaListener(topics = KafkaTopics.ORDERS_STATUS, groupId = "notification-service")
     public void onOrderStatusChanged(OrderStatusChanged event) {
-        /*
-         * ## Lab 5 — map + broadcast (à coder)
-         *
-         * Build NotificationEvent(
-         *   orderId = event.orderId(),
-         *   type = NotificationEvent.TYPE_ORDER_STATUS,
-         *   message = "Order status: " + event.status(),
-         *   at = event.changedAt() or Instant.now()
-         * ) then sseHub.broadcast(...).
-         */
-        // Keep injection wired until Lab 5 is implemented.
-        if (sseHub == null || event == null) {
-            return;
-        }
-        // TODO Lab 5
+        Boolean success = switch (event.status() == null ? "" : event.status()) {
+            case "CONFIRMED" -> Boolean.TRUE;
+            case "CANCELLED" -> Boolean.FALSE;
+            default -> null;
+        };
+        NotificationEvent notificationEvent = new NotificationEvent(
+                event.orderId(),
+                NotificationEvent.TYPE_ORDER_STATUS,
+                "Order status: " + event.status(),
+                success,
+                event.changedAt() != null ? event.changedAt() : Instant.now());
+        sseHub.broadcast(notificationEvent);
     }
 }

@@ -1,6 +1,8 @@
 package com.example.orders.notification.sse;
 
 import com.example.orders.notification.api.NotificationEvent;
+
+import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import org.springframework.stereotype.Component;
@@ -37,6 +39,13 @@ public class SseHub {
      * See doc/fr/appendices/exercises/lab-05-notification-sse.md
      */
     public void broadcast(NotificationEvent event) {
-        // TODO Lab 5
+        for (SseEmitter emitter : emitters) {
+            try {
+                emitter.send(SseEmitter.event().name(EVENT_NAME).data(event));
+            } catch (IOException e) {
+                emitters.remove(emitter);
+                emitter.completeWithError(e);
+            }
+        }
     }
 }

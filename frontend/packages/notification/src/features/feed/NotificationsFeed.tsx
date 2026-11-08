@@ -78,7 +78,14 @@ export function NotificationsFeed() {
                   </span>
                   <span>{event.at}</span>
                 </div>
-                <p className="mt-1 text-sm text-foreground">{event.message}</p>
+                <div className="mt-1 flex flex-wrap items-center gap-2">
+                  <p className="text-sm text-foreground">{event.message}</p>
+                  {typeof event.success === 'boolean' ? (
+                    <Badge tone={event.success ? 'success' : 'danger'} pill>
+                      {event.success ? t('outcomeOk') : t('outcomeKo')}
+                    </Badge>
+                  ) : null}
+                </div>
                 {event.type && (
                   <p className="mt-1 text-xs uppercase tracking-wide text-muted">
                     {event.type}

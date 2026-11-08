@@ -4,6 +4,8 @@ export type PocNotificationEvent = {
   orderId?: string | null;
   type: string;
   message: string;
+  /** Outcome when applicable; null for CONNECTED / unknown. */
+  success?: boolean | null;
   at: string;
 };
 
@@ -44,6 +46,7 @@ function parseEventData(raw: string): PocNotificationEvent | null {
       orderId: parsed.orderId ?? null,
       type: parsed.type ?? 'MESSAGE',
       message: parsed.message ?? raw,
+      success: typeof parsed.success === 'boolean' ? parsed.success : null,
       at: parsed.at ?? new Date().toISOString(),
     };
   } catch {
@@ -51,6 +54,7 @@ function parseEventData(raw: string): PocNotificationEvent | null {
       orderId: null,
       type: 'MESSAGE',
       message: raw,
+      success: null,
       at: new Date().toISOString(),
     };
   }

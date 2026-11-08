@@ -14,6 +14,7 @@ function toNotificationEvent(event: PocNotificationEvent): NotificationEvent {
     orderId: event.orderId ?? null,
     type: event.type,
     message: event.message,
+    success: event.success ?? null,
     at: event.at,
   };
 }

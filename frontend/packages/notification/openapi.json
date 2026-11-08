@@ -64,6 +64,13 @@
           "message": {
             "type": "string"
           },
+          "success": {
+            "type": [
+              "boolean",
+              "null"
+            ],
+            "description": "Outcome when applicable (null for CONNECTED / unknown)"
+          },
           "at": {
             "type": "string",
             "format": "date-time"

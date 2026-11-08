@@ -38,6 +38,7 @@ public class NotificationController {
                             null,
                             NotificationEvent.TYPE_CONNECTED,
                             "SSE stub ready",
+                            null,
                             Instant.now())));
         } catch (IOException ex) {
             emitter.completeWithError(ex);

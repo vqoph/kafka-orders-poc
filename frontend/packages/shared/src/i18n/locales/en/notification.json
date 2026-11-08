@@ -6,5 +6,7 @@
   "filterLabel": "Filter by order id",
   "filterPlaceholder": "optional",
   "loadFailed": "Failed to load notifications",
-  "empty": "No notifications yet."
+  "empty": "No notifications yet.",
+  "outcomeOk": "success",
+  "outcomeKo": "failed"
 }
