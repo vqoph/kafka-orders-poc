@@ -17,6 +17,15 @@ public class KafkaTopicsConfig {
                 .build();
     }
 
+    /** Poison / exhausted retries from {@code orders.created} land here. */
+    @Bean
+    NewTopic ordersCreatedDltTopic() {
+        return TopicBuilder.name(KafkaTopics.ORDERS_CREATED_DLT)
+                .partitions(3)
+                .replicas(1)
+                .build();
+    }
+
     @Bean
     NewTopic paymentsRefundRequestedTopic() {
         return TopicBuilder.name(KafkaTopics.PAYMENTS_REFUND_REQUESTED)

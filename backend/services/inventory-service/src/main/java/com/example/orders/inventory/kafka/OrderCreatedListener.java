@@ -5,6 +5,9 @@ import com.example.orders.inventory.InventoryService;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
 
+/**
+ * Consumes {@code orders.created} in group {@code inventory-service}.
+ */
 @Component
 public class OrderCreatedListener {
 

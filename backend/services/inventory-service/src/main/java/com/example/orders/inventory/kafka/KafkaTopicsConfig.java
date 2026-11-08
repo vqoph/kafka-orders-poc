@@ -8,6 +8,15 @@ import org.springframework.kafka.config.TopicBuilder;
 @Configuration
 public class KafkaTopicsConfig {
 
+    /** Poison / exhausted retries from {@code orders.created} land here. */
+    @Bean
+    NewTopic ordersCreatedDltTopic() {
+        return TopicBuilder.name(KafkaTopics.ORDERS_CREATED_DLT)
+                .partitions(3)
+                .replicas(1)
+                .build();
+    }
+
     @Bean
     NewTopic inventoryReservedTopic() {
         return TopicBuilder.name(KafkaTopics.INVENTORY_RESERVED)

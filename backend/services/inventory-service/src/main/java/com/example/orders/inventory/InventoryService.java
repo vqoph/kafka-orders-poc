@@ -13,6 +13,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+/**
+ * Reserve stock for orders.
+ * Idempotency on {@code orderId}: implement the early skip (Lab 6).
+ */
 @Service
 public class InventoryService {
 
@@ -37,6 +41,25 @@ public class InventoryService {
 
     @Transactional
     public void processOrderCreated(OrderCreated order) {
+        if (order.amount() != null && order.amount().signum() < 0) {
+            throw new IllegalArgumentException(
+                    "Inventory rejected: negative amount for orderId=" + order.orderId());
+        }
+
+        /*
+         * ## Lab 6 — idempotent skip (à coder)
+         *
+         * DB already has UNIQUE(order_id). On Kafka redelivery, skip if already processed:
+         *
+         * if (reservationRepository.existsByOrderId(order.orderId())) {
+         *     log.info("Skipping already processed inventory orderId={}", order.orderId());
+         *     return;
+         * }
+         *
+         * See doc/fr/appendices/exercises/lab-06-at-least-once.md
+         */
+        // TODO Lab 6
+
         Reservation reservation = inventoryReservation.reserve(order);
         inventoryEventPublisher.publishReserved(reservation);
         log.info(

@@ -26,6 +26,7 @@ spring:
     bootstrap-servers: localhost:29092
     consumer:
       group-id: payment-service
+      enable-auto-commit: false
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       # Boot 4 / Jackson 3 — not the deprecated JsonDeserializer (Jackson 2).
       value-deserializer: org.springframework.kafka.support.serializer.JacksonJsonDeserializer
@@ -38,7 +39,7 @@ spring:
       properties:
         spring.json.add.type.headers: true
 
-# Simulated payment failures for labs / chaos (0.0 = always OK, 1.0 = always KO).
+# Simulated payment failures for chaos (0.0 = always OK, 1.0 = always KO).
 payment:
   failure-rate: 0.2
 
