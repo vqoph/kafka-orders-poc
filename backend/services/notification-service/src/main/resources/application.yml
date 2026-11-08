@@ -5,6 +5,11 @@ spring:
   application:
     name: notification-service
 
+  data:
+    redis:
+      host: localhost
+      port: 6379
+
   kafka:
     bootstrap-servers: localhost:29092
     consumer:
@@ -14,6 +19,11 @@ spring:
       value-deserializer: org.springframework.kafka.support.serializer.JacksonJsonDeserializer
       properties:
         spring.json.trusted.packages: com.example.orders.events
+
+# Redis Pub/Sub channel for SSE fan-out (see RedisNotificationFanout.CHANNEL).
+notification:
+  redis:
+    channel: notifications.sse
 
 management:
   endpoints:

@@ -2,7 +2,7 @@ package com.example.orders.notification.kafka;
 
 import com.example.orders.events.OrderStatusChanged;
 import com.example.orders.notification.api.NotificationEvent;
-import com.example.orders.notification.sse.SseHub;
+import com.example.orders.notification.redis.RedisNotificationFanout;
 
 import java.time.Instant;
 
@@ -12,15 +12,15 @@ import org.springframework.stereotype.Component;
 /**
  * Consumes {@code orders.status} in group {@code notification-service}
  * (separate from {@code order-service} — each group sees the full stream).
- * Lab 5 — map to NotificationEvent and broadcast.
+ * Lab 5 — map to NotificationEvent and publish to Redis fan-out.
  */
 @Component
 public class OrderStatusListener {
 
-    private final SseHub sseHub;
+    private final RedisNotificationFanout fanout;
 
-    public OrderStatusListener(SseHub sseHub) {
-        this.sseHub = sseHub;
+    public OrderStatusListener(RedisNotificationFanout fanout) {
+        this.fanout = fanout;
     }
 
     @KafkaListener(topics = KafkaTopics.ORDERS_STATUS, groupId = "notification-service")
@@ -36,6 +36,6 @@ public class OrderStatusListener {
                 "Order status: " + event.status(),
                 success,
                 event.changedAt() != null ? event.changedAt() : Instant.now());
-        sseHub.broadcast(notificationEvent);
+        fanout.publish(notificationEvent);
     }
 }

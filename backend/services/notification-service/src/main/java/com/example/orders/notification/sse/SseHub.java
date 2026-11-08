@@ -9,7 +9,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 /**
- * In-memory fan-out for SSE clients (POC: one JVM only).
+ * In-memory fan-out for SSE clients on this JVM only.
+ * Cross-instance fan-out goes through Redis ({@code RedisNotificationFanout}).
  * Lab 5 — implement {@link #broadcast(NotificationEvent)}.
  */
 @Component

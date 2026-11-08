@@ -2,7 +2,7 @@ package com.example.orders.notification.kafka;
 
 import com.example.orders.events.PaymentProcessed;
 import com.example.orders.notification.api.NotificationEvent;
-import com.example.orders.notification.sse.SseHub;
+import com.example.orders.notification.redis.RedisNotificationFanout;
 
 import java.time.Instant;
 
@@ -11,15 +11,15 @@ import org.springframework.stereotype.Component;
 
 /**
  * Consumes {@code payments.processed} — drives Payments list refresh on the UI.
- * Lab 5 — map to NotificationEvent and broadcast.
+ * Lab 5 — map to NotificationEvent and publish to Redis fan-out.
  */
 @Component
 public class PaymentProcessedListener {
 
-    private final SseHub sseHub;
+    private final RedisNotificationFanout fanout;
 
-    public PaymentProcessedListener(SseHub sseHub) {
-        this.sseHub = sseHub;
+    public PaymentProcessedListener(RedisNotificationFanout fanout) {
+        this.fanout = fanout;
     }
 
     @KafkaListener(topics = KafkaTopics.PAYMENTS_PROCESSED, groupId = "notification-service")
@@ -30,6 +30,6 @@ public class PaymentProcessedListener {
                 "Payment " + (event.success() ? "OK" : "KO"),
                 event.success(),
                 event.processedAt() != null ? event.processedAt() : Instant.now());
-        sseHub.broadcast(notificationEvent);
+        fanout.publish(notificationEvent);
     }
 }
