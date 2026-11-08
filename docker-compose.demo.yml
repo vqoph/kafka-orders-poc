@@ -11,6 +11,7 @@ x-java-service: &java-service
   environment: &java-env
     SPRING_PROFILES_ACTIVE: demo
     JAVA_TOOL_OPTIONS: -Xmx256m
+    APP_CORS_ALLOWED_ORIGIN_PATTERNS: ${APP_CORS_ALLOWED_ORIGIN_PATTERNS:-http://localhost:*}
   networks:
     - demo
 
