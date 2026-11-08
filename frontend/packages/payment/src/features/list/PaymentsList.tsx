@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import {
   Badge,
-  Button,
   DEFAULT_PAGE_SIZE,
   EmptyState,
   ErrorText,
@@ -20,7 +19,7 @@ export function PaymentsList() {
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
 
-  const { data, error, isLoading, isFetching, refetch } = useListPaymentsQuery({
+  const { data, error, isLoading, isFetching } = useListPaymentsQuery({
     page,
     size: pageSize,
     sort: ['processedAt,DESC'],
@@ -30,14 +29,7 @@ export function PaymentsList() {
 
   return (
     <section className="space-y-4">
-      <PageHeader
-        title={t('title')}
-        actions={
-          <Button variant="secondary" onClick={() => void refetch()}>
-            {t('refresh')}
-          </Button>
-        }
-      />
+      <PageHeader title={t('title')} />
       <div className="flex justify-end">
         <PaginationControls
           page={page}

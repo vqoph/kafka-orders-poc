@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Badge,
-  Button,
   buttonClassName,
   DEFAULT_PAGE_SIZE,
   EmptyState,
@@ -33,7 +32,7 @@ export function OrdersList() {
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
   const [sortMode, setSortMode] = useState<SortMode>('date-desc');
 
-  const { data, error, isLoading, isFetching, refetch } = useListOrdersQuery({
+  const { data, error, isLoading, isFetching } = useListOrdersQuery({
     page,
     size: pageSize,
     sort: [toPageableSort(sortMode)],
@@ -63,9 +62,6 @@ export function OrdersList() {
                 ))}
               </Select>
             </label>
-            <Button variant="secondary" onClick={() => void refetch()}>
-              {t('refresh')}
-            </Button>
             <Link to="new" className={buttonClassName('primary')}>
               {t('newOrder')}
             </Link>

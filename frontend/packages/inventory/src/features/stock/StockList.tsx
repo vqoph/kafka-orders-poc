@@ -19,7 +19,6 @@ export function StockList() {
     error: stockError,
     isLoading: stockLoading,
     isFetching: stockFetching,
-    refetch: refetchStock,
   } = useListStockQuery();
   const [deleteStock, { error: deleteError }] = useDeleteStockMutation();
 
@@ -37,14 +36,9 @@ export function StockList() {
       <PageHeader
         title={t('title')}
         actions={
-          <>
-            <Button variant="secondary" onClick={() => void refetchStock()}>
-              {t('refresh')}
-            </Button>
-            <Link to="new" className={buttonClassName('primary')}>
-              {t('newProduct')}
-            </Link>
-          </>
+          <Link to="new" className={buttonClassName('primary')}>
+            {t('newProduct')}
+          </Link>
         }
       />
       {(stockLoading || stockFetching) && <LoadingText />}
