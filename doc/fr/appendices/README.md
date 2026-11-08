@@ -6,6 +6,7 @@ Compléments au [tutoriel](../TUTORIAL.md) : lectures de fond et exercices hors 
 
 - [Architecture Kafka — l'essentiel](./architecture-kafka-essentials.md) — producers, topics, brokers, consumer groups, réplication, KRaft.
 - [Changer le nombre de partitions](./kafka-partition-count-changes.md) — pourquoi `hash(key) % N` casse l’ordre au resize, et comment l’éviter.
+- [SSE multi-instance et Redis](./sse-multi-instance-redis.md) — pourquoi `SseHub` local ne scale pas ; Redis Pub/Sub comme fan-out (étape 7).
 
 ## Exercices (labs)
 
@@ -14,7 +15,7 @@ Compléments au [tutoriel](../TUTORIAL.md) : lectures de fond et exercices hors 
 - [Lab 2 — Consumer groups](./exercises/lab-02-consumer-groups.md) — cité depuis l’[étape 5](../TUTORIAL.md#étape-5--payment-service-et-lab-2).
 - [Lab 3 — Saga chorégraphiée](./exercises/lab-03-saga-choreography.md) — cité depuis l’[étape 6](../TUTORIAL.md#étape-6--inventory-service-et-saga-chorégraphie).
 - [Lab 4 — Liste paiements + Stock CRUD](./exercises/lab-04-stock-payment-rest.md) — Partie A [étape 5](../TUTORIAL.md#étape-5--payment-service-et-lab-2), Partie B [étape 6](../TUTORIAL.md#étape-6--inventory-service-et-saga-chorégraphie).
-- [Lab 5 — Notification SSE](./exercises/lab-05-notification-sse.md) — cité depuis l’[étape 7](../TUTORIAL.md#étape-7--notification-service-sse--invalidation-rtk).
+- [Lab 5 — Notification SSE](./exercises/lab-05-notification-sse.md) — Kafka → Redis → SSE ; cité depuis l’[étape 7](../TUTORIAL.md#étape-7--notification-service-sse--invalidation-rtk) (Partie C = multi-instance).
 
 ## Sources
 

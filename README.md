@@ -6,7 +6,7 @@ Learning POC: Java / Spring Boot microservices talking through Kafka (order saga
 
 - `backend/` — Maven multi-module (`libs/events` + Spring Boot services)
 - `frontend/` — microfrontends (shell + remotes)
-- `docker-compose.yml` — Kafka, Kafka UI, Postgres
+- `docker-compose.yml` — Kafka, Kafka UI, Postgres, Redis (SSE fan-out)
 - `scripts/` — `backend-build.sh`, `backend-run.sh`, `frontend-dev.sh`
 
 ## Quick start

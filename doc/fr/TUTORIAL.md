@@ -32,10 +32,10 @@ Browser / microfronts --REST/SSE--> order / payment / inventory / notification
                                                       |
                                                 orders.status
                                                       v
-                                          notification-service --SSE--> UI
+                                          notification-service --Redis Pub/Sub--> SSE --> UI
 ```
 
-(`notification-service` s’abonne aussi à `payments.processed` et `inventory.reserved` — même journal métier, autre consumer group ; pas un second bus “notif”.)
+(`notification-service` s’abonne aussi à `payments.processed` et `inventory.reserved` — même journal métier, autre consumer group ; pas un second bus “notif”. Redis ne relaie que le fan-out SSE entre replicas.)
 
 - Topics : 3 partitions, clé de message = `orderId`.
 - Saga en chorégraphie : pas de chef d'orchestre, chaque service réagit aux événements des autres.
@@ -47,7 +47,7 @@ Browser / microfronts --REST/SSE--> order / payment / inventory / notification
 - Modules partagés : `libs/events` (contrats Kafka ≈ `ts-shared`) et `libs/web` (pagination Spring commune : `Pageable` + sérialisation `VIA_DTO` / `PagedModel`).
 - Spring Kafka, Spring Web, Spring Data JPA, Flyway, springdoc-openapi, Actuator.
 - Sérialisation Kafka : `JacksonJsonSerializer` / `JacksonJsonDeserializer` (Jackson **3**, Boot 4 — pas les `Json`\* Jackson 2).
-- Kafka en KRaft (image `apache/kafka`, pas de Zookeeper) + Kafka UI + Postgres (une base par service).
+- Kafka en KRaft (image `apache/kafka`, pas de Zookeeper) + Kafka UI + Postgres (une base par service) + Redis (Pub/Sub fan-out SSE, étape 7).
 - Front (hors parcours Kafka) : microfrontends sous `frontend/` (shell + remotes, ports 5000–5004), OpenAPI → RTK Query.
 - Scripts racine : `./scripts/backend-build.sh`, `./scripts/backend-run.sh`, `./scripts/frontend-dev.sh`.
 - Tests : JUnit 5 + Testcontainers (peu, ciblés).
@@ -65,7 +65,7 @@ kafka-orders-poc/
     services/inventory-service/  # :8085
     services/notification-service/ # :8084 SSE
   frontend/                 # shell + remotes (hors parcours Kafka ; UI étape 9)
-  docker-compose.yml
+  docker-compose.yml        # Kafka, Kafka UI, Postgres, Redis
   docker/postgres/init/     # CREATE DATABASE orders|payments|inventory
   scripts/backend-build.sh
   scripts/backend-run.sh
@@ -145,7 +145,7 @@ Pour le vocabulaire et le schéma d'ensemble (avant de manipuler) : [Architectur
 - **KRaft** : Kafka gère lui-même son quorum de métadonnées, il n'y a plus de Zookeeper.
 - Piège classique : les **advertised listeners**. Le broker dit aux clients "reconnecte-toi sur cette adresse". Depuis un conteneur c'est `kafka:9092`, depuis ton WSL c'est `localhost:29092`. Si ça ne colle pas, la connexion initiale marche mais les produce/consume échouent.
 
-**Ce qu'on crée** : `docker-compose.yml` avec `kafka` (KRaft, deux listeners), `kafka-ui`, `postgres` (avec un script d'init qui crée une base par service).
+**Ce qu'on crée** : `docker-compose.yml` avec `kafka` (KRaft, deux listeners), `kafka-ui`, `postgres` (script d'init : une base par service), et `redis` (utilisé à l’étape 7 pour le fan-out SSE multi-instance — tu peux le laisser tourner dès maintenant).
 
 **Commandes (tu les lances)**
 
@@ -605,20 +605,21 @@ Nouvelle commande → `CANCELLED` + `inventory.release.requested`.
 - Kafka reste le **journal métier**. `notification-service` est un **abonné de plus** (`groupId=notification-service`) sur `orders.status`, `payments.processed`, `inventory.reserved` — **pas** un second bus “notif”, **pas** de POST HTTP métier → notif.
 - Même topic, autre groupe : ex. `orders.status` est lu par `order-service` **et** par `notification-service` (chaque groupe reçoit le flux complet — pub/sub).
 - SSE (`SseEmitter`) : push navigateur ; le front fait `invalidateTags` RTK (listes + détails orders / stock / payments).
-- Limite POC : connexions SSE **locales** à l’instance (pas de fan-out multi-replicas).
+- `SseHub` = sockets **locaux** à la JVM. Le fan-out **entre** replicas passe par **Redis Pub/Sub** (§7.3) — Kafka reste le journal métier.
 
 ### 7.1 Boilerplate (assistant)
 
 - Dep `libs/events` ; Kafka `localhost:29092` ; `JacksonJsonDeserializer` + `trusted.packages`
-- `SseHub` (registre emitters) + `NotificationController` (`GET /stream`, list stub)
-- 3 listeners mince + stubs **`TODO Lab 5`**
+- Redis (`localhost:6379`) + `RedisNotificationFanout` (PUBLISH / SUBSCRIBE canal `notifications.sse`) → `SseHub.broadcast`
+- `SseHub` (registre emitters) + `NotificationController` (`GET /stream`, list stub ; event `CONNECTED` **local**, pas Redis)
+- 3 listeners mince + stubs **`TODO Lab 5`** (map event → `fanout.publish`)
 - Front : singleton `subscribeNotificationStream` (`@poc/shared`) + hooks `invalidateTags` par remote
 
-### 7.2 Exercice
+### 7.2 Exercice (Lab 5 A + B)
 
 **Exercice** : [Lab 5 — Notification SSE](./appendices/exercises/lab-05-notification-sse.md)
 
-**Lancer**
+**Lancer** (Redis doit être up : `docker compose up -d`)
 
 ```bash
 mvn -f backend/pom.xml -pl services/notification-service -am -DskipTests install
@@ -629,7 +630,39 @@ curl -N localhost:8084/notifications/stream
 
 Crée une commande (`POST localhost:8081/orders`) : events SSE `PAYMENT_PROCESSED` / `INVENTORY_RESERVED` / `ORDER_STATUS` ; UI se rafraîchit sans bouton Refresh.
 
-**Étape 7 ok** : Lab 5 A + B.
+### 7.3 Multi-instance : pourquoi Redis (pédagogie + observation)
+
+**Le problème** — dès que tu lances **plusieurs** replicas de `notification-service` :
+
+1. Chaque connexion SSE atterrit sur **une** instance (son `SseHub` local).
+2. Le `groupId=notification-service` fait qu’**une seule** instance du groupe consomme chaque message Kafka.
+3. Sans relais, cette instance broadcast **uniquement** à ses clients locaux → les autres navigateurs ne voient rien.
+
+Ce n’est pas un bug Kafka : SSE n’est pas un bus partagé. `CopyOnWriteArrayList` dans `SseHub` résout la concurrence **dans** la JVM, pas le fan-out **entre** JVM.
+
+**Le correctif (implémenté)** — consumer group unique sur les topics métier, puis republier le `NotificationEvent` sur Redis Pub/Sub ; **toutes** les instances souscrivent et appellent leur `SseHub` local :
+
+```text
+topics métier (Kafka)
+        │
+        ▼
+notification-service (1 msg / group partagé)
+        │  map → NotificationEvent
+        ▼
+   Redis PUBLISH  ──►  pod-1 SseHub  ──► clients SSE
+                  └──►  pod-2 SseHub  ──► clients SSE
+```
+
+- Kafka = journal métier (durable, rejouable).
+- Redis = fan-out realtime **best-effort** (pas d’historique, pas d’offset UI — si un pod est down au moment du PUBLISH, il rate l’event).
+- Même en **1** instance : Kafka → Redis → `SseHub` (un seul chemin de code).
+
+Boilerplate : `RedisNotificationFanout` + `RedisFanoutConfig` sous `backend/services/notification-service/.../redis/`.
+
+**Observer (Lab 5 Partie C)** — deux JVM notif, deux `curl -N` : les deux streams reçoivent les mêmes events. Détail : [Lab 5](./appendices/exercises/lab-05-notification-sse.md#partie-c--observer-multi-instance-redis).  
+Lecture longue : [SSE multi-instance et Redis](./appendices/sse-multi-instance-redis.md).
+
+**Étape 7 ok** : Lab 5 A + B + Partie C (ou au minimum smoke Redis 1 instance + lecture §7.3).
 
 ---
 
@@ -767,6 +800,7 @@ docker compose exec kafka /opt/kafka/bin/kafka-console-consumer.sh \
 | Kafka (depuis WSL)       | 29092     |
 | Kafka UI                 | 8080      |
 | Postgres                 | 5432      |
+| Redis                    | 6379      |
 | order-service            | 8081      |
 | payment-service          | 8082      |
 | notification-service     | 8084      |
