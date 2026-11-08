@@ -668,24 +668,38 @@ Lecture longue : [SSE multi-instance et Redis](./appendices/sse-multi-instance-r
 
 ## Étape 8 : fiabilité (labs 6 et 7)
 
+Cible : **payment-service** et **inventory-service** (tous deux consomment `orders.created`). Même pattern des deux côtés.
+
 **Concepts**
 
-- **Offsets et commits** : un consumer enregistre sa position (offset commité). Si le service tombe après avoir traité mais avant de committer, le message est **rejoué** => livraison **at-least-once**.
-- Donc les consumers doivent être **idempotents** : table `processed_events(event_id)` ou contrainte unique métier.
-- `enable.auto.commit=false` + `AckMode.MANUAL` (ou le mode par défaut de Spring Kafka, `BATCH`) : on contrôle quand committer.
-- **Erreurs** : `DefaultErrorHandler` + `ExponentialBackOff`, puis `DeadLetterPublishingRecoverer` vers `<topic>.DLT`. `@RetryableTopic` crée des topics de retry intermédiaires.
-- **Poison pill** : un message qui fait planter le consumer à chaque tentative et bloque la partition s'il n'y a pas de DLT.
+- **Offsets et commits** : traitement puis commit d’offset ; en cas de rejeu (crash, reset d’offset) ⇒ **at-least-once**.
+- **Idempotence métier** : `UNIQUE(order_id)` + skip si déjà traité (`payments` / `reservations`). Alternative générique (hors code) : `processed_events(event_id)`.
+- Consumer : `enable-auto-commit: false` (Spring Kafka commit après succès du listener).
+- **Erreurs** : `DefaultErrorHandler` + backoff, puis `DeadLetterPublishingRecoverer` → `orders.created.DLT`.
+- **Poison pill** : sans DLT, un message qui échoue toujours bloque la partition.
 
-**Lab 6 : at-least-once**
+### 8.1 Boilerplate (assistant)
 
-1. Ajoute un `Thread.sleep` + un `System.exit` après le traitement et avant le commit.
-2. Relance : le message est retraité. Sans idempotence, double paiement. Avec la table `processed_events`, le doublon est ignoré.
+- Flyway `UNIQUE(order_id)` + `existsByOrderId` sur payment et inventory
+- Stubs **`TODO Lab 6`** (skip à coder) dans `PaymentService` / `InventoryService`
+- `CommonErrorHandler` (retries + DLT) + topic `orders.created.DLT`
+- Garde `amount < 0` → exception (poison métier)
 
-**Lab 7 : retries et DLT**
+Pas de flags « lab » dans le runtime : le rejeu se démontre avec les outils Kafka (bash).
 
-1. Envoie un message invalide (JSON cassé, ou `amount` négatif).
-2. Observe les retries avec backoff dans les logs, puis le message dans `orders.created.DLT` (Kafka UI).
-3. Corrige, puis rejoue le message depuis la DLT.
+### 8.2 Lab 6 — at-least-once
+
+**Exercice** : [Lab 6 — At-least-once et idempotence](./appendices/exercises/lab-06-at-least-once.md)
+
+Tu codes le **skip**, puis reset d’offset → 2ᵉ livraison → log Skipping + une seule ligne DB.
+
+### 8.3 Lab 7 — retries et DLT
+
+**Exercice** : [Lab 7 — Retries et DLT](./appendices/exercises/lab-07-retries-dlt.md)
+
+Poison (`amount` négatif via produce Kafka, ou JSON cassé) → retries → `orders.created.DLT`.
+
+**Étape 8 ok** : Lab 6 (rejeu bash + idempotence) + Lab 7 (DLT observée).
 
 ---
 

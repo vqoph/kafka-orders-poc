@@ -16,6 +16,8 @@ Compléments au [tutoriel](../TUTORIAL.md) : lectures de fond et exercices hors 
 - [Lab 3 — Saga chorégraphiée](./exercises/lab-03-saga-choreography.md) — cité depuis l’[étape 6](../TUTORIAL.md#étape-6--inventory-service-et-saga-chorégraphie).
 - [Lab 4 — Liste paiements + Stock CRUD](./exercises/lab-04-stock-payment-rest.md) — Partie A [étape 5](../TUTORIAL.md#étape-5--payment-service-et-lab-2), Partie B [étape 6](../TUTORIAL.md#étape-6--inventory-service-et-saga-chorégraphie).
 - [Lab 5 — Notification SSE](./exercises/lab-05-notification-sse.md) — Kafka → Redis → SSE ; cité depuis l’[étape 7](../TUTORIAL.md#étape-7--notification-service-sse--invalidation-rtk) (Partie C = multi-instance).
+- [Lab 6 — At-least-once et idempotence](./exercises/lab-06-at-least-once.md) — cité depuis l’[étape 8](../TUTORIAL.md#étape-8--fiabilité-labs-6-et-7).
+- [Lab 7 — Retries et DLT](./exercises/lab-07-retries-dlt.md) — cité depuis l’[étape 8](../TUTORIAL.md#étape-8--fiabilité-labs-6-et-7).
 
 ## Sources
 
