@@ -25,8 +25,7 @@ public class PaymentService {
     public PaymentService(
             PaymentDecision paymentDecision,
             PaymentRepository paymentRepository,
-            PaymentEventPublisher paymentEventPublisher
-    ) {
+            PaymentEventPublisher paymentEventPublisher) {
         this.paymentDecision = paymentDecision;
         this.paymentRepository = paymentRepository;
         this.paymentEventPublisher = paymentEventPublisher;
@@ -38,19 +37,7 @@ public class PaymentService {
             throw new IllegalArgumentException("Payment rejected: negative amount for orderId=" + order.orderId());
         }
 
-        /*
-         * ## Lab 6 — idempotent skip (à coder)
-         *
-         * DB already has UNIQUE(order_id). On Kafka redelivery, skip if already processed:
-         *
-         * if (paymentRepository.existsByOrderId(order.orderId())) {
-         *     log.info("Skipping already processed payment orderId={}", order.orderId());
-         *     return;
-         * }
-         *
-         * See doc/fr/appendices/exercises/lab-06-at-least-once.md
-         */
-        // TODO Lab 6
+        // TODO Lab 6 — idempotent skip on redelivery (see lab-06-at-least-once.md)
 
         boolean success = paymentDecision.decideSuccess();
 

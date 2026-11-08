@@ -31,8 +31,7 @@ public class InventoryService {
             InventoryReservation inventoryReservation,
             ReservationRepository reservationRepository,
             StockRepository stockRepository,
-            InventoryEventPublisher inventoryEventPublisher
-    ) {
+            InventoryEventPublisher inventoryEventPublisher) {
         this.inventoryReservation = inventoryReservation;
         this.reservationRepository = reservationRepository;
         this.stockRepository = stockRepository;
@@ -46,27 +45,14 @@ public class InventoryService {
                     "Inventory rejected: negative amount for orderId=" + order.orderId());
         }
 
-        /*
-         * ## Lab 6 — idempotent skip (à coder)
-         *
-         * DB already has UNIQUE(order_id). On Kafka redelivery, skip if already processed:
-         *
-         * if (reservationRepository.existsByOrderId(order.orderId())) {
-         *     log.info("Skipping already processed inventory orderId={}", order.orderId());
-         *     return;
-         * }
-         *
-         * See doc/fr/appendices/exercises/lab-06-at-least-once.md
-         */
-        // TODO Lab 6
+        // TODO Lab 6 — idempotent skip on redelivery (see lab-06-at-least-once.md)
 
         Reservation reservation = inventoryReservation.reserve(order);
         inventoryEventPublisher.publishReserved(reservation);
         log.info(
                 "Processed inventory orderId={} success={}",
                 order.orderId(),
-                reservation.isSuccess()
-        );
+                reservation.isSuccess());
     }
 
     @Transactional
@@ -82,7 +68,6 @@ public class InventoryService {
                             }
                             log.info("Released inventory for orderId={}", event.orderId());
                         },
-                        () -> log.warn("No successful reservation to release for orderId={}", event.orderId())
-                );
+                        () -> log.warn("No successful reservation to release for orderId={}", event.orderId()));
     }
 }

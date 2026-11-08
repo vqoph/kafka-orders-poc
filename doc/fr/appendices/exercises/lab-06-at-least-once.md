@@ -39,14 +39,11 @@ Alternative générique (lecture) : table `processed_events(event_id)`.
 
 Dans chaque `processOrderCreated`, **avant** decide / reserve :
 
-```java
-if (…Repository.existsByOrderId(order.orderId())) {
-    log.info("Skipping already processed … orderId={}", order.orderId());
-    return;
-}
-```
+1. Détecter si cet `orderId` a **déjà** une ligne en base (repo : `existsByOrderId`).
+2. Si oui : logger et `return` (pas de 2ᵉ insert / publish).
+3. Sinon : laisser le flux actuel.
 
-Les deux services (payment + inventory).
+À faire dans **payment** et **inventory**.
 
 ---
 
