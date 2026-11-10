@@ -16,12 +16,10 @@ import java.util.function.Function;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 /**
  * Stock reservation rule for an {@link OrderCreated} event.
- * Failure rate is mutable at runtime via chaos API.
  * See doc/fr/appendices/exercises/lab-03-saga-choreography.md
  */
 @Component
@@ -29,27 +27,20 @@ public class InventoryReservation {
 
     private final StockRepository stockRepository;
     private final ReservationRepository reservationRepository;
-    private volatile double failureRate;
     private final Logger log = Logger.getLogger(InventoryReservation.class.getName());
 
     public InventoryReservation(
             StockRepository stockRepository,
-            ReservationRepository reservationRepository,
-            @Value("${inventory.failure-rate}") double failureRate) {
+            ReservationRepository reservationRepository) {
         this.stockRepository = stockRepository;
         this.reservationRepository = reservationRepository;
-        this.failureRate = failureRate;
     }
 
     /**
      * Reserves stock for each line item, or records a failed reservation when stock
-     * is insufficient or chaos failure applies.
+     * is insufficient or the SKU is unknown.
      */
     public Reservation reserve(OrderCreated order) {
-        if (failureRate > 0 && Math.random() < failureRate) {
-            return failReservation(order, "Inventory reservation failed");
-        }
-
         // Defense in depth: merge qty by SKU
         Map<String, Integer> qtyBySku = order.items().stream()
                 .collect(Collectors.toMap(
@@ -85,17 +76,6 @@ public class InventoryReservation {
         reservationRepository.save(reservation);
 
         return reservation;
-    }
-
-    public double getFailureRate() {
-        return failureRate;
-    }
-
-    public void setFailureRate(double failureRate) {
-        if (failureRate < 0.0 || failureRate > 1.0) {
-            throw new IllegalArgumentException("failure rate must be between 0.0 and 1.0");
-        }
-        this.failureRate = failureRate;
     }
 
     private Reservation failReservation(OrderCreated order, String failureReason) {

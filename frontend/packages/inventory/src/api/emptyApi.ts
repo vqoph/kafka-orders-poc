@@ -5,6 +5,6 @@ import { INVENTORY_API_BASE_URL } from '@poc/shared';
 export const emptySplitApi = createApi({
   reducerPath: 'inventoryApi',
   baseQuery: fetchBaseQuery({ baseUrl: INVENTORY_API_BASE_URL }),
-  tagTypes: ['Stock', 'Chaos'],
+  tagTypes: ['Stock'],
   endpoints: () => ({}),
 });

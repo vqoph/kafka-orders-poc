@@ -7,8 +7,7 @@ Exercice **réparti** sur deux étapes du tutoriel (pas une étape dédiée) :
 | **A** — liste paiements | [Étape 5](../../TUTORIAL.md#étape-5--payment-service-et-lab-2) (après Lab 2) | payment-service |
 | **B** — CRUD stock | [Étape 6](../../TUTORIAL.md#étape-6--inventory-service-et-saga-chorégraphie) (avant Lab 3 saga) | inventory-service |
 
-But : consolider **Spring Web + JPA + validation** hors Kafka (renforce Lab 0), au moment où chaque service existe déjà.  
-Le chaos **payment** reste l’outil de démo saga ; le chaos **inventory** n’est pas l’exercice REST (curl optionnel seulement).
+But : consolider **Spring Web + JPA + validation** hors Kafka (renforce Lab 0), au moment où chaque service existe déjà.
 
 Fichiers à compléter (cherche `TODO Lab 4`) :
 
@@ -68,8 +67,7 @@ curl -s -o /dev/null -w "%{http_code}\n" \
 
 ## Partie B — CRUD stock (étape 6)
 
-À faire **avant** le Lab 3 (saga) : tu gères le catalogue que la réservation va consommer.  
-Pas d’exercice chaos inventory ici — le chaos inventory reste un curl optionnel pour forcer un échec sans vider le stock.
+À faire **avant** le Lab 3 (saga) : tu gères le catalogue que la réservation va consommer.
 
 ### B.1 `StockService.create`
 

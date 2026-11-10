@@ -1,7 +1,7 @@
 export type PocEventMap = {
   'poc:order-created': { orderId: string };
   'poc:order-selected': { orderId: string };
-  'poc:chaos-updated': { service: 'payment' | 'inventory'; rate: number };
+  'poc:chaos-updated': { service: 'payment'; rate: number };
 };
 
 type EventName = keyof PocEventMap;

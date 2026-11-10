@@ -37,10 +37,6 @@ spring:
       properties:
         spring.json.add.type.headers: true
 
-# Simulated reservation failures (0.0 = never force KO; stock rules still apply).
-inventory:
-  failure-rate: 0.0
-
 management:
   endpoints:
     web:

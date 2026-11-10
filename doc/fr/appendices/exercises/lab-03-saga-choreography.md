@@ -10,7 +10,7 @@ Fichiers à compléter une fois le boilerplate posé (cherche `TODO Lab 3` / com
 
 Helpers utiles sur `Order` : `hasBothSagaResults()`, `hasBothSagaSuccess()`, `confirm()`, `cancel()`.
 
-Le boilerplate (events, Flyway, topics, listeners, publishers, refund/release, chaos `/chaos/failure-rate`) est **posé par l’assistant**.
+Le boilerplate (events, Flyway, topics, listeners, publishers, refund/release, chaos paiement `PUT /chaos/failure-rate` sur 8082) est **posé par l’assistant**.
 
 ## Prérequis
 
@@ -65,7 +65,6 @@ Si **les deux** OK → `CONFIRMED`, **aucune** compensation.
 
 - SKU seed **`SKU-001`** (voir Flyway inventory) — les curls du tuto utilisent `"sku":"SKU-001"`.
 - Garde le traitement dans une `@Transactional` (décrément + insert reservation atomiques).
-- Chaos optionnel : si `inventory.failure-rate` > 0, tu peux forcer un échec **après** ou **à la place** de la règle stock (selon ce que le boilerplate expose).
 
 ### A.2 Agrégation saga (order-service)
 

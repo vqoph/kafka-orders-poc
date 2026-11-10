@@ -536,8 +536,7 @@ public record OrderStatusChanged(UUID orderId, String status, Instant changedAt)
 - Topics `NewTopic` : `inventory.reserved`, `inventory.release.requested` (**3 partitions**)
 - Listener mince `orders.created` → réserve → persist → publish `InventoryReserved` (clé = `orderId`)
 - Listener `inventory.release.requested` → remet le stock (compensation)
-- REST catalogue : `GET /stock` déjà là ; stubs `TODO Lab 4` pour `POST` / `PUT` / `DELETE` (`StockService`) — **c’est l’exercice REST de ce service** (pas le chaos)
-- Chaos inventory (`inventory.failure-rate` + `PUT /chaos/failure-rate`) : **optionnel** (curl) pour forcer un échec sans vider le stock — le chaos UI / démo saga reste surtout **payment**
+- REST catalogue : `GET /stock` déjà là ; stubs `TODO Lab 4` pour `POST` / `PUT` / `DELETE` (`StockService`) — **c’est l’exercice REST de ce service**
 
 ### 6.3 Lab 4 partie B — CRUD stock (REST)
 
@@ -563,7 +562,7 @@ Boilerplate :
 
 **À coder (Lab 3)** — chemins :
 
-1. [`InventoryReservation.reserve`](../../backend/services/inventory-service/src/main/java/com/example/orders/inventory/InventoryReservation.java) — stock / merge défensif par SKU / `failureRate`
+1. [`InventoryReservation.reserve`](../../backend/services/inventory-service/src/main/java/com/example/orders/inventory/InventoryReservation.java) — stock / merge défensif par SKU / échec si SKU inconnu ou quantité insuffisante
 2. [`SagaService.tryComplete`](../../backend/services/order-service/src/main/java/com/example/orders/order/saga/SagaService.java) — agrégation (`hasBothSagaResults` / `hasBothSagaSuccess` + compensations)
 
 ### 6.6 Exercice saga (à coder + observer)
@@ -715,7 +714,7 @@ Nav cible : **Commandes** → **Stocks** (CRUD catalogue, Lab 4 B) → **Paiemen
 cd frontend && npm run fetch:openapi && npm run generate:api
 ```
 
-Le chaos panel **payment** appelle `PUT /chaos/failure-rate` (8082). Inventory chaos reste via curl (8085) si besoin — pas exposé au front Stocks.
+Le chaos panel **payment** appelle `PUT /chaos/failure-rate` (8082).
 
 ---
 
@@ -795,7 +794,6 @@ mvn -f backend/pom.xml -pl services/order-service spring-boot:run
 # Chaos (sans restart)
 curl -s localhost:8082/chaos/failure-rate
 curl -s -X PUT localhost:8082/chaos/failure-rate -H 'content-type: application/json' -d '{"rate":1.0}'
-curl -s -X PUT localhost:8085/chaos/failure-rate -H 'content-type: application/json' -d '{"rate":0.5}'
 
 # Kafka
 docker compose exec kafka /opt/kafka/bin/kafka-topics.sh --bootstrap-server kafka:9092 --list

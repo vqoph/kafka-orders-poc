@@ -18,12 +18,6 @@ export const inventoryApi = generatedApi.enhanceEndpoints({
     deleteStock: {
       invalidatesTags: ['Stock'],
     },
-    getInventoryFailureRate: {
-      providesTags: ['Chaos'],
-    },
-    setInventoryFailureRate: {
-      invalidatesTags: ['Chaos'],
-    },
   },
 });
 
@@ -33,6 +27,4 @@ export const {
   useCreateStockMutation,
   useUpdateStockMutation,
   useDeleteStockMutation,
-  useGetInventoryFailureRateQuery,
-  useSetInventoryFailureRateMutation,
 } = inventoryApi;

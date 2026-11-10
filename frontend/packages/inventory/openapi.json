@@ -100,54 +100,6 @@
         }
       }
     },
-    "/chaos/failure-rate": {
-      "get": {
-        "tags": [
-          "chaos-controller"
-        ],
-        "operationId": "getInventoryFailureRate",
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/FailureRateResponse"
-                }
-              }
-            }
-          }
-        }
-      },
-      "put": {
-        "tags": [
-          "chaos-controller"
-        ],
-        "operationId": "setInventoryFailureRate",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/FailureRateRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/FailureRateResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/stock": {
       "get": {
         "tags": [
@@ -229,32 +181,6 @@
         "required": [
           "quantity",
           "sku"
-        ]
-      },
-      "FailureRateRequest": {
-        "type": "object",
-        "properties": {
-          "rate": {
-            "type": "number",
-            "format": "double",
-            "maximum": 1,
-            "minimum": 0
-          }
-        },
-        "required": [
-          "rate"
-        ]
-      },
-      "FailureRateResponse": {
-        "type": "object",
-        "properties": {
-          "rate": {
-            "type": "number",
-            "format": "double"
-          }
-        },
-        "required": [
-          "rate"
         ]
       },
       "CreateStockRequest": {

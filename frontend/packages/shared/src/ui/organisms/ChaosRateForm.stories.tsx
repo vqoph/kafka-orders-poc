@@ -31,8 +31,8 @@ export const Default: Story = {
 
 export const Loading: Story = {
   args: {
-    title: 'Inventory chaos',
-    description: 'Artificial failure rate for inventory-service (0–1).',
+    title: 'Payment chaos',
+    description: 'Control the artificial failure rate (0 = none, 1 = always fail).',
     value: '0',
     onChange: () => undefined,
     onSubmit: () => undefined,
