@@ -42,8 +42,8 @@ export default function App() {
                 {t('nav.payment')}
               </NavLink>
             </nav>
-            <NotificationBell />
             <LanguageSwitcher />
+            <NotificationBell />
             <ThemeSwitcher />
           </div>
         </div>
