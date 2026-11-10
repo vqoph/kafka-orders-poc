@@ -20,7 +20,6 @@ ENV ORDERS_API_BASE_URL=/api/orders \
 RUN MF_PUBLIC_PATH=/mf/orders/ npm run build -w @poc/orders \
  && MF_PUBLIC_PATH=/mf/payment/ npm run build -w @poc/payment \
  && MF_PUBLIC_PATH=/mf/inventory/ npm run build -w @poc/inventory \
- && MF_PUBLIC_PATH=/mf/notification/ npm run build -w @poc/notification \
  && MF_PUBLIC_PATH=/ npm run build -w @poc/shell
 
 FROM nginx:1.27-alpine AS runtime
@@ -29,7 +28,6 @@ COPY --from=build /app/packages/shell/dist/ /usr/share/nginx/html/
 COPY --from=build /app/packages/orders/dist/ /usr/share/nginx/html/mf/orders/
 COPY --from=build /app/packages/payment/dist/ /usr/share/nginx/html/mf/payment/
 COPY --from=build /app/packages/inventory/dist/ /usr/share/nginx/html/mf/inventory/
-COPY --from=build /app/packages/notification/dist/ /usr/share/nginx/html/mf/notification/
 
 EXPOSE 80
 HEALTHCHECK --interval=10s --timeout=3s --retries=5 \

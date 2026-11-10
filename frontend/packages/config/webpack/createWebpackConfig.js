@@ -18,7 +18,6 @@ const SAME_ORIGIN_REMOTES = {
   orders: "orders@/mf/orders/remoteEntry.js",
   payment: "payment@/mf/payment/remoteEntry.js",
   inventory: "inventory@/mf/inventory/remoteEntry.js",
-  notification: "notification@/mf/notification/remoteEntry.js",
 };
 
 function loadFrontendEnv() {

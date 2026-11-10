@@ -14,5 +14,5 @@ if [[ ! -d node_modules ]]; then
   echo "node_modules missing — running npm install"
   npm install
 fi
-echo "Starting MF apps via turbo (shell :5000, remotes :5001-5004)"
+echo "Starting MF apps via turbo (shell :5000, remotes :5001-5003)"
 npm run dev

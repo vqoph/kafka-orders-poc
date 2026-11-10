@@ -2,12 +2,12 @@ import { lazy } from 'react';
 import { NavLink, Navigate, Route, Routes } from 'react-router-dom';
 import { clsx } from 'clsx';
 import { LanguageSwitcher, ThemeSwitcher, useTranslation } from '@poc/shared';
+import { NotificationBell } from './components/NotificationBell';
 import { RemoteOutlet } from './components/RemoteOutlet';
 
 const OrdersApp = lazy(() => import('orders/App'));
 const PaymentApp = lazy(() => import('payment/App'));
 const InventoryApp = lazy(() => import('inventory/App'));
-const NotificationApp = lazy(() => import('notification/App'));
 
 const navClass = ({ isActive }: { isActive: boolean }) =>
   clsx(
@@ -42,6 +42,7 @@ export default function App() {
                 {t('nav.payment')}
               </NavLink>
             </nav>
+            <NotificationBell />
             <LanguageSwitcher />
             <ThemeSwitcher />
           </div>
@@ -62,10 +63,6 @@ export default function App() {
           <Route
             path="/payment/*"
             element={<RemoteOutlet name="payment" remote={PaymentApp} />}
-          />
-          <Route
-            path="/notifications/*"
-            element={<RemoteOutlet name="notification" remote={NotificationApp} />}
           />
           <Route
             path="*"

@@ -5,7 +5,7 @@ import java.time.Instant;
 import java.util.UUID;
 
 /**
- * Payload pushed on the SSE stream and returned by {@code GET /notifications}.
+ * Payload pushed on the SSE stream.
  * {@code type} is the discriminant used by the front (RTK tag invalidation).
  */
 @Schema(requiredProperties = {"type", "message", "at"})

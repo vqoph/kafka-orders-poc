@@ -4,17 +4,14 @@ import com.example.orders.notification.sse.SseHub;
 import io.swagger.v3.oas.annotations.Operation;
 import java.io.IOException;
 import java.time.Instant;
-import java.util.List;
-import java.util.UUID;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 /**
- * SSE stream for the UI and history list endpoint.
+ * SSE stream for the UI.
  * Domain events reach the hub via Kafka listeners — not via HTTP publish.
  * See doc/fr/appendices/exercises/lab-05-notification-sse.md
  */
@@ -45,12 +42,5 @@ public class NotificationController {
             emitter.completeWithError(ex);
         }
         return emitter;
-    }
-
-    @GetMapping
-    @Operation(operationId = "listNotifications")
-    public List<NotificationEvent> list(@RequestParam(required = false) UUID orderId) {
-        // No persistence yet; returns an empty list.
-        return List.of();
     }
 }

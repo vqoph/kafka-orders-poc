@@ -1,12 +1,9 @@
 {
   "title": "Notifications",
-  "subtitle": "Live SSE stream plus optional order filter.",
+  "subtitle": "Ephemeral list for the current session (live SSE, nothing persisted).",
   "sseConnected": "SSE connected",
   "sseDisconnected": "SSE disconnected",
-  "filterLabel": "Filter by order id",
-  "filterPlaceholder": "optional",
-  "loadFailed": "Failed to load notifications",
-  "empty": "No notifications yet.",
+  "empty": "No notifications for this session. Create an order to receive live events.",
   "outcomeOk": "success",
   "outcomeKo": "failed"
 }

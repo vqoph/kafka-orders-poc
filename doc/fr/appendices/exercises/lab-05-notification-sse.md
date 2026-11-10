@@ -19,17 +19,13 @@ Le boilerplate (Kafka config `group-id=notification-service`, Redis fan-out, COR
 - Build : `mvn -f backend/pom.xml -pl services/notification-service -am -DskipTests install`
 - Run : `./scripts/backend-run.sh` (ou au moins order + payment + inventory + notification).
 
-
-
 ## Contexte (à lire avant de coder)
-
 
 | Topic                | `NotificationEvent.type` | Effet UI (déjà câblé) |
 | -------------------- | ------------------------ | --------------------- |
 | `orders.status`      | `ORDER_STATUS`           | invalidate `Orders`   |
 | `payments.processed` | `PAYMENT_PROCESSED`      | invalidate `Payments` |
 | `inventory.reserved` | `INVENTORY_RESERVED`     | invalidate `Stock`    |
-
 
 Ce n’est **pas** “Kafka = système de notif interne” : Kafka reste le **journal métier** ; notification-service est un **abonné de plus** (comme payment lit `orders.created`).
 
@@ -40,11 +36,7 @@ Flux runtime : Kafka → listener → `RedisNotificationFanout.publish` → Redi
 
 ---
 
-
-
 ## Partie A — À coder (Java)
-
-
 
 ### A.1 `SseHub.broadcast`
 
@@ -52,8 +44,6 @@ Pour chaque emitter enregistré :
 
 1. `emitter.send(SseEmitter.event().name(SseHub.EVENT_NAME).data(event))`
 2. Sur `IOException` : retirer l’emitter + `completeWithError`
-
-
 
 ### A.2 Listeners
 
@@ -64,18 +54,14 @@ Champ `success` (`Boolean`, nullable) : `event.success()` pour paiement / stock 
 
 ---
 
-
-
 ## Partie B — Observer (1 instance)
 
 1. Terminal : `curl -N localhost:8084/notifications/stream` → event `connected`.
 2. `POST localhost:8081/orders` (SKU seed) → dans le curl : events `notification` avec types `PAYMENT_PROCESSED`, `INVENTORY_RESERVED`, puis `ORDER_STATUS`.
 3. Kafka UI : même messages visibles sur les topics ; consumer group `notification-service` avance.
-4. Front (`./scripts/frontend-dev.sh`) : listes Commandes / Stocks / Paiements se rafraîchissent **sans** bouton Refresh ; feed Notifications reçoit les messages.
+4. Front (`./scripts/frontend-dev.sh`) : listes Commandes / Stocks / Paiements se rafraîchissent; la cloche du shell (popover) reçoit les messages (liste éphémère de session).
 
 ---
-
-
 
 ## Partie C — Observer multi-instance (Redis)
 

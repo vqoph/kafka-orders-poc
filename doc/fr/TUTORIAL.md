@@ -48,7 +48,7 @@ Browser / microfronts --REST/SSE--> order / payment / inventory / notification
 - Spring Kafka, Spring Web, Spring Data JPA, Flyway, springdoc-openapi, Actuator.
 - Sérialisation Kafka : `JacksonJsonSerializer` / `JacksonJsonDeserializer` (Jackson **3**, Boot 4 — pas les `Json`\* Jackson 2).
 - Kafka en KRaft (image `apache/kafka`, pas de Zookeeper) + Kafka UI + Postgres (une base par service) + Redis (Pub/Sub fan-out SSE, étape 7).
-- Front (hors parcours Kafka) : microfrontends sous `frontend/` (shell + remotes, ports 5000–5004), OpenAPI → RTK Query.
+- Front (hors parcours Kafka) : microfrontends sous `frontend/` (shell + remotes, ports 5000–5003), OpenAPI → RTK Query ; cloche notifications dans le shell (popover SSE).
 - Scripts racine : `./scripts/backend-build.sh`, `./scripts/backend-run.sh`, `./scripts/frontend-dev.sh`.
 - Tests : JUnit 5 + Testcontainers (peu, ciblés).
 
@@ -610,7 +610,7 @@ Nouvelle commande → `CANCELLED` + `inventory.release.requested`.
 
 - Dep `libs/events` ; Kafka `localhost:29092` ; `JacksonJsonDeserializer` + `trusted.packages`
 - Redis (`localhost:6379`) + `RedisNotificationFanout` (PUBLISH / SUBSCRIBE canal `notifications.sse`) → `SseHub.broadcast`
-- `SseHub` (registre emitters) + `NotificationController` (`GET /stream`, list stub ; event `CONNECTED` **local**, pas Redis)
+- `SseHub` (registre emitters) + `NotificationController` (`GET /stream` only ; event `CONNECTED` **local**, pas Redis)
 - 3 listeners mince + stubs **`TODO Lab 5`** (map event → `fanout.publish`)
 - Front : singleton `subscribeNotificationStream` (`@poc/shared`) + hooks `invalidateTags` par remote
 
@@ -817,4 +817,4 @@ docker compose exec kafka /opt/kafka/bin/kafka-console-consumer.sh \
 | payment-service          | 8082      |
 | notification-service     | 8084      |
 | inventory-service        | 8085      |
-| frontend shell / remotes | 5000–5004 |
+| frontend shell / remotes | 5000–5003 |

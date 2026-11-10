@@ -21,11 +21,6 @@ const SERVICES = [
     out: join(ROOT, 'packages/payment/openapi.json'),
   },
   {
-    name: 'notification',
-    env: 'NOTIFICATION_OPENAPI_URL',
-    out: join(ROOT, 'packages/notification/openapi.json'),
-  },
-  {
     name: 'inventory',
     env: 'INVENTORY_OPENAPI_URL',
     out: join(ROOT, 'packages/inventory/openapi.json'),
