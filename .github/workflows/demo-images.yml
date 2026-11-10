@@ -102,3 +102,34 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha,scope=frontend
           cache-to: type=gha,mode=max,scope=frontend
+
+  # Pull GHCR :latest on the VPS and recreate the sandbox if it is running.
+  # Secrets/vars: SSH_PRIVATE_KEY, DEPLOY_USER, DEPLOY_HOST (same as personal-vps).
+  rollout:
+    name: Rollout on VPS
+    needs: [backend-images, frontend-image]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Pull and recreate sandbox
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ vars.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script_stop: true
+          script: |
+            set -euo pipefail
+            DIR=/opt/qoph/sandbox/kafka-orders
+            cd "$DIR"
+            echo "==> docker compose pull"
+            docker compose -f docker-compose.demo.yml pull
+            RUNNING="$(docker compose -f docker-compose.demo.yml ps -q 2>/dev/null || true)"
+            if [ -n "$RUNNING" ]; then
+              echo "==> stack running — force-recreate"
+              docker compose -f docker-compose.demo.yml up -d --force-recreate --remove-orphans
+              if command -v qoph-sandbox-ctl >/dev/null 2>&1; then
+                qoph-sandbox-ctl wake kafka-orders || true
+              fi
+            else
+              echo "==> stack stopped — images updated; next wake will start them"
+            fi
