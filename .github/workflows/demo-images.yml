@@ -13,23 +13,96 @@ on:
 permissions:
   contents: read
   packages: write
+  pull-requests: read
 
 env:
   REGISTRY: ghcr.io
   OWNER: vqoph
 
 jobs:
+  changes:
+    name: Detect changes
+    runs-on: ubuntu-latest
+    outputs:
+      services: ${{ steps.select.outputs.services }}
+      frontend: ${{ steps.select.outputs.frontend }}
+      any: ${{ steps.select.outputs.any }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Path filter
+        id: filter
+        if: github.event_name != 'workflow_dispatch'
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            backend_shared:
+              - 'backend/pom.xml'
+              - 'backend/libs/**'
+              - 'backend/docker/**'
+              - 'backend/.dockerignore'
+              - 'docker-compose.demo.yml'
+              - '.github/workflows/demo-images.yml'
+            order:
+              - 'backend/services/order-service/**'
+            payment:
+              - 'backend/services/payment-service/**'
+            inventory:
+              - 'backend/services/inventory-service/**'
+            notification:
+              - 'backend/services/notification-service/**'
+            frontend:
+              - 'frontend/**'
+
+      - name: Select targets
+        id: select
+        shell: bash
+        run: |
+          set -euo pipefail
+          services=()
+          frontend=false
+
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            services=(order-service payment-service inventory-service notification-service)
+            frontend=true
+          else
+            if [[ "${{ steps.filter.outputs.backend_shared }}" == "true" ]]; then
+              services=(order-service payment-service inventory-service notification-service)
+            else
+              [[ "${{ steps.filter.outputs.order }}" == "true" ]] && services+=(order-service)
+              [[ "${{ steps.filter.outputs.payment }}" == "true" ]] && services+=(payment-service)
+              [[ "${{ steps.filter.outputs.inventory }}" == "true" ]] && services+=(inventory-service)
+              [[ "${{ steps.filter.outputs.notification }}" == "true" ]] && services+=(notification-service)
+            fi
+            [[ "${{ steps.filter.outputs.frontend }}" == "true" ]] && frontend=true
+          fi
+
+          if [[ ${#services[@]} -eq 0 ]]; then
+            services_json='[]'
+          else
+            services_json="$(printf '%s\n' "${services[@]}" | jq -R . | jq -s -c .)"
+          fi
+
+          any=false
+          if [[ "$services_json" != "[]" || "$frontend" == "true" ]]; then
+            any=true
+          fi
+
+          echo "services=$services_json" >> "$GITHUB_OUTPUT"
+          echo "frontend=$frontend" >> "$GITHUB_OUTPUT"
+          echo "any=$any" >> "$GITHUB_OUTPUT"
+          echo "Selected services=$services_json frontend=$frontend"
+
   backend-images:
     name: Build ${{ matrix.service }}
+    needs: changes
+    if: needs.changes.outputs.services != '[]'
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        service:
-          - order-service
-          - payment-service
-          - inventory-service
-          - notification-service
+        service: ${{ fromJson(needs.changes.outputs.services) }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -68,6 +141,8 @@ jobs:
 
   frontend-image:
     name: Build frontend
+    needs: changes
+    if: needs.changes.outputs.frontend == 'true'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -107,7 +182,13 @@ jobs:
   # Secrets/vars: SSH_PRIVATE_KEY, DEPLOY_USER, DEPLOY_HOST (same as personal-vps).
   rollout:
     name: Rollout on VPS
-    needs: [backend-images, frontend-image]
+    needs: [changes, backend-images, frontend-image]
+    if: |
+      always()
+      && needs.changes.outputs.any == 'true'
+      && (needs.backend-images.result == 'success' || needs.backend-images.result == 'skipped')
+      && (needs.frontend-image.result == 'success' || needs.frontend-image.result == 'skipped')
+      && (needs.backend-images.result == 'success' || needs.frontend-image.result == 'success')
     runs-on: ubuntu-latest
     steps:
       - name: Pull and recreate sandbox
