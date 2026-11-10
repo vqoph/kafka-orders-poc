@@ -11,7 +11,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Decide → persist → publish (dual-write).
- * Idempotency on {@code orderId}: implement the early skip (Lab 6).
+ * Idempotent on {@code orderId}: skips when a payment already exists.
+ * See doc/fr/appendices/exercises/lab-06-at-least-once.md
  */
 @Service
 public class PaymentService {

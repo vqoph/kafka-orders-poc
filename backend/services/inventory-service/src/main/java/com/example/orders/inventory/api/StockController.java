@@ -18,6 +18,10 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
+/**
+ * REST adapter for the stock catalog.
+ * See doc/fr/appendices/exercises/lab-04-stock-payment-rest.md
+ */
 @RestController
 @RequestMapping("/stock")
 public class StockController {
@@ -46,7 +50,7 @@ public class StockController {
         return StockResponse.from(stock);
     }
 
-    /** Lab 4 — create; returns 201. Body of {@link StockService#create} is yours to implement. */
+    /** Creates a stock row; returns 201. */
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     @Operation(operationId = "createStock")
@@ -54,7 +58,7 @@ public class StockController {
         return stockService.create(request);
     }
 
-    /** Lab 4 — update quantity. Body of {@link StockService#update} is yours to implement. */
+    /** Updates quantity for an existing SKU. */
     @PutMapping("/{sku}")
     @Operation(operationId = "updateStock")
     public StockResponse update(
@@ -62,7 +66,7 @@ public class StockController {
         return stockService.update(sku, request);
     }
 
-    /** Lab 4 — delete; returns 204. Body of {@link StockService#delete} is yours to implement. */
+    /** Deletes a stock row; returns 204. */
     @DeleteMapping("/{sku}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @Operation(operationId = "deleteStock")

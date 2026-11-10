@@ -36,7 +36,7 @@ spring:
       # Boot 4 / Jackson 3 — not the deprecated JsonSerializer (Jackson 2).
       value-serializer: org.springframework.kafka.support.serializer.JacksonJsonSerializer
       properties:
-        # Include Java type in headers (handy in one service; fragile across services — lab 8).
+        # Include Java type in headers (handy in one service; fragile across services).
         spring.json.add.type.headers: true
 
 management:

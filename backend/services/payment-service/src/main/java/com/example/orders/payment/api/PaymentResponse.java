@@ -7,8 +7,8 @@ import java.time.Instant;
 import java.util.UUID;
 
 /**
- * HTTP DTO for a payment row (Lab 4). Keep separate from the JPA
- * {@link Payment} entity.
+ * HTTP DTO for a payment row. Keep separate from the JPA {@link Payment} entity.
+ * See doc/fr/appendices/exercises/lab-04-stock-payment-rest.md
  */
 @Schema(requiredProperties = { "id", "orderId", "amount", "success", "processedAt" })
 public record PaymentResponse(

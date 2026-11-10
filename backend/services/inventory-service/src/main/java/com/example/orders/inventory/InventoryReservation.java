@@ -20,8 +20,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 /**
- * Lab 3 — stock reservation rule ({@link #reserve(OrderCreated)}).
+ * Stock reservation rule for an {@link OrderCreated} event.
  * Failure rate is mutable at runtime via chaos API.
+ * See doc/fr/appendices/exercises/lab-03-saga-choreography.md
  */
 @Component
 public class InventoryReservation {
@@ -40,22 +41,11 @@ public class InventoryReservation {
         this.failureRate = failureRate;
     }
 
-    /*
-     * ## Lab 3 — reserve stock (à coder)
-     *
-     * For each OrderCreated item: enough stock? If not → save Reservation(orderId,
-     * false, empty)
-     * and return. If yes for all: decrement each SKU, save Reservation(orderId,
-     * true, items).
-     * Optional: if failureRate > 0 && Math.random() < failureRate → fail without
-     * decrementing.
-     *
-     * See doc/fr/appendices/exercises/lab-03-saga-choreography.md (A.1).
+    /**
+     * Reserves stock for each line item, or records a failed reservation when stock
+     * is insufficient or chaos failure applies.
      */
-
     public Reservation reserve(OrderCreated order) {
-        // If the failure rate is greater than 0 and the random number is less than the
-        // failure rate, return a failed reservation
         if (failureRate > 0 && Math.random() < failureRate) {
             return failReservation(order, "Inventory reservation failed");
         }
@@ -113,8 +103,7 @@ public class InventoryReservation {
                 order.orderId(),
                 false,
                 Collections.emptyList(),
-                failureReason
-        );
+                failureReason);
         reservationRepository.save(reservation);
         log.info("Failed reservation for orderId=" + order.orderId() + " reason=" + failureReason);
         return reservation;

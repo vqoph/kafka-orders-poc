@@ -14,7 +14,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * Lab 3 — saga aggregation ({@link #tryComplete(Order)}).
+ * Aggregates payment and inventory results, then confirms or cancels the order.
+ * See doc/fr/appendices/exercises/lab-03-saga-choreography.md
  */
 @Service
 public class SagaService {
@@ -49,9 +50,7 @@ public class SagaService {
         tryComplete(order);
     }
 
-    /*
-     * ## Lab 3 — tryComplete (à coder)
-     */
+    /** Completes the saga once both payment and inventory results are recorded. */
     private void tryComplete(Order order) {
         if (order.getStatus() != OrderStatus.PENDING || !order.hasBothSagaResults()) {
             return;

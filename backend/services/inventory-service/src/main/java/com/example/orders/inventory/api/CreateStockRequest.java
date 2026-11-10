@@ -5,7 +5,10 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
-/** Incoming JSON for {@code POST /stock} (Lab 4). */
+/**
+ * Incoming JSON for {@code POST /stock}.
+ * See doc/fr/appendices/exercises/lab-04-stock-payment-rest.md
+ */
 @Schema(requiredProperties = {"sku", "quantity"})
 public record CreateStockRequest(
         @NotBlank String sku,

@@ -11,10 +11,9 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 /**
- * Payment read use-cases (Lab 4). Search {@code TODO Lab 4}.
- * Mirror {@code OrderService#findAll} / {@code findById}.
- * Named differently from {@link com.example.orders.payment.PaymentService}
- * (Kafka processing).
+ * Payment read use-cases. Named differently from
+ * {@link com.example.orders.payment.PaymentService} (Kafka processing).
+ * See doc/fr/appendices/exercises/lab-04-stock-payment-rest.md
  */
 @Service
 public class PaymentQueryService {
@@ -25,19 +24,13 @@ public class PaymentQueryService {
         this.paymentRepository = paymentRepository;
     }
 
-    /**
-     * Paginated list —
-     * {@code paymentRepository.findAll(pageable).map(PaymentResponse::from)}.
-     */
+    /** Paginated list of payments. */
     @Transactional(readOnly = true)
     public Page<PaymentResponse> findAll(Pageable pageable) {
         return paymentRepository.findAll(pageable).map(PaymentResponse::from);
     }
 
-    /**
-     * By id — 404 via {@code ResponseStatusException} if missing, else
-     * {@code PaymentResponse.from}.
-     */
+    /** Payment by id, or 404 if missing. */
     @Transactional(readOnly = true)
     public PaymentResponse findById(UUID id) {
         Payment payment = paymentRepository.findById(id)

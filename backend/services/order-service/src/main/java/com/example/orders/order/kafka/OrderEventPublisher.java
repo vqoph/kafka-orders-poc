@@ -29,8 +29,9 @@ public class OrderEventPublisher {
     }
 
     /**
-     * Lab 1 helper: same payload as {@link #publishOrderCreated(Order)}, but key is chosen
-     * by the caller ({@code null} = no key). Always publish {@link OrderCreated}, never {@link Order}.
+     * Same payload as {@link #publishOrderCreated(Order)}, but key is chosen by the
+     * caller ({@code null} = no key). Always publish {@link OrderCreated}, never {@link Order}.
+     * See doc/fr/appendices/exercises/lab-01-keys-partitions.md
      */
     public void publishOrderCreatedWithKey(Order order, String key) {
         OrderCreated event = toEvent(order);

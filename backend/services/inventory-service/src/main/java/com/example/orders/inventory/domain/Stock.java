@@ -33,7 +33,10 @@ public class Stock {
         return quantity;
     }
 
-    /** Replace absolute quantity (Lab 4 update). Quantity must be {@code >= 0}. */
+    /**
+     * Replace absolute quantity. Quantity must be {@code >= 0}.
+     * See doc/fr/appendices/exercises/lab-04-stock-payment-rest.md
+     */
     public void setQuantity(int quantity) {
         if (quantity < 0) {
             throw new IllegalArgumentException("quantity must be >= 0");

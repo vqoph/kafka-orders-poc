@@ -11,7 +11,7 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 /**
  * In-memory fan-out for SSE clients on this JVM only.
  * Cross-instance fan-out goes through Redis ({@code RedisNotificationFanout}).
- * Lab 5 — implement {@link #broadcast(NotificationEvent)}.
+ * See doc/fr/appendices/exercises/lab-05-notification-sse.md
  */
 @Component
 public class SseHub {
@@ -29,16 +29,7 @@ public class SseHub {
         return emitter;
     }
 
-    /*
-     * ## Lab 5 — broadcast (à coder)
-     *
-     * For each registered emitter:
-     * 1. send an SSE event named {@link #EVENT_NAME} with {@code data = event}
-     * 2. on IOException: remove the emitter and {@code completeWithError}
-     *
-     * Hint: {@code SseEmitter.event().name(EVENT_NAME).data(event)}
-     * See doc/fr/appendices/exercises/lab-05-notification-sse.md
-     */
+    /** Sends the event to every registered emitter; drops failed emitters. */
     public void broadcast(NotificationEvent event) {
         for (SseEmitter emitter : emitters) {
             try {

@@ -13,8 +13,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * REST adapter for payment reads (Lab 4). Chaos stays on {@link ChaosController}.
+ * REST adapter for payment reads. Chaos stays on {@link ChaosController}.
  * Controllers stay thin — logic lives in {@link PaymentQueryService}.
+ * See doc/fr/appendices/exercises/lab-04-stock-payment-rest.md
  */
 @RestController
 @RequestMapping("/payments")

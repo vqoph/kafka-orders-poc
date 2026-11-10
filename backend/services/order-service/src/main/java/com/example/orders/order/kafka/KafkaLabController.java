@@ -13,19 +13,17 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * Tutorial-only endpoints for Lab 1 (keys and partitions).
- * Not part of the business API.
+ * Non-business endpoints to re-publish an order with a chosen Kafka key
+ * (partition / key experiments).
+ * See doc/fr/appendices/exercises/lab-01-keys-partitions.md
  */
 @RestController
 @RequestMapping("/labs/kafka")
 public class KafkaLabController {
 
     /**
-     * Closed set of lab modes (Java equivalent of TS {@code "ORDER_ID" | "NONE"}).
-     * Nested here: fine for a small tutorial controller; extract to its own file if
-     * reused.
-     * Spring binds {@code ?keyMode=} to the enum constant name ({@code ORDER_ID},
-     * {@code NONE}).
+     * Kafka key strategy for republish. Spring binds {@code ?keyMode=} to the
+     * enum constant name ({@code ORDER_ID}, {@code NONE}).
      */
     public enum KeyMode {
         ORDER_ID,
@@ -69,20 +67,7 @@ public class KafkaLabController {
             OrderResponse order) {
     }
 
-    /*
-     * ## Lab 1 — `resolveKey` (à coder si TODO présent)
-     *
-     * Input: `KeyMode` from `?keyMode=ORDER_ID` or `?keyMode=NONE` (Spring converts
-     * the string).
-     * Output: Kafka message key (`String` or `null`).
-     *
-     * | KeyMode | Return |
-     * |-----------|--------------------------------|
-     * | ORDER_ID | `order.getId().toString()` |
-     * | NONE | `null` (publish without a key) |
-     *
-     * Prefer `switch` on the enum (exhaustive — no default needed).
-     */
+    /** Maps {@link KeyMode} to the Kafka message key ({@code null} = no key). */
     String resolveKey(Order order, KeyMode keyMode) {
         return switch (keyMode) {
             case ORDER_ID -> order.getId().toString();

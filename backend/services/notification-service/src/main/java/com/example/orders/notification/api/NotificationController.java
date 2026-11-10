@@ -14,8 +14,9 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 /**
- * SSE stream for the UI + stub history list.
- * Domain events reach the hub via Kafka listeners (Lab 5) — not via HTTP publish.
+ * SSE stream for the UI and history list endpoint.
+ * Domain events reach the hub via Kafka listeners — not via HTTP publish.
+ * See doc/fr/appendices/exercises/lab-05-notification-sse.md
  */
 @RestController
 @RequestMapping("/notifications")
@@ -49,7 +50,7 @@ public class NotificationController {
     @GetMapping
     @Operation(operationId = "listNotifications")
     public List<NotificationEvent> list(@RequestParam(required = false) UUID orderId) {
-        // Stub: no persisted notifications yet.
+        // No persistence yet; returns an empty list.
         return List.of();
     }
 }

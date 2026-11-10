@@ -5,7 +5,8 @@ import org.springframework.stereotype.Component;
 
 /**
  * Decides simulated payment success from {@code payment.failure-rate}.
- * Lab 2 — {@link #decideSuccess()}. Rate is mutable at runtime via chaos API.
+ * Rate is mutable at runtime via chaos API.
+ * See doc/fr/appendices/exercises/lab-02-consumer-groups.md
  */
 @Component
 public class PaymentDecision {
@@ -17,7 +18,7 @@ public class PaymentDecision {
     }
 
     /**
-     * Lab 2 — mock success: {@code Math.random() >= failureRate}
+     * Mock success: {@code Math.random() >= failureRate}
      * ({@code 0.0} = always OK, {@code 1.0} = always KO).
      */
     public boolean decideSuccess() {

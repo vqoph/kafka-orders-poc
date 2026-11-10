@@ -11,7 +11,8 @@ import org.springframework.stereotype.Component;
 
 /**
  * Consumes {@code inventory.reserved} — drives Stock list refresh on the UI.
- * Lab 5 — map to NotificationEvent and publish to Redis fan-out.
+ * Maps to {@link NotificationEvent} and publishes to Redis fan-out.
+ * See doc/fr/appendices/exercises/lab-05-notification-sse.md
  */
 @Component
 public class InventoryReservedListener {

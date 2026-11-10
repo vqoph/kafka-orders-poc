@@ -15,7 +15,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Reserve stock for orders.
- * Idempotency on {@code orderId}: implement the early skip (Lab 6).
+ * Idempotent on {@code orderId}: skips when a reservation already exists.
+ * See doc/fr/appendices/exercises/lab-06-at-least-once.md
  */
 @Service
 public class InventoryService {

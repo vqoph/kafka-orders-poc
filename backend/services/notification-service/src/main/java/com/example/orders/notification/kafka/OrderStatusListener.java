@@ -12,7 +12,8 @@ import org.springframework.stereotype.Component;
 /**
  * Consumes {@code orders.status} in group {@code notification-service}
  * (separate from {@code order-service} — each group sees the full stream).
- * Lab 5 — map to NotificationEvent and publish to Redis fan-out.
+ * Maps to {@link NotificationEvent} and publishes to Redis fan-out.
+ * See doc/fr/appendices/exercises/lab-05-notification-sse.md
  */
 @Component
 public class OrderStatusListener {

@@ -8,7 +8,10 @@ import org.springframework.kafka.config.TopicBuilder;
 @Configuration
 public class KafkaTopicsConfig {
 
-    /** Declares the topic (auto-create is disabled on the broker). 3 partitions for lab 1. */
+    /**
+     * Declares the topic (auto-create is disabled on the broker). 3 partitions.
+     * See doc/fr/appendices/exercises/lab-01-keys-partitions.md
+     */
     @Bean
     NewTopic ordersCreatedTopic() {
         return TopicBuilder.name(KafkaTopics.ORDERS_CREATED)

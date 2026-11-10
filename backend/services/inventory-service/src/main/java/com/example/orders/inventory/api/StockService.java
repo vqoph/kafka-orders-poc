@@ -10,9 +10,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 /**
- * Stock catalog use-cases (Lab 4). GET list/by-sku stay on
- * {@link StockController};
- * you implement create / update / delete here — search {@code TODO Lab 4}.
+ * Stock catalog write use-cases. GET list/by-sku stay on {@link StockController}.
+ * See doc/fr/appendices/exercises/lab-04-stock-payment-rest.md
  */
 @Service
 public class StockService {
@@ -23,12 +22,7 @@ public class StockService {
         this.stockRepository = stockRepository;
     }
 
-    /*
-     * ## Create a stock row
-     *
-     * - If `sku` already exists → `409 CONFLICT`
-     * - Else save `new Stock(sku, quantity)` → return `StockResponse.from(...)`
-     */
+    /** Creates a stock row; 409 if the SKU already exists. */
     @Transactional
     public StockResponse create(CreateStockRequest request) {
         if (stockRepository.existsById(request.sku())) {
@@ -40,12 +34,7 @@ public class StockService {
         return StockResponse.from(stock);
     }
 
-    /*
-     * ## Update quantity for an existing SKU
-     *
-     * - Unknown sku → `404 NOT_FOUND`
-     * - Else `stock.setQuantity(...)` + save → return response
-     */
+    /** Updates quantity for an existing SKU; 404 if unknown. */
     @Transactional
     public StockResponse update(String sku, UpdateStockRequest request) {
         Stock stock = stockRepository.findById(sku)
@@ -56,12 +45,7 @@ public class StockService {
         return StockResponse.from(stock);
     }
 
-    /*
-     * ## Delete a stock row
-     *
-     * - Unknown sku → `404 NOT_FOUND`
-     * - Else delete → void (`204` from controller)
-     */
+    /** Deletes a stock row; 404 if unknown. */
     @Transactional
     public void delete(String sku) {
         if (!stockRepository.existsById(sku)) {
